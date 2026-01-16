@@ -12,7 +12,8 @@ import {
   RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuthUserStore } from '../../library/authUserStore';
+// ✅ IMPORT fetchProtected FROM STORE TO GET TIMEOUT/RETRY LOGIC
+import { useAuthUserStore, fetchProtected } from '../../library/authUserStore'; 
 import { useStoryStore } from '../../library/storyStore';
 import StoryImage from '../../components/StoryImage';
 import { StatusBar } from 'expo-status-bar';
@@ -21,16 +22,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { addNetworkStateListener } from 'expo-network';
 import { StoryLiveCount } from '../../components/StoryLiveCount';
 import { useShareStory } from '../../hooks/useShareStory';
-import { fetchProtected } from '../../lib/api';
+//import { AdBanner } from '../../components/AdBanner';
 
 export default function StoryPage() {
   const storyScrollViewRef = useRef(null);
-  const router = useRouter(); // Correctly import and use the router
+  const router = useRouter();
 
   const [story, setStory] = useState(null);
   const [rating, setRating] = useState(0);
   const [hasRated, setHasRated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true); // Simplified loading state
+  const [isLoading, setIsLoading] = useState(true);
   const [submissionMessage, setSubmissionMessage] = useState(null);
   const [error, setError] = useState(null);
 
@@ -38,6 +39,8 @@ export default function StoryPage() {
   const { token, user } = useAuthUserStore();
   const { setCurrentStory } = useStoryStore();
   const { slug: slugParam } = useLocalSearchParams();
+  
+  // Handle array or string slug from expo-router
   const rawSlug = Array.isArray(slugParam) ? slugParam[0] : slugParam;
   const apiSlug = typeof rawSlug === 'string' ? rawSlug.trim().toLowerCase() : '';
   const userId = user?._id || user?.id;
@@ -53,6 +56,7 @@ export default function StoryPage() {
     setIsLoading(true);
     try {
       const url = `/api/blog/story/${encodeURIComponent(apiSlug)}`;
+      // This uses the robust fetchProtected with timeout/retry
       const data = await fetchProtected(url);
 
       if (data?.title) {
@@ -69,11 +73,15 @@ export default function StoryPage() {
       setError(null);
     } catch (err) {
       console.error('❌ Fetch story error:', err);
-      setError(err.message || 'Ekokaki kozwa lisapo te.');
+      // User friendly error message
+      const msg = err.message.includes('timeout') 
+        ? 'Ekokaki kozwa lisapo te due to connection issues.' 
+        : 'Ekokaki kozwa lisapo te.';
+      setError(msg);
       setStory({
         title: apiSlug,
         slug: apiSlug,
-        content: 'Ekokaki kozwa lisapo te.',
+        content: msg,
         reason: err.message,
       });
     } finally {
@@ -110,10 +118,11 @@ export default function StoryPage() {
       Alert.alert('Rating Submitted', `You rated this story ${newScore} stars.`);
     } catch (err) {
       console.error('❌ Rating submission failed:', err);
-      Alert.alert('Error', 'Failed to submit rating');
+      Alert.alert('Error', 'Failed to submit rating. Please try again.');
     }
-    await fetchRatedStories();
-    await fetchRatingStats();
+    // Refresh stats in background
+    fetchRatedStories();
+    fetchRatingStats();
   }, [story?._id, rating, fetchRatedStories, fetchRatingStats]);
 
   useEffect(() => {
@@ -210,11 +219,13 @@ export default function StoryPage() {
               </Text>
             </View>
           )}
+          
+          {/* Header Actions */}
           <Ionicons
             name="arrow-back"
             size={28}
             color="black"
-            onPress={() => router.back()} // ✅ FIXED: Use router.back()
+            onPress={() => router.back()}
             style={{ position: 'absolute', top: 14, left: 10, zIndex: 1, backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: 14, padding: 2 }}
           />
           <TouchableOpacity
@@ -235,9 +246,13 @@ export default function StoryPage() {
             <Text style={{ fontSize: 15, fontWeight: '600', color: '#68696aff' }}>Kabola</Text>
             <Ionicons name="share-social-outline" size={25} color="#333" />
           </TouchableOpacity>
+
+          {/* Title */}
           <Text style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 20, textAlign: 'center', marginTop: 40 }}>
             {story?.title}
           </Text>
+
+          {/* Image */}
           {story?.image && (
             <StoryImage
               uri={
@@ -247,11 +262,15 @@ export default function StoryPage() {
               }
             />
           )}
+
+          {/* Content */}
           <Text style={{ fontSize: 17, marginTop: 30, lineHeight: 28, marginBottom: 20, fontFamily: 'Palatino'}}>
             {story?.content}
           </Text>
+
+          {/* Rating Section */}
           <View style={{ marginBottom: 4, marginTop: 2 }}>
-            <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Monzoto:</Text>
+            <Text style={{ fontSize: 17, fontWeight: 'bold' }}>Monzoto:</Text>
             {renderRatingStar()}
             <TouchableOpacity
               onPress={submitRating}
@@ -283,7 +302,10 @@ export default function StoryPage() {
               </Text>
             )}
           </View>
+
+          {/* Live Count Component */}
           <StoryLiveCount storyId={story?._id} userId={userId} />
+          {/* Ad Banner */}
         </ScrollView>
       </KeyboardAvoidingView>
       <StatusBar style="dark" />

@@ -6,16 +6,38 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EAS_BUILD_DISABLE_COCOAPODS_CACHE": "1"
+      },
+      "cache": {
+        "paths": ["./ios/Podfile.lock"]
+      }
     },
     "preview": {
       "distribution": "internal"
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "android": {
+        "buildType": "apk"
+      }
     }
   },
   "submit": {
-    "production": {}
-  }
+    "production": {
+      "ios": {
+        "appleId": "salaarnold14@gmail.com",
+        "ascAppId": "6757685562"
+      }
+    }
+  },
+  "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
+        }
+      ]
+    ]
 }

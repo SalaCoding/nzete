@@ -1,21 +1,24 @@
 {
   "expo": {
-    "name": "mosisa-na-nse",
+    "name": "nzete",
     "slug": "mosisa-ya-nse",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/icon_nzete1.png",
     "scheme": "mosisananse",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
+      "icon": "./assets/images/icon_nzete1.png",
       "supportsTablet": true,
       "bundleIdentifier": "com.salacoding.mosisananse",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
-      }
+      },
+      "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
+      "icon": "./assets/images/icon_nzete1.png",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -31,6 +34,7 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      ["./withGoogleMobileAdsConfig"],
       "expo-router",
       [
         "expo-splash-screen",
@@ -52,7 +56,7 @@
       "reactCompiler": true
     },
     "extra": {
-      "EXPO_PUBLIC_API_URL": "http://192.168.1.226:3001",
+      "EXPO_PUBLIC_API_URL": "http://192.168.0.165:3001",
       "router": {},
       "eas": {
         "projectId": "4c21570f-f55a-409e-aeff-2b9c981412fd"
@@ -61,4 +65,3 @@
     "owner": "salacoding"
   }
 }
-  

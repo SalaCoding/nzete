@@ -15,198 +15,265 @@ import React, { useState, useEffect } from 'react'
 import { Image } from 'expo-image'
 import { StatusBar } from 'expo-status-bar'
 import { Link, useRouter } from 'expo-router'
-import { useAuthUserStore, login } from '../../library/authUserStore'
 import { Ionicons } from '@expo/vector-icons'
+import { useAuthUserStore, login } from '../../library/authUserStore';
+import { GoogleButton } from '../../components/GoogleButton';
 
 const Login = () => {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  
+  // ✅ Create a local loading state specifically for Email Login
+  const [isEmailLoading, setIsEmailLoading] = useState(false);
 
-  // ✅ Destructure what you need from the store.
-  // The `user` variable will automatically update on login.
-  const { user, isLoading, error, _hasHydrated } = useAuthUserStore();
+  const { user, error, _hasHydrated } = useAuthUserStore();
 
+  // 1. Handle Successful Login Navigation
   useEffect(() => {
-    // Redirect if the user logs in successfully
     if (user) {
       router.replace('/(tabs)');
     }
-  }, [user, router]); // This effect runs when the user state changes
+  }, [user, router]);
 
-   useEffect(() => {
-    // ✅ Centralized error handling. This is the single source of truth for login errors.
+  // 2. Handle Errors
+  useEffect(() => {
     if (error) {
-      Alert.alert('Login Error', error)
+      // Reset local loading if there's a global error
+      setIsEmailLoading(false);
+      Alert.alert('Login Failed', error)
     }
   }, [error])
 
-  // 🚦**DO NOT RENDER UI UNTIL HYDRATION READY**
+  // 3. Loading State for Hydration
   if (!_hasHydrated) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" />
-        <Text>Loading...</Text>
+        <ActivityIndicator size="large" color="#007AFF" />
       </View>
     )
   }
 
+  // 4. Handle Login Button Press
   const handleLogin = async () => {
-    // ✅ Simplified: just call login. The effects will handle the rest.
-    await login(email, password);
-  }
+    if (isEmailLoading) return; // Prevent double taps
+
+    // Basic Client-side validation
+    if (!email.trim() || !password) {
+      Alert.alert('Missing Input', 'Please enter both email and password.');
+      return;
+    }
+
+    setIsEmailLoading(true); // Start local loading
+    
+    // Pass isEmailLoading to the login function logic or handle cleanup
+    const result = await login(email, password);
+    
+    // If login fails, stop loading (if success, the useEffect navigates away)
+    if (!result.success) {
+      setIsEmailLoading(false);
+    }
+  };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <ScrollView contentContainerStyle={{ flex: 1, paddingBottom: 60 }}>
-        <SafeAreaView style={{ flexGrow: 1 }}>
-          <View style={[
-            styles.container,
-            {
-              minHeight: '100%',
-              paddingVertical: 20,
-              paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0,
-            }
-          ]}>
-            <View style={{ width: '100%', alignItems: 'center', marginBottom: 20 }}>
+    <KeyboardAvoidingView 
+      style={{ flex: 1 }} 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.container}>
+            
+            {/* Header / Image */}
+            <View style={styles.imageContainer}>
               <Image
-                source={require('../../assets/images/learning-cuate.png')}
-                style={{ width: '100%', height: 200 }}
+                source={require('../../assets/images/icon_nzete1.png')}
+                style={styles.image}
                 contentFit="contain"
               />
             </View>
+
+            {/* Login Form Box */}
             <View style={styles.caseBox}>
+              
               {/* Email Field */}
-              <View>
+              <View style={styles.inputGroup}>
                 <Text style={styles.text__head}>Email</Text>
                 <TextInput
-                  placeholder="koma email na yo"
+                  placeholder="Enter your email"
                   placeholderTextColor="#888"
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
-                  style={styles.emailInput}
+                  style={styles.input}
+                  // Disable input while any loading happens
+                  editable={!isEmailLoading} 
                 />
               </View>
+
               {/* Password Field */}
-              <View style={{ marginTop: 12, marginBottom: 12 }}>
+              <View style={styles.inputGroup}>
                 <Text style={styles.text__head}>Password</Text>
-                <View>
+                <View style={styles.passwordContainer}>
                   <TextInput
-                    placeholder="koma Password na yo awa"
+                    placeholder="Enter your password"
                     placeholderTextColor="#888"
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry={!showPassword}
                     autoCapitalize='none'
-                    autoCorrect={false}
-                    style={[styles.emailInput, { paddingRight: 40 }]} // ensure space for eye icon
+                    style={[styles.input, { flex: 1, marginVertical: 0 }]}
+                    editable={!isEmailLoading}
                   />
                   <TouchableOpacity
                     onPress={() => setShowPassword(!showPassword)}
-                    accessibilityLabel={showPassword ? "Hide password" : "Show password"}
                     style={styles.passwordToggle}
                   >
                     <Ionicons
                       name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                       size={20}
-                      color="#000"
+                      color="#555"
                     />
                   </TouchableOpacity>
                 </View>
               </View>
-              {/* Login Button (Custom for loading state) */}
+
+              {/* Login Button (Uses local isEmailLoading) */}
               <TouchableOpacity
                 onPress={handleLogin}
-                disabled={isLoading}
+                disabled={isEmailLoading}
                 style={[
                   styles.loginButton,
-                  { backgroundColor: isLoading ? '#A0A0A0' : '#007AFF', alignItems: 'center', padding: 12 }
+                  { backgroundColor: isEmailLoading ? '#ccc' : '#007AFF' }
                 ]}
               >
-                {isLoading ? (
+                {isEmailLoading ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.button__text}>Login</Text>
+                  <Text style={styles.buttonText}>Login</Text>
                 )}
               </TouchableOpacity>
-              {/* Footer */}
+
+              {/* Google Login Button (Passes false so it doesn't spin when email is loading) */}
+              <GoogleButton isLoading={false} />
+
+              {/* Footer Links */}
               <View style={styles.footer}>
-                <Text style={{ marginRight: 5, fontSize: 16 }}>Don’t have an account?</Text>
+                <Text style={styles.footerText}>Don’t have an account?</Text>
                 <Link href="/signup" asChild>
                   <TouchableOpacity>
-                    <Text style={{ marginLeft: 5, color: 'blue', fontSize: 16 }}>
-                      Sign Up
-                    </Text>
+                    <Text style={styles.linkText}>Sign Up</Text>
                   </TouchableOpacity>
                 </Link>
               </View>
+
             </View>
           </View>
         </SafeAreaView>
-        <StatusBar style="auto" />
       </ScrollView>
+      <StatusBar style="auto" />
     </KeyboardAvoidingView>
   )
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
   container: {
     flex: 1,
+    padding: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 30,
+  },
+  imageContainer: {
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  image: {
+    width: 250,
+    height: 200,
   },
   caseBox: {
-    alignSelf: 'center',
-    borderRadius: 12,
-    padding: 20,
     width: '100%',
     maxWidth: 400,
     backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 24,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
     shadowRadius: 12,
-    elevation: 10,
+    elevation: 5,
   },
-  emailInput: {
-    borderWidth: 1,
-    borderRadius: 8,
-    width: '100%',
-    padding: 12,
-    marginVertical: 5,
-    paddingHorizontal: 10,
-    fontSize: 16,
+  inputGroup: {
+    marginBottom: 16,
   },
   text__head: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+  input: {
+    height: 50,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    paddingHorizontal: 16,
     fontSize: 16,
-    marginBottom: 5,
-    fontWeight: 'bold'
+    backgroundColor: '#FAFAFA',
+    color: '#000',
   },
-  loginButton: {
-    borderRadius: 16,
-    marginTop: 12,
-  },
-  passwordToggle: {
-    padding: 8,
-    position: 'absolute',
-    right: 0,
-    height: '100%',
-    justifyContent: 'center'
-  },
-  button__text: {
-    textAlign: 'center',
-    color: '#fff',
-    fontWeight: "bold"
-  },
-  footer: {
-    marginTop: 22,
+  passwordContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    backgroundColor: '#FAFAFA',
+    height: 50,
+    overflow: 'hidden',
+  },
+  passwordToggle: {
+    padding: 12,
+  },
+  loginButton: {
+    height: 50,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 8,
+    shadowColor: '#007AFF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  footer: {
+    marginTop: 24,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  footerText: {
+    fontSize: 15,
+    color: '#666',
+  },
+  linkText: {
+    fontSize: 15,
+    color: '#007AFF',
+    fontWeight: '600',
+    marginLeft: 6,
   },
 })
 

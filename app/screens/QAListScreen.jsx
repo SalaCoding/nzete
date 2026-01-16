@@ -407,7 +407,7 @@ const QAListScreen = () => {
           
           {bestScore && (
             <Text style={styles.bestScoreText}>
-              🏆 Score ya likolo: {bestScore. percentage}%
+              🏆 Score ya likolo: {bestScore.percentage}%
             </Text>
           )}
           
@@ -419,8 +419,8 @@ const QAListScreen = () => {
           
           {mode !== 'quiz' && mode !== 'complete' && (
             <Text style={styles.modeText}>
-              {mode === 'retryFailed' ?  '🔄 Retry: Mituna ya mabunga' : 
-               mode === 'retryAll' ? '🔄 Retry: Mituna nyonso' : ''}
+              {mode === 'retryFailed' ?  '🔄 Meka: Mituna ya mabunga' : 
+               mode === 'retryAll' ? '🔄 Meka: Mituna nyonso' : ''}
             </Text>
           )}
           {previousScore && (

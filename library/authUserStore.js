@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import * as SecureStore from 'expo-secure-store';
 import { API_URL } from '../constants/api';
 import { jwtDecode } from 'jwt-decode';
+import { Platform } from 'react-native';
 
 // ============================================================
 // SECURE STORAGE ADAPTER (expo-secure-store)
@@ -10,25 +11,53 @@ import { jwtDecode } from 'jwt-decode';
 
 const secureStorage = {
   getItem: async (name) => {
+    // SecureStore is not supported on web, use localStorage instead
+    if (Platform.OS === 'web') {
+      try {
+        return localStorage.getItem(name);
+      } catch (error) {
+        console.error('[localStorage] getItem error:', error);
+        return null;
+      }
+    }
+
     try {
-      return await SecureStore. getItemAsync(name);
+      return await SecureStore.getItemAsync(name);
     } catch (error) {
-      console.error('SecureStore getItem error:', error);
+      console.error('[SecureStore] getItem error:', error);
       return null;
     }
   },
   setItem: async (name, value) => {
+    if (Platform.OS === 'web') {
+      try {
+        localStorage.setItem(name, value);
+      } catch (error) {
+        console.error('[localStorage] setItem error:', error);
+      }
+      return;
+    }
+
     try {
-      await SecureStore. setItemAsync(name, value);
+      await SecureStore.setItemAsync(name, value);
     } catch (error) {
-      console. error('SecureStore setItem error:', error);
+      console.error('[SecureStore] setItem error:', error);
     }
   },
   removeItem: async (name) => {
+    if (Platform.OS === 'web') {
+      try {
+        localStorage.removeItem(name);
+      } catch (error) {
+        console.error('[localStorage] removeItem error:', error);
+      }
+      return;
+    }
+
     try {
       await SecureStore.deleteItemAsync(name);
     } catch (error) {
-      console.error('SecureStore removeItem error:', error);
+      console.error('[SecureStore] removeItem error:', error);
     }
   },
 };
@@ -38,7 +67,7 @@ const secureStorage = {
 // ============================================================
 
 const TOKEN_EXPIRY_BUFFER = 60 * 1000; // Refresh 1 minute before expiry
-const REQUEST_TIMEOUT = 15000; // 15 seconds
+const REQUEST_TIMEOUT = 30000; // Increased to 30s
 const MAX_RETRIES = 3;
 
 // ============================================================
@@ -52,13 +81,48 @@ const fetchWithTimeout = async (url, options = {}, timeout = REQUEST_TIMEOUT) =>
 
   try {
     const response = await fetch(url, {
-      ... options,
+      ...options,
       signal: controller.signal,
     });
     return response;
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      console.error(`[FETCH TIMEOUT] Request aborted (Timeout: ${timeout}ms) for URL: ${url}`);
+      throw new Error('Request timed out. Please check your connection and try again.');
+    } else {
+      throw error;
+    }
   } finally {
     clearTimeout(timeoutId);
   }
+};
+
+// Helper to handle retries automatically
+const fetchWithRetries = async (url, options = {}, retries = MAX_RETRIES) => {
+  let lastError;
+
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      if (attempt > 0) console.log(`[Retry Attempt ${attempt + 1}] ${url}`);
+      
+      const response = await fetchWithTimeout(url, options);
+      
+      if (!response.ok && response.status >= 500) {
+        throw new Error(`Server error: ${response.status}`);
+      }
+      
+      return response;
+    } catch (error) {
+      lastError = error;
+      
+      if (attempt === retries - 1) break;
+
+      const delay = 1000 * Math.pow(2, attempt);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+
+  throw lastError;
 };
 
 // Check if token is expired (with buffer)
@@ -66,8 +130,8 @@ const isTokenExpired = (token) => {
   if (!token) return true;
   try {
     const decoded = jwtDecode(token);
-    const expiryTime = decoded.exp * 1000; // Convert to milliseconds
-    return Date. now() >= expiryTime - TOKEN_EXPIRY_BUFFER;
+    const expiryTime = decoded.exp * 1000;
+    return Date.now() >= expiryTime - TOKEN_EXPIRY_BUFFER;
   } catch (error) {
     console.error('Token decode error:', error);
     return true;
@@ -87,29 +151,28 @@ const getTokenExpiry = (token) => {
 // Sanitize user input
 const sanitizeInput = (input) => {
   if (typeof input !== 'string') return '';
-  return input. trim().slice(0, 500); // Limit length
+  return input.trim().slice(0, 500);
 };
 
 // Sanitize email
 const sanitizeEmail = (email) => {
-  return sanitizeInput(email). toLowerCase();
+  return sanitizeInput(email).toLowerCase();
 };
 
-// Generic error messages (don't expose internals)
+// Generic error messages
 const getGenericError = (error) => {
-  const message = error?. message?. toLowerCase() || '';
+  const message = error?.message?.toLowerCase() || '';
 
   if (message.includes('network') || message.includes('fetch')) {
-    return 'Network error. Please check your connection. ';
+    return 'Network error. Please check your connection.';
   }
-  if (message. includes('timeout') || message.includes('aborted')) {
-    return 'Request timed out. Please try again.';
+  if (message.includes('timeout') || message.includes('aborted')) {
+    return 'Request timed out. The server took too long to respond.';
   }
   if (message.includes('401') || message.includes('unauthorized')) {
     return 'Session expired. Please log in again.';
   }
 
-  // Return server message for auth errors, generic for others
   return error?.message || 'An error occurred. Please try again.';
 };
 
@@ -124,6 +187,7 @@ export const useAuthUserStore = create(
       tokenExpiry: null,
       user: null,
       isLoading: false,
+      loadingType: null, // ✅ ADDED: Tracks which specific action is loading ('email', 'google', 'register')
       error: null,
       _hasHydrated: false,
 
@@ -136,30 +200,28 @@ export const useAuthUserStore = create(
         return !!token && !!user && !isTokenExpired(token);
       },
 
-      // Clear auth state
       clearAuth: () => {
-        set({ token: null, tokenExpiry: null, user: null, error: null });
+        set({ token: null, tokenExpiry: null, user: null, error: null, loadingType: null });
       },
 
-      // Set auth state
       setAuth: (token, user) => {
         set({
           token,
           tokenExpiry: getTokenExpiry(token),
           user,
           error: null,
+          loadingType: null, // Clear loading on success
         });
       },
 
-      // Check token validity
       isTokenValid: () => {
         const { token } = get();
-        return ! isTokenExpired(token);
+        return !isTokenExpired(token);
       },
     }),
     {
       name: 'auth-storage',
-      storage: createJSONStorage(() => secureStorage),
+      storage: createJSONStorage(() => secureStorage), 
       partialize: (state) => ({
         token: state.token,
         tokenExpiry: state.tokenExpiry,
@@ -167,12 +229,10 @@ export const useAuthUserStore = create(
       }),
       onRehydrateStorage: () => (state, error) => {
         if (error) {
-          console.error('Hydration error:', error);
-        }
-        if (state) {
-          // Check if token is expired on hydration
-          if (state.token && isTokenExpired(state.token)) {
-            console. log('Token expired on hydration, clearing auth');
+          console.error('[HYDRATION ERROR]:', error);
+        } else {
+          if (state?.token && isTokenExpired(state.token)) {
+            console.warn('Token expired during hydration. Clearing auth...');
             state.clearAuth();
           }
           state.setHasHydrated(true);
@@ -186,15 +246,19 @@ export const useAuthUserStore = create(
 // AUTH ACTIONS
 // ============================================================
 
+let isProcessingAuth = false;
+
 export const register = async (username, email, password) => {
-  useAuthUserStore.setState({ isLoading: true, error: null });
+  if (isProcessingAuth) return;
+  isProcessingAuth = true;
+
+  // ✅ Set loadingType to 'register'
+  useAuthUserStore.setState({ isLoading: true, loadingType: 'register', error: null });
 
   try {
-    // Sanitize inputs
     const sanitizedUsername = sanitizeInput(username);
     const sanitizedEmail = sanitizeEmail(email);
 
-    // Basic client-side validation
     if (!sanitizedUsername || !sanitizedEmail || !password) {
       throw new Error('All fields are required');
     }
@@ -203,7 +267,7 @@ export const register = async (username, email, password) => {
       throw new Error('Password must be at least 8 characters');
     }
 
-    const response = await fetchWithTimeout(`${API_URL}/api/auth/register`, {
+    const response = await fetchWithRetries(`${API_URL}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -215,40 +279,46 @@ export const register = async (username, email, password) => {
 
     const data = await response.json();
 
-    if (! response.ok) {
-      throw new Error(data. message || 'Registration failed');
+    if (!response.ok) {
+      throw new Error(data.message || 'Registration failed');
     }
 
-    if (! data.token || !data.user) {
+    if (!data.token || !data.user) {
       throw new Error('Invalid server response');
     }
 
-    // Use server-provided user data (not decoded JWT)
     useAuthUserStore.getState().setAuth(data.token, data.user);
-    useAuthUserStore.setState({ isLoading: false });
+    useAuthUserStore.setState({ isLoading: false, loadingType: null });
 
     return { success: true };
 
   } catch (error) {
     console.error('[register] error:', error.message);
     const errorMessage = getGenericError(error);
-    useAuthUserStore.setState({ error: errorMessage, isLoading: false });
+    useAuthUserStore.setState({ error: errorMessage, isLoading: false, loadingType: null });
     return { success: false, error: errorMessage };
+  } finally {
+    isProcessingAuth = false;
   }
 };
 
 export const login = async (email, password) => {
-  useAuthUserStore.setState({ isLoading: true, error: null });
+  if (isProcessingAuth) return;
+  isProcessingAuth = true;
+
+  // ✅ Set loadingType to 'email'
+  useAuthUserStore.setState({ isLoading: true, loadingType: 'email', error: null });
 
   try {
-    // Sanitize inputs
     const sanitizedEmail = sanitizeEmail(email);
 
     if (!sanitizedEmail || !password) {
       throw new Error('Email and password are required');
     }
 
-    const response = await fetchWithTimeout(`${API_URL}/api/auth/login`, {
+    console.log(`[LOGIN START] Attempting login for: ${sanitizedEmail} to the Api`);
+
+    const response = await fetchWithRetries(`${API_URL}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -257,49 +327,46 @@ export const login = async (email, password) => {
       }),
     });
 
-    const data = await response. json();
+    const data = await response.json();
 
     if (!response.ok) {
       throw new Error(data.message || 'Login failed');
     }
 
-    if (!data. token || !data. user) {
+    if (!data.token || !data.user) {
       throw new Error('Invalid server response');
     }
 
-    // Trust server-provided user data, not JWT decode
-    useAuthUserStore.getState(). setAuth(data. token, data.user);
-    useAuthUserStore.setState({ isLoading: false });
+    useAuthUserStore.getState().setAuth(data.token, data.user);
+    useAuthUserStore.setState({ isLoading: false, loadingType: null });
 
     return { success: true };
 
   } catch (error) {
-    console.error('[login] error:', error. message);
+    console.error('[login] error:', error.message);
     const errorMessage = getGenericError(error);
-    useAuthUserStore.setState({ error: errorMessage, isLoading: false });
+    useAuthUserStore.setState({ error: errorMessage, isLoading: false, loadingType: null });
     return { success: false, error: errorMessage };
+  } finally {
+    isProcessingAuth = false;
   }
 };
 
 export const logout = async () => {
   try {
-    // Optionally notify server of logout (for token blacklisting)
     const { token } = useAuthUserStore.getState();
     if (token) {
-      // Fire and forget - don't block logout on server response
       fetchWithTimeout(`${API_URL}/api/auth/logout`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-      }). catch(() => {});
+      }, 5000).catch(() => {});
     }
   } finally {
-    // Always clear local state
-    useAuthUserStore.getState().clearAuth();
-    // Clear secure storage
     await secureStorage.removeItem('auth-storage');
+    useAuthUserStore.getState().clearAuth();
   }
 };
 
@@ -310,18 +377,16 @@ export const updateUser = async (updatedData) => {
     return { success: false, error: 'User not authenticated' };
   }
 
-  // Check token expiry before making request
   if (isTokenExpired(token)) {
     await logout();
     return { success: false, error: 'Session expired. Please log in again.' };
   }
 
-  useAuthUserStore.setState({ isLoading: true, error: null });
+  useAuthUserStore.setState({ isLoading: true, loadingType: 'update', error: null });
 
   try {
-    // Sanitize updateable fields
     const sanitizedData = {};
-    if (updatedData. username) {
+    if (updatedData.username) {
       sanitizedData.username = sanitizeInput(updatedData.username);
     }
     if (updatedData.profilePicture) {
@@ -332,7 +397,7 @@ export const updateUser = async (updatedData) => {
       throw new Error('No valid update data provided');
     }
 
-    const response = await fetchWithTimeout(`${API_URL}/api/auth/user/profile`, {
+    const response = await fetchWithRetries(`${API_URL}/api/auth/user/profile`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -341,7 +406,7 @@ export const updateUser = async (updatedData) => {
       body: JSON.stringify(sanitizedData),
     });
 
-    const data = await response. json();
+    const data = await response.json();
 
     if (!response.ok) {
       if (response.status === 401) {
@@ -354,14 +419,15 @@ export const updateUser = async (updatedData) => {
     useAuthUserStore.setState({
       user: data.user,
       isLoading: false,
+      loadingType: null,
     });
 
     return { success: true, user: data.user };
 
   } catch (error) {
-    console. error('[updateUser] error:', error.message);
+    console.error('[updateUser] error:', error.message);
     const errorMessage = getGenericError(error);
-    useAuthUserStore.setState({ error: errorMessage, isLoading: false });
+    useAuthUserStore.setState({ error: errorMessage, isLoading: false, loadingType: null });
     return { success: false, error: errorMessage };
   }
 };
@@ -369,67 +435,49 @@ export const updateUser = async (updatedData) => {
 export const fetchProtected = async (path, options = {}, retries = MAX_RETRIES) => {
   const { token } = useAuthUserStore.getState();
 
-  if (! token) {
+  if (!token) {
     throw new Error('No token available');
   }
 
-  // Check token expiry
   if (isTokenExpired(token)) {
     await logout();
-    throw new Error('Session expired.  Please log in again.');
+    throw new Error('Session expired. Please log in again.');
   }
 
-  let lastError;
+  try {
+    const response = await fetchWithRetries(`${API_URL}${path}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options.headers || {}),
+        Authorization: `Bearer ${token}`,
+      },
+    }, retries);
 
-  for (let attempt = 0; attempt < retries; attempt++) {
-    try {
-      const response = await fetchWithTimeout(`${API_URL}${path}`, {
-        ...options,
-        headers: {
-          'Content-Type': 'application/json',
-          ...(options. headers || {}),
-          Authorization: `Bearer ${token}`,
-        },
-      });
+    const data = await response.json();
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (response. status === 401) {
-          await logout();
-          throw new Error('Session expired.  Please log in again.');
-        }
-        throw new Error(data.message || 'Request failed');
+    if (!response.ok) {
+      if (response.status === 401) {
+        await logout();
+        throw new Error('Session expired. Please log in again.');
       }
-
-      return data;
-
-    } catch (error) {
-      lastError = error;
-
-      // Don't retry auth errors
-      if (error. message. includes('expired') || error.message.includes('401')) {
-        throw error;
-      }
-
-      // Wait before retry (exponential backoff)
-      if (attempt < retries - 1) {
-        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
-      }
+      throw new Error(data.message || 'Request failed');
     }
+
+    return data;
+
+  } catch (error) {
+    if (error.message.includes('expired') || error.message.includes('401')) {
+      await logout();
+    }
+    throw error;
   }
-
-  throw lastError;
 };
-
-// ============================================================
-// REFRESH USER DATA FROM SERVER
-// ============================================================
 
 export const refreshUser = async () => {
   const { token } = useAuthUserStore.getState();
 
-  if (! token || isTokenExpired(token)) {
+  if (!token || isTokenExpired(token)) {
     return { success: false, error: 'Not authenticated' };
   }
 
@@ -438,14 +486,10 @@ export const refreshUser = async () => {
     useAuthUserStore.setState({ user: data.user });
     return { success: true, user: data.user };
   } catch (error) {
-    console. error('[refreshUser] error:', error. message);
+    console.error('[refreshUser] error:', error.message);
     return { success: false, error: error.message };
   }
 };
-
-// ============================================================
-// CHECK USER (for app initialization / hydration)
-// ============================================================
 
 export const checkUser = async () => {
   useAuthUserStore.setState({ isLoading: true, error: null });
@@ -453,13 +497,11 @@ export const checkUser = async () => {
   try {
     const { token, user } = useAuthUserStore.getState();
 
-    // If no token, user is not authenticated
     if (!token) {
       useAuthUserStore.setState({ isLoading: false });
       return { success: false, error: 'No token' };
     }
 
-    // Check if token is expired
     if (isTokenExpired(token)) {
       console.log('[checkUser] Token expired, clearing auth');
       useAuthUserStore.getState().clearAuth();
@@ -467,13 +509,11 @@ export const checkUser = async () => {
       return { success: false, error: 'Token expired' };
     }
 
-    // If we have a valid token and user in store, we're good
     if (user) {
       useAuthUserStore.setState({ isLoading: false });
       return { success: true, user };
     }
 
-    // Otherwise, fetch user from server
     const response = await fetchWithTimeout(`${API_URL}/api/auth/me`, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -481,7 +521,7 @@ export const checkUser = async () => {
       },
     });
 
-    const data = await response. json();
+    const data = await response.json();
 
     if (!response.ok) {
       throw new Error(data.message || 'Failed to verify user');
@@ -495,38 +535,32 @@ export const checkUser = async () => {
     return { success: true, user: data.user };
 
   } catch (error) {
-    console. error('[checkUser] error:', error.message);
+    console.error('[checkUser] error:', error.message);
     useAuthUserStore.getState().clearAuth();
     useAuthUserStore.setState({ isLoading: false });
     return { success: false, error: error.message };
   }
 };
 
-// ============================================================
-// CHECK USER WITH RETRY (for unreliable networks)
-// ============================================================
-
 export const checkUserWithRetry = async (retries = 3) => {
   for (let i = 0; i < retries; i++) {
     try {
       const result = await checkUser();
 
-      if (result. success) {
+      if (result.success) {
         return result;
       }
 
-      // Don't retry if it's an auth error (no token or expired)
-      if (result.error === 'No token' || result. error === 'Token expired') {
+      if (result.error === 'No token' || result.error === 'Token expired') {
         return result;
       }
 
-      // Wait before retry (exponential backoff)
       if (i < retries - 1) {
         await new Promise((resolve) => setTimeout(resolve, 500 * (i + 1)));
       }
 
     } catch (err) {
-      console.error(`[checkUserWithRetry] Attempt ${i + 1} failed:`, err. message);
+      console.error(`[checkUserWithRetry] Attempt ${i + 1} failed:`, err.message);
 
       if (i === retries - 1) {
         return { success: false, error: err.message };
@@ -537,4 +571,39 @@ export const checkUserWithRetry = async (retries = 3) => {
   }
 
   return { success: false, error: 'Max retries reached' };
+};
+
+// ============================================================
+// CONFIGURE GOOGLE SIGN IN
+// ============================================================
+export const googleLogin = async (firebaseToken) => {
+  if (isProcessingAuth) return;
+  isProcessingAuth = true;
+
+  // ✅ Set loadingType to 'google'
+  useAuthUserStore.setState({ isLoading: true, loadingType: 'google', error: null });
+
+  try {
+    // Send Firebase Token to your backend
+    const response = await fetchWithRetries(`${API_URL}/api/auth/google`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: firebaseToken }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) throw new Error(data.message || 'Google login failed');
+
+    useAuthUserStore.getState().setAuth(data.token, data.user);
+    useAuthUserStore.setState({ isLoading: false, loadingType: null });
+
+    return { success: true };
+  } catch (error) {
+    console.error('[googleLogin] error:', error);
+    useAuthUserStore.setState({ error: error.message, isLoading: false, loadingType: null });
+    return { success: false, error: error.message };
+  } finally {
+    isProcessingAuth = false;
+  }
 };

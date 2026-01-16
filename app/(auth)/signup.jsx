@@ -12,7 +12,6 @@ import {
  } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import React, { useState } from 'react'
-import { Image } from 'expo-image'
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import { useAuthUserStore, register } from '../../library/authUserStore'
@@ -53,11 +52,7 @@ const SignUp = () => {
             <SafeAreaView style={{ flexGrow: 1 }}>
         <View style={[styles.container, { minHeight: '100%', paddingVertical: 20, paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
             <View style={{width: '100%', alignItems: 'center', marginBottom: 20}}>
-                <Image 
-                    source={require("../../assets/images/learning-cuate.png")}
-                    style={{width: '100%', height: 200, justifyContent: 'center'}}
-                    contentFit='contain'
-                />
+                <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#007AFF' }}>Create Account</Text>
             </View>
             <View style={styles.caseBox}>
               <View>
@@ -140,9 +135,10 @@ const SignUp = () => {
                     </TouchableOpacity>
                 </View>
                 <View style={styles.footer}>
-                    <Text style={{ marginRight: 5, fontSize: 16 }}>Already have an account?</Text>
+                    <Text style={{ marginRight: 5, fontSize: 15, color: '#666', }}>Already have an account?</Text>
                     <TouchableOpacity onPress={() => router.back()}>
-                        <Text style={{ marginLeft: 5, color: 'blue', fontSize: 16 }}>Login</Text>
+                        <Text style={{ fontSize: 15, color: '#007AFF', fontWeight: '600',
+    marginLeft: 6, }}>Login</Text>
                     </TouchableOpacity>
                 </View>
             </View>

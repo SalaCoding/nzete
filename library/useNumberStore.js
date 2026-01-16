@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { API_URL } from '../constants/api';
 
-console.log('API_URL is', API_URL);
+//console.log('API_URL is', API_URL);
 
 export const useNumberStore = create((set, get) => ({
   numbers: [],

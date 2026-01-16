@@ -32,7 +32,7 @@ export default function Index() {
   useEffect(() => { checkUser(); }, []);
 
   const handleStoryPress = (item) => {
-    const path = item.slug ?  `/story/${item.slug}` : `/story/${item._id || item.id}`;
+    const path = item.slug ? `/story/${item.slug}` : `/story/${item._id || item.id}`;
     router.push(path);
   };
 
@@ -81,9 +81,9 @@ export default function Index() {
       const data = await response.json();
       
       const processedStories = Array.isArray(data)
-        ? data. map(item => ({
+        ? data.map(item => ({
             ...item,
-            snippet: item.content ?  item.content.slice(0, 120) + '...' : 'No content available.',
+            snippet: item.content ? item.content.slice(0, 120) + '...' : 'No content available.',
           }))
         : [];
       
@@ -144,7 +144,7 @@ export default function Index() {
     if (stories.length === 0) {
       return (
         <View style={styles.errorContainer}>
-          <Text style={styles.emptyListText}>Masolo ezali te mpo na sikoyo. </Text>
+          <Text style={styles.emptyListText}>Masolo ezali te mpo na sikoyo.</Text>
         </View>
       );
     }
@@ -191,12 +191,12 @@ export default function Index() {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <View style={styles.motango_container}>
-          <Text style={styles. motango}>Motango</Text>
+          <Text style={styles.motango}>Motango</Text>
           <View style={styles.yekola_mitango}>
             <Text style={styles.yekola}>Yekola kotanga na biso</Text>
             <Ionicons name="book" size={75} color="rgb(0, 251, 255)" />
-            <TouchableOpacity onPress={() => router.navigate('/number/numberlistScreen')} style={styles. linkText63}>
-              <Text style={styles.yekola__moko}>1 2 3 4 5 6 7 8 9 .  . .</Text>
+            <TouchableOpacity onPress={() => router.navigate('/number/numberlistScreen')} style={styles.linkText63}>
+              <Text style={styles.yekola__moko}>1 2 3 4 5 6 7 8 9 . . .</Text>
               <Ionicons name="arrow-up-outline" size={24} color="rgb(0, 251, 255)" />
             </TouchableOpacity>
             {showNumbers && <NumberList />}
@@ -255,7 +255,7 @@ const styles = StyleSheet. create({
   },
   motango: {
     color: '#000',
-    fontSize: 20,
+    fontSize: 17,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 12,
@@ -277,14 +277,14 @@ const styles = StyleSheet. create({
   },
   yekola: {
     color: '#000',
-    fontSize: 21,
+    fontSize: 18,
     textAlign: 'center',
     marginBottom: 5,
     marginTop: 8,
     fontFamily: 'Palatino',
   },
   yekola__moko: {
-    fontSize: 30,
+    fontSize: 28,
     fontWeight: 'bold',
     textAlign: 'center',
     color: 'rgb(255, 255, 255)',
@@ -301,7 +301,7 @@ const styles = StyleSheet. create({
     marginTop: 5,
   },
   title__top: {
-    fontSize: 20,
+    fontSize: 17,
     color: '#000',
     fontWeight: 'bold',
     textAlign: 'center',
@@ -344,7 +344,7 @@ const styles = StyleSheet. create({
     marginHorizontal: 14,
   },
   lisolo: {
-    fontSize: 20,
+    fontSize: 18,
     color: '#000',
     padding: 16,
     textAlign: 'justify',
@@ -352,7 +352,7 @@ const styles = StyleSheet. create({
     fontFamily: 'Palatino',
   },
   lisapo__title: {
-    fontSize: 18,
+    fontSize: 17,
     color: '#000',
     fontWeight: 'bold',
     textAlign: 'center',
@@ -369,7 +369,7 @@ const styles = StyleSheet. create({
     alignItems: 'center',
   },
   samboleTitle: {
-    fontSize: 20,
+    fontSize: 19,
     fontWeight: 'bold',
     color: '#fff',
     marginBottom: 4,

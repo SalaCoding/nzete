@@ -17,6 +17,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from 'expo-image-manipulator';
 import { Ionicons } from "@expo/vector-icons";
+import Svg, { Defs, RadialGradient, LinearGradient, Stop, G, Ellipse, Path, Circle } from 'react-native-svg';
+
 import {
   useAuthUserStore,
   checkUser,
@@ -30,6 +32,72 @@ import { API_URL } from "../../constants/api";
 const MAX_BASE64_SIZE_KB = 5000;
 const MIN_RATING_SCORE = 1;
 
+// Tree SVG Component (Defaults are here, but we override them below)
+const TreeSvg = ({ width = 250, height = 200 }) => (
+  <Svg width={width} height={height} viewBox="0 0 512 512">
+    <Defs>
+      <RadialGradient id="canopyGradient" cx="70%" cy="30%" r="80%" fx="70%" fy="30%">
+        <Stop offset="0%" stopColor="#AEEA00" stopOpacity="1" />
+        <Stop offset="40%" stopColor="#558B2F" stopOpacity="1" />
+        <Stop offset="100%" stopColor="#1B5E20" stopOpacity="1" />
+      </RadialGradient>
+      
+      <LinearGradient id="trunkGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+        <Stop offset="0%" stopColor="#3E2723" stopOpacity="1" />
+        <Stop offset="40%" stopColor="#5D4037" stopOpacity="1" />
+        <Stop offset="100%" stopColor="#3E2723" stopOpacity="1" />
+      </LinearGradient>
+    </Defs>
+
+    {/* Ground Shadow/Grass Base */}
+    <G id="base">
+      <Ellipse cx="256" cy="470" rx="140" ry="25" fill="#33691E" opacity="0.8" />
+      <Path d="M150,470 Q256,460 362,470 L350,480 Q256,490 160,480 Z" fill="#558B2F" />
+      <Path d="M180,475 l5,-15 l5,15 M200,478 l-5,-20 l10,20 M250,480 l0,-25 l5,25 M300,478 l8,-18 l-4,18 M330,475 l-5,-15 l8,15" 
+            stroke="#558B2F" strokeWidth="2" fill="none"/>
+    </G>
+
+    {/* Trunk */}
+    <G id="trunk">
+      <Path d="M230,470 Q256,470 282,470 Q275,400 270,350 Q300,300 340,280 L330,270 Q290,290 265,330 L265,280 Q280,240 290,200 L275,200 Q265,240 256,280 Q240,240 220,210 L210,220 Q230,250 245,290 Q220,310 180,300 L185,315 Q220,325 242,350 Q237,400 230,470 Z" 
+            fill="url(#trunkGradient)"/>
+      <Path d="M245,380 Q256,400 250,450 M265,360 Q260,400 268,440" stroke="#3E2723" strokeWidth="2" fill="none" opacity="0.6"/>
+    </G>
+
+    {/* Canopy */}
+    <G id="canopy">
+      <Path d="M100,250 Q80,350 200,400 Q320,420 420,350 Q480,250 400,150 Q300,50 200,100 Q50,150 100,250 Z" 
+            fill="#1B5E20" />
+
+      <Circle cx="180" cy="220" r="70" fill="#33691E" />
+      <Circle cx="330" cy="220" r="75" fill="#33691E" />
+      <Circle cx="256" cy="150" r="80" fill="#558B2F" />
+      <Circle cx="150" cy="300" r="60" fill="#33691E" />
+      <Circle cx="360" cy="300" r="60" fill="#33691E" />
+      
+      <Circle cx="300" cy="130" r="60" fill="#7CB342" opacity="0.9"/>
+      <Circle cx="380" cy="180" r="60" fill="#9CCC65" opacity="0.9"/>
+      <Circle cx="240" cy="100" r="50" fill="#AED581" opacity="0.8"/>
+      <Circle cx="420" cy="250" r="50" fill="#8BC34A" opacity="0.8"/>
+      
+      <Circle cx="350" cy="100" r="40" fill="#DCEDC8" opacity="0.6"/>
+      <Circle cx="430" cy="200" r="30" fill="#DCEDC8" opacity="0.6"/>
+
+      <Path d="M120,250 Q100,350 256,380 Q412,350 430,220 Q412,80 256,80 Q100,100 120,250 Z" 
+            fill="url(#canopyGradient)" opacity="0.6" />
+      
+      <G fill="#689F38">
+          <Circle cx="100" cy="250" r="10" />
+          <Circle cx="90" cy="280" r="12" />
+          <Circle cx="120" cy="350" r="15" />
+          <Circle cx="450" cy="250" r="10" />
+          <Circle cx="440" cy="300" r="12" />
+          <Circle cx="256" cy="60" r="15" />
+      </G>
+    </G>
+  </Svg>
+);
+
 const ProfileScreen = () => {
   const { width } = Dimensions.get("window");
   const isTablet = width >= 768;
@@ -39,11 +107,8 @@ const ProfileScreen = () => {
   const {
     ratedStories,
     fetchRatedStories,
-    ratingStats,
     fetchRatingStats,
-    ratingStatsLoading,
     userId,
-    ratingStatsError,
     lastRatingUpdate,
   } = useStoryStore();
 
@@ -255,41 +320,11 @@ const ProfileScreen = () => {
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>📊 Rating Summary</Text>
-              {ratingStatsLoading ? (
-                <Text style={styles.loadingText}>Loading rating stats...</Text>
-              ) : ratingStatsError ? (
-                <Text style={styles.errorText}>Error: {ratingStatsError}</Text>
-              ) : ratingStats ?  (
-                <View style={styles.statsContainer}>
-                  <View style={styles.statRow}>
-                    <Text style={styles.statLabel}>Total Ratings:</Text>
-                    <Text style={styles.statValue}>{ratingStats.totalRatings || 0}</Text>
-                  </View>
-                  <View style={styles.statRow}>
-                    <Text style={styles.statLabel}>Average Score:</Text>
-                    <Text style={styles.statValue}>
-                      {ratingStats.averageScore?. toFixed(1) || 'N/A'}
-                    </Text>
-                  </View>
-                  <View style={styles. statRow}>
-                    <Text style={styles.statLabel}>Most Rated Category:</Text>
-                    <Text style={styles.statValue}>
-                      {ratingStats.mostRatedCategory || 'N/A'}
-                    </Text>
-                  </View>
-                  {ratingStats.lastRatedAt && (
-                    <View style={styles.statRow}>
-                      <Text style={styles.statLabel}>Last Rated:</Text>
-                      <Text style={styles.statValue}>
-                        {new Date(ratingStats. lastRatedAt). toLocaleDateString()}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              ) : (
-                <Text style={styles.emptyText}>No rating stats available.</Text>
-              )}
+              {/* Header / Image -> REDUCED SIZE HERE */}
+              <View style={styles.imageContainer}>
+                {/* 👇 CHANGE WIDTH AND HEIGHT HERE TO REDUCE SIZE 👇 */}
+                <TreeSvg width={150} height={120} />
+              </View>
             </View>
           </View>
         </ScrollView>
@@ -324,10 +359,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginTop: 12,
-    shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 4,
+    boxShadow: '0px 3px 4px rgba(0, 0, 0, 0.06)',
     elevation: 2,
     width: "100%",
     maxWidth: 500,
@@ -410,52 +442,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#333',
   },
-  chartContainer: {
-    marginBottom: 16,
-  },
-  chartTitle: {
-    textAlign: 'center',
-    fontWeight: 'bold',
-    fontSize: 16,
-    marginBottom: 8,
-    color: '#444',
-  },
-  statsContainer: {
-    backgroundColor: '#f9f9f9',
-    borderRadius: 8,
-    padding: 12,
-  },
-  statRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  statLabel: {
-    fontSize: 14,
-    color: '#555',
-  },
-  statValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-  },
-  emptyText: {
-    fontSize: 14,
-    fontStyle: "italic",
-    color: "#888",
-    textAlign: 'center',
-    paddingVertical: 20,
-  },
-  loadingText: {
-    fontSize: 14,
-    color: "#666",
-    textAlign: 'center',
-  },
-  errorText: {
-    fontSize: 14,
-    color: "#d9534f",
-    textAlign: 'center',
+  imageContainer: {
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 30,
   },
 });

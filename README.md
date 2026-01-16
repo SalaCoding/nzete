@@ -54,5 +54,9 @@ Join our community of developers creating universal apps.
 "react-native-google-mobile-ads",
         {
           "androidAppId": "ca-app-pub-6981062586351046~4390104828", 
-          "iosAppId": "ca-app-pub-6981062586351046~4390104828" 
+          
+      "ios": {
+        "appleId": "6757685562",
+        "ascAppId": "com.salacoding.mosisananse"
+      },
         }# nzete

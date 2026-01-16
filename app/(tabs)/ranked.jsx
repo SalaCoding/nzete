@@ -44,10 +44,10 @@ const Ranked = () => {
 
   useEffect(() => {
     loadStories();
-  }, [ loadStories]);
+  }, [ loadStories ]);
 
   const navigateToStory = (story) => {
-    const storyId = story. id || story._id;
+    const storyId = story.id || story._id;
     const route = story.slug ? `/story/${story.slug}` : `/story/${storyId}`;
     router.push(route);
   };
@@ -67,7 +67,7 @@ const Ranked = () => {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
-          <Text style={styles. errorText}>Error: {allRatedStoriesError}</Text>
+          <Text style={styles.errorText}>Error: {allRatedStoriesError}</Text>
           <Pressable style={styles.retryButton} onPress={loadStories}>
             <Text style={styles.retryButtonText}>Retry</Text>
           </Pressable>
@@ -79,7 +79,7 @@ const Ranked = () => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
-        style={styles. scrollView}
+        style={styles.scrollView}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
@@ -92,8 +92,8 @@ const Ranked = () => {
         </View>
 
         {allRatedStories.length > 0 ? (
-          allRatedStories. map(story => {
-            const storyId = story. id || story._id;
+          allRatedStories.map(story => {
+            const storyId = story.id || story._id;
             const distribution = getStoryRatingDistribution(story);
             const totalRatings = story.totalRatings || 0;
             const averageRating = story.averageRating || 0;
@@ -108,15 +108,15 @@ const Ranked = () => {
 
                 <View style={styles.statsRow}>
                   <View style={styles.statItem}>
-                    <Text style={styles. statStars}>
+                    <Text style={styles.statStars}>
                       {"⭐".repeat(Math.round(averageRating))}
                     </Text>
-                    <Text style={styles. statLabel}>
+                    <Text style={styles.statLabel}>
                       {averageRating.toFixed(1)} / 5
                     </Text>
                   </View>
                   <View style={styles.statItem}>
-                    <Text style={styles. statValue}>{totalRatings}</Text>
+                    <Text style={styles.statValue}>{totalRatings}</Text>
                     <Text style={styles.statLabel}>
                       {totalRatings === 1 ? 'moto' : 'bato'}
                     </Text>
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
   },
   storyTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: 'bold',
     color: '#333',
     textAlign: 'center',
