@@ -28,7 +28,10 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.salacoding.mosisananse",
-      "googleServicesFile": "./android/app/google-services.json" 
+      "googleServicesFile": "./google-services.json",
+      "config": {
+        "googleMobileAdsAppId": "ca-app-pub-6981062586351046~4390104828"
+      }
     },
     "web": {
       "output": "static",

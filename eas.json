@@ -22,6 +22,9 @@
       "android": {
         "buildType": "apk"
       }
+    },
+    "test": {
+      "config": "test.yml"
     }
   },
   "submit": {

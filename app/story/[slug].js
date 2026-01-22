@@ -305,7 +305,7 @@ export default function StoryPage() {
 
           {/* Live Count Component */}
           <StoryLiveCount storyId={story?._id} userId={userId} />
-          {/* Ad Banner */}
+          {/*<AdBanner />*/}
         </ScrollView>
       </KeyboardAvoidingView>
       <StatusBar style="dark" />
