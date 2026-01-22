@@ -31,13 +31,5 @@
         "ascAppId": "6757685562"
       }
     }
-  },
-  "plugins": [
-      [
-        "expo-location",
-        {
-          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
-        }
-      ]
-    ]
+  }
 }

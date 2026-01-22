@@ -51,12 +51,10 @@ Join our community of developers creating universal apps.
 
 
 
-"react-native-google-mobile-ads",
-        {
-          "androidAppId": "ca-app-pub-6981062586351046~4390104828", 
-          
-      "ios": {
-        "appleId": "6757685562",
-        "ascAppId": "com.salacoding.mosisananse"
-      },
-        }# nzete
+- Update process
+
+npm outdated
+npx expo install --check
+npx expo install --fix
+npx expo-doctor@latest
+

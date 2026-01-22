@@ -27,7 +27,8 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.salacoding.mosisananse"
+      "package": "com.salacoding.mosisananse",
+      "googleServicesFile": "./android/app/google-services.json" 
     },
     "web": {
       "output": "static",
@@ -35,6 +36,12 @@
     },
     "plugins": [
       ["./withGoogleMobileAdsConfig"],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
+        }
+      ],
       "expo-router",
       [
         "expo-splash-screen",
