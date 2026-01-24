@@ -50,4 +50,5 @@ GoogleService-Info.plist
 
 # sensitive keys
 client_secret.json
+# secrets/
 credentials.json
