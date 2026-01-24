@@ -11,14 +11,15 @@ import { Platform } from 'react-native';
 
 const secureStorage = {
   getItem: async (name) => {
-    // SecureStore is not supported on web, use localStorage instead
     if (Platform.OS === 'web') {
       try {
-        return localStorage.getItem(name);
+        if (typeof localStorage !== 'undefined') {
+          return localStorage.getItem(name);
+        }
       } catch (error) {
         console.error('[localStorage] getItem error:', error);
-        return null;
       }
+      return null;
     }
 
     try {
@@ -28,10 +29,13 @@ const secureStorage = {
       return null;
     }
   },
+
   setItem: async (name, value) => {
     if (Platform.OS === 'web') {
       try {
-        localStorage.setItem(name, value);
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem(name, value);
+        }
       } catch (error) {
         console.error('[localStorage] setItem error:', error);
       }
@@ -44,10 +48,13 @@ const secureStorage = {
       console.error('[SecureStore] setItem error:', error);
     }
   },
+
   removeItem: async (name) => {
     if (Platform.OS === 'web') {
       try {
-        localStorage.removeItem(name);
+        if (typeof localStorage !== 'undefined') {
+          localStorage.removeItem(name);
+        }
       } catch (error) {
         console.error('[localStorage] removeItem error:', error);
       }
