@@ -1,0 +1,9 @@
+   # .easignore
+
+   # Copy everything from .gitignore
+   .env
+   google-services.json
+   GoogleService-Info.plist
+   
+   !google-services.json
+    !GoogleService-Info.plist

@@ -22,7 +22,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { addNetworkStateListener } from 'expo-network';
 import { StoryLiveCount } from '../../components/StoryLiveCount';
 import { useShareStory } from '../../hooks/useShareStory';
-//import { AdBanner } from '../../components/AdBanner';
+import { AdBanner } from '../../components/AdBanner';
 
 export default function StoryPage() {
   const storyScrollViewRef = useRef(null);
@@ -305,7 +305,7 @@ export default function StoryPage() {
 
           {/* Live Count Component */}
           <StoryLiveCount storyId={story?._id} userId={userId} />
-          {/*<AdBanner />*/}
+          <AdBanner />
         </ScrollView>
       </KeyboardAvoidingView>
       <StatusBar style="dark" />

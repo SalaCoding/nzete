@@ -1,11 +1,12 @@
-//import React from 'react';
-//import { View } from 'react-native';
-//import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
+import React from 'react';
+import { View } from 'react-native';
+import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 
 // 1. Replace with your actual Ad Unit ID from the AdMob dashboard.
 // It looks like: ca-app-pub-xxxxxxxx/yyyyyyyy
 // If you are testing, keep 'TestIds.BANNER' to avoid getting banned.
 //const adUnitId = __DEV__ ? TestIds.BANNER : 'ca-app-pub-6981062586351046~4390104828';
+const adUnitId = TestIds.BANNER;
 
 export const AdBanner = () => {
   return (
