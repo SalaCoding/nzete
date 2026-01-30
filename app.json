@@ -13,7 +13,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.salacoding.mosisananse",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "GADApplicationIdentifier": "ca-app-pub-6981062586351046~4390104828"
       },
       "googleServicesFile": "./GoogleService-Info.plist"
     },
