@@ -7,3 +7,9 @@
    
    !google-services.json
     !GoogleService-Info.plist
+
+  # generated native folders
+  /ios
+  /android
+  
+   

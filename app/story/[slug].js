@@ -22,7 +22,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { addNetworkStateListener } from 'expo-network';
 import { StoryLiveCount } from '../../components/StoryLiveCount';
 import { useShareStory } from '../../hooks/useShareStory';
-import { AdBanner } from '../../components/AdBanner';
+import { AdBanner } from '../../components/AdBanner.js';
 
 export default function StoryPage() {
   const storyScrollViewRef = useRef(null);

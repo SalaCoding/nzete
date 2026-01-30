@@ -6,7 +6,7 @@ import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads'
 // It looks like: ca-app-pub-xxxxxxxx/yyyyyyyy
 // If you are testing, keep 'TestIds.BANNER' to avoid getting banned.
 //const adUnitId = __DEV__ ? TestIds.BANNER : 'ca-app-pub-6981062586351046~4390104828';
-const adUnitId = TestIds.BANNER;
+const adUnitId =  __DEV__ ? TestIds.BANNER : 'ca-app-pub-6981062586351046/4390104828';
 
 export const AdBanner = () => {
   return (
