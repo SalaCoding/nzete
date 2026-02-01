@@ -1,11 +1,11 @@
-export const getRatingMessage = (
+export default function getRatingMessage(
   score: number | null,
   options: {
     lang?: string;
     tense?: 'present' | 'past';
     fallback?: string;
   } = {}
-): string => {
+): string {
   const lang = (options.lang || 'en').toLowerCase();
   const tense = options.tense || 'present';
 

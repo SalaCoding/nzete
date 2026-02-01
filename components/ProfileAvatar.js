@@ -4,7 +4,7 @@ import { View, Image, Button, StyleSheet } from 'react-native'
 import { useProfilePicture } from '../hooks/useProfilePicture'
 //import { useAuthUserStore } from '../library/authUserStore'
 
-export const ProfileAvatar = () => {
+export default function ProfileAvatar() {
   const { changeProfilePicture, uploading, profilePicture } = useProfilePicture();
   const source = profilePicture
     ? { uri: profilePicture }

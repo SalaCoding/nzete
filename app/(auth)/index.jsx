@@ -17,7 +17,7 @@ import { StatusBar } from 'expo-status-bar'
 import { Link, useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuthUserStore, login } from '../../library/authUserStore';
-import { GoogleButton } from '../../components/GoogleButton';
+//import { GoogleButton } from '../../components/GoogleButton';
 
 const Login = () => {
   const router = useRouter()
@@ -158,7 +158,7 @@ const Login = () => {
               </TouchableOpacity>
 
               {/* Google Login Button (Passes false so it doesn't spin when email is loading) */}
-              <GoogleButton isLoading={false} />
+              {/*<GoogleButton isLoading={false} />*/}
 
               {/* Footer Links */}
               <View style={styles.footer}>

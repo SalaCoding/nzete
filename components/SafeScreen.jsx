@@ -5,7 +5,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function SafeScreen({children}) {
-    const insets = useSafeAreaInsets;
+    const insets = useSafeAreaInsets();
     return (
         <View style={[styles.container, {paddingTop: insets.top}]}>
             {children}

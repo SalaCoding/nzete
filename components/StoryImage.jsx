@@ -6,12 +6,12 @@ import { Image } from 'expo-image';
  * Set the default width/height for smaller display.
  * - `contentFit` prop is supported by expo-image.
  */
-const StoryImage = ({
+export function StoryImage({
   uri,
   width = 128,      // Small default width
   height = 176,      // Small default height
   contentFit = 'cover'
-}) => {
+}) {
   return (
     <View style={styles.container}>
       <Image
@@ -22,7 +22,7 @@ const StoryImage = ({
       />
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {

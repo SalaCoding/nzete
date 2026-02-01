@@ -98,7 +98,7 @@ const TreeSvg = ({ width = 250, height = 200 }) => (
   </Svg>
 );
 
-const ProfileScreen = () => {
+export const ProfileScreen = () => {
   const { width } = Dimensions.get("window");
   const isTablet = width >= 768;
   const avatarSize = isTablet ? 100 : 80;

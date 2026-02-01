@@ -5,7 +5,7 @@ import { useStoryStore } from '../library/storyStore';
 import { useRouter } from "expo-router";
 
 // 🔹 Selector: Get user's rating for a story
-export const selectUserRating = (story, userId) => {
+export function selectUserRating(story, userId) {
   if (!story || !userId) return 0;
   
   // First check if rating is directly on the story (from fetchRatedStories)
@@ -21,16 +21,18 @@ export const selectUserRating = (story, userId) => {
 };
 
 // 🔹 Utility Functions
-export const getUserRatedStoriesAbove = (stories, userId, minScore = 1) =>
-  stories.filter(story => selectUserRating(story, userId) >= minScore);
+export function getUserRatedStoriesAbove(stories, userId, minScore = 1) {
+  return stories.filter(story => selectUserRating(story, userId) >= minScore);
+}
 
-export const getStoriesRatedAboveByAny = (stories, minScore = 1) =>
-  stories. filter(story =>
+export function getStoriesRatedAboveByAny(stories, minScore = 1) {
+  return stories.filter(story =>
     story.interactions?.some(i => i.type === 'rating' && i.score >= minScore)
   );
+}
 
-export const getPopularStoriesWithUsers = (stories, minScore = 3) =>
-  stories.map(story => {
+export default function getPopularStoriesWithUsers(stories, minScore = 3) {
+  return stories.map(story => {
     const highRatings = story.interactions?.filter(
       i => i.type === 'rating' && i. score >= minScore
     );
@@ -38,8 +40,9 @@ export const getPopularStoriesWithUsers = (stories, minScore = 3) =>
       ? { ... story, highRatedBy: highRatings.map(i => i.userId) }
       : null;
   }).filter(Boolean);
+}
 
-export const getRatingDistribution = (stories) => {
+export function getRatingDistribution(stories) {
   const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
   stories.forEach(story => {
     story.interactions?.forEach(i => {

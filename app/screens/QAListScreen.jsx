@@ -21,7 +21,7 @@ const QUIZ_STATE_KEY = 'quiz_state';
 
 const QAListScreen = () => {
   const { 
-    qas, 
+    qas,
     isLoading, 
     fetchQAs, 
     fetchCategories, 

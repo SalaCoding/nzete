@@ -10,8 +10,8 @@
       "env": {
         "EAS_BUILD_DISABLE_COCOAPODS_CACHE": "1"
       },
-      "cache": {
-        "paths": ["./ios/Podfile.lock"]
+      "ios": {
+        "simulator": true
       }
     },
     "preview": {
