@@ -4,20 +4,20 @@ import { Image } from 'expo-image';
 /**
  * StoryImage component using expo-image for better performance and control.
  * Set the default width/height for smaller display.
- * - `contentFit` prop is supported by expo-image.
+ * - `resizeMode` prop is supported by expo-image.
  */
 export function StoryImage({
   uri,
   width = 128,      // Small default width
   height = 176,      // Small default height
-  contentFit = 'cover'
+  resizeMode = 'cover'
 }) {
   return (
     <View style={styles.container}>
       <Image
         source={{ uri }}
         style={{ width, height, borderRadius: 16 }}
-        contentFit={contentFit}      // expo-image accepts this prop
+        resizeMode={resizeMode}      // expo-image accepts this prop
         transition={300}             // Optional: fade in effect for better UX
       />
     </View>

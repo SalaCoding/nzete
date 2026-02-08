@@ -9,8 +9,10 @@ const AuthLayout = () => {
   const isSignedIn = !!token;
 
   useEffect(() => {
-    syncUserToStoryStore();
-  }, );
+    if (_hasHydrated) {
+      syncUserToStoryStore();
+    }
+  }, [_hasHydrated]);
 
   if (!_hasHydrated) {
     return (

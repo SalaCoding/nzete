@@ -49,7 +49,7 @@ const TreeSvg = ({ width = 250, height = 200 }) => (
       </LinearGradient>
     </Defs>
 
-    {/* Ground Shadow/Grass Base */}
+    {/* Ground /Grass Base */}
     <G id="base">
       <Ellipse cx="256" cy="470" rx="140" ry="25" fill="#33691E" opacity="0.8" />
       <Path d="M150,470 Q256,460 362,470 L350,480 Q256,490 160,480 Z" fill="#558B2F" />

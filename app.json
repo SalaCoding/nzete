@@ -14,12 +14,14 @@
       "bundleIdentifier": "com.salacoding.mosisananse",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "GADApplicationIdentifier": "ca-app-pub-6981062586351046~4390104828"
+        "GADApplicationIdentifier": "ca-app-pub-6981062586351046~4390104828",
+        "simulator": true
       },
       "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
       "icon": "./assets/images/icon_nzete1.png",
+      "package": "com.salacoding.mosisananse",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -28,7 +30,6 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.salacoding.mosisananse",
       "googleServicesFile": "./google-services.json"
     },
     "web": {

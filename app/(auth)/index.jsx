@@ -17,7 +17,6 @@ import { StatusBar } from 'expo-status-bar'
 import { Link, useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuthUserStore, login } from '../../library/authUserStore';
-//import { GoogleButton } from '../../components/GoogleButton';
 
 const Login = () => {
   const router = useRouter()
@@ -57,24 +56,39 @@ const Login = () => {
 
   // 4. Handle Login Button Press
   const handleLogin = async () => {
-    if (isEmailLoading) return; // Prevent double taps
+  if (isEmailLoading) return;
 
-    // Basic Client-side validation
-    if (!email.trim() || !password) {
-      Alert.alert('Missing Input', 'Please enter both email and password.');
-      return;
-    }
+  console.log("🔵 Login button pressed");
+  console.log("Email:", email);
+  console.log("Password length:", password.length);
 
-    setIsEmailLoading(true); // Start local loading
-    
-    // Pass isEmailLoading to the login function logic or handle cleanup
+  if (!email.trim() || !password) {
+    console.log("⚠️ Missing input");
+    Alert.alert('Missing Input', 'Please enter both email and password.');
+    return;
+  }
+
+  setIsEmailLoading(true);
+  console.log("⏳ isEmailLoading set to TRUE");
+
+  try {
+    console.log("➡️ Calling loginUser()");
     const result = await login(email, password);
-    
-    // If login fails, stop loading (if success, the useEffect navigates away)
-    if (!result.success) {
+    console.log("⬅️ loginUser() returned:", result);
+
+    if (!result?.success) {
+      console.log("❌ Login failed, stopping loader");
       setIsEmailLoading(false);
+    } else {
+      console.log("✅ Login success — navigation will occur via useEffect");
     }
-  };
+
+  } catch (err) {
+    console.log("🔥 Login error caught:", err);
+    setIsEmailLoading(false);
+  }
+};
+
 
   return (
     <KeyboardAvoidingView 
@@ -90,7 +104,7 @@ const Login = () => {
               <Image
                 source={require('../../assets/images/icon_nzete1.png')}
                 style={styles.image}
-                contentFit="contain"
+                resizeMode="contain"
               />
             </View>
 
@@ -156,9 +170,6 @@ const Login = () => {
                   <Text style={styles.buttonText}>Login</Text>
                 )}
               </TouchableOpacity>
-
-              {/* Google Login Button (Passes false so it doesn't spin when email is loading) */}
-              {/*<GoogleButton isLoading={false} />*/}
 
               {/* Footer Links */}
               <View style={styles.footer}>
