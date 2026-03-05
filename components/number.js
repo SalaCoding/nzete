@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     right: 0,
     backgroundColor: '#eee',
     zIndex: 10,
-    elevation: 12,
+    elevation: 12
   },
   groupButton: {
     marginHorizontal: 8,
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
     padding: 6,
   },
   value: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#1b0146',
     marginLeft: 10,
@@ -224,9 +224,9 @@ const styles = StyleSheet.create({
   word: {
     flex: 1,
     marginLeft: 12,
-    fontSize: 18,
+    fontSize: 14,
     fontFamily: 'Times New Roman',
-    fontWeight: '400',
+    fontWeight: '600',
   },
   loadMore: {
     padding: 12,

@@ -8,7 +8,7 @@ export default function ProfileAvatar() {
   const { changeProfilePicture, uploading, profilePicture } = useProfilePicture();
   const source = profilePicture
     ? { uri: profilePicture }
-    : require('../assets/images/icon.png');
+    : require('../assets/images/icon_nzete.png');
 
   return (
     <View style={styles.container}>

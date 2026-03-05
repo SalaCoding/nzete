@@ -248,7 +248,7 @@ export default function StoryPage() {
           </TouchableOpacity>
 
           {/* Title */}
-          <Text style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 20, textAlign: 'center', marginTop: 40 }}>
+          <Text style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 18, textAlign: 'center', marginTop: 40 }}>
             {story?.title}
           </Text>
 
@@ -264,7 +264,7 @@ export default function StoryPage() {
           )}
 
           {/* Content */}
-          <Text style={{ fontSize: 17, marginTop: 30, lineHeight: 28, marginBottom: 20, fontFamily: 'Palatino'}}>
+          <Text style={{ fontSize: 17, marginTop: 18, lineHeight: 28, marginBottom: 20, fontFamily: 'Palatino'}}>
             {story?.content}
           </Text>
 

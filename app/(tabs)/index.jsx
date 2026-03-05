@@ -42,7 +42,7 @@ export default function Index() {
 
   const fetchStories = useCallback(async () => {
     // Cancel any previous request
-    if (abortControllerRef. current) {
+    if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
 
@@ -55,10 +55,10 @@ export default function Index() {
     setFetchError(null);
 
     // Create new controller
-    abortControllerRef. current = new AbortController();
+    abortControllerRef.current = new AbortController();
     const timeoutId = setTimeout(() => {
       if (abortControllerRef.current) {
-        abortControllerRef.current. abort();
+        abortControllerRef.current.abort();
       }
     }, 30000);
 
@@ -194,10 +194,10 @@ export default function Index() {
           <Text style={styles.motango}>Motango</Text>
           <View style={styles.yekola_mitango}>
             <Text style={styles.yekola}>Yekola kotanga na biso</Text>
-            <Ionicons name="book" size={75} color="rgb(0, 251, 255)" />
+            <Ionicons name="book" size={55} color="rgb(0, 251, 255)" />
             <TouchableOpacity onPress={() => router.navigate('/number/numberlistScreen')} style={styles.linkText63}>
               <Text style={styles.yekola__moko}>1 2 3 4 5 6 7 8 9 . . .</Text>
-              <Ionicons name="arrow-up-outline" size={24} color="rgb(0, 251, 255)" />
+              <Ionicons name="arrow-up-outline" size={18} color="rgb(0, 251, 255)" />
             </TouchableOpacity>
             {showNumbers && <NumberList />}
           </View>
@@ -209,7 +209,7 @@ export default function Index() {
   );
 }
 
-const styles = StyleSheet. create({
+const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: 'rgb(255, 255, 255)',
@@ -255,7 +255,7 @@ const styles = StyleSheet. create({
   },
   motango: {
     color: '#000',
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 12,
@@ -277,20 +277,19 @@ const styles = StyleSheet. create({
   },
   yekola: {
     color: '#000',
-    fontSize: 18,
+    fontSize: 17,
     textAlign: 'center',
     marginBottom: 5,
     marginTop: 8,
     fontFamily: 'Palatino',
   },
   yekola__moko: {
-    fontSize: 28,
+    fontSize: 20,
     fontWeight: 'bold',
     textAlign: 'center',
     color: 'rgb(255, 255, 255)',
     textShadowOffset: { width: 5, height: 5 },
     textShadowRadius: 16,
-    textShadowColor: 'rgb(0, 255, 238)',
     fontFamily: 'Papyrus',
     marginTop: 1,
     marginBottom: 6,
@@ -301,11 +300,11 @@ const styles = StyleSheet. create({
     marginTop: 5,
   },
   title__top: {
-    fontSize: 17,
+    fontSize: 16,
     color: '#000',
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
     textTransform: 'uppercase',
     borderRadius: 8,
     borderWidth: 2,
@@ -326,9 +325,9 @@ const styles = StyleSheet. create({
   },
   title: {
     backgroundColor: 'rgb(155, 154, 155)',
-    padding: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
+    padding: 9,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
     borderRadius: 10,
     fontSize: 14,
     fontWeight: 'bold',
@@ -340,57 +339,52 @@ const styles = StyleSheet. create({
     backgroundColor: 'rgb(38, 154, 155)',
     padding: 2,
     borderRadius: 10,
-    marginTop: 18,
-    marginHorizontal: 14,
+    marginTop: 11,
+    marginHorizontal: 12,
   },
   lisolo: {
     fontSize: 18,
-    color: '#000',
+    color: '#0e0d0d',
     padding: 16,
     textAlign: 'justify',
-    lineHeight: 30,
-    fontFamily: 'Palatino',
+    lineHeight: 26,
+    fontFamily: 'Times New Roman',
   },
   lisapo__title: {
-    fontSize: 17,
-    color: '#000',
+    fontSize: 18,
+    color: '#161516',
     fontWeight: 'bold',
     textAlign: 'center',
     marginVertical: 10,
-    fontFamily: 'sans-serif',
+    fontFamily: 'Times New Roman',
+    marginBottom: 1,
   },
   samboleSection: {
-    marginHorizontal: 14,
-    marginTop: 10,
-    marginBottom: 40,
+    marginHorizontal: 12,
+    marginTop: 8,
+    marginBottom: 46,
     padding: 10,
     backgroundColor: '#4a487d',
     borderRadius: 12,
     alignItems: 'center',
   },
   samboleTitle: {
-    fontSize: 19,
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#fff',
     marginBottom: 4,
-  },
-  samboleSubtitle: {
-    fontSize: 16,
-    color: '#ddd',
-    marginBottom: 16,
   },
   samboleButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFB800',
-    paddingVertical: 11,
-    paddingHorizontal: 22,
+    paddingVertical: 9,
+    paddingHorizontal: 14,
     borderRadius: 8,
-    gap: 8,
+    gap: 6,
   },
   samboleButtonText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
-    color: '#fff',
   },
 });

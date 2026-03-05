@@ -21,7 +21,7 @@ const TabLayout = () => {
         options={{
           title: "Home",
           tabBarIcon: ({color, size}) => (<Ionicons
-            name="home-outline" size='26' color={color}
+            name="home-outline" size={26} color={color}
           />)
         }}
       />
@@ -29,7 +29,7 @@ const TabLayout = () => {
         options={{
           title: "Ranked",
           tabBarIcon: ({color, size}) => (<Ionicons
-            name='stats-chart-outline' size='26' color={color}
+            name='stats-chart-outline' size={26} color={color}
           />)
         }}
       />
@@ -37,7 +37,7 @@ const TabLayout = () => {
         options={{
           title: "Profile",
           tabBarIcon: ({color, size}) => (<Ionicons
-            name='person-circle-outline' size='26' color={color}
+            name='person-circle-outline' size={26} color={color}
           />)
         }}
       />

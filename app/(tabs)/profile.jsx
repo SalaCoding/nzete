@@ -155,14 +155,14 @@ export const ProfileScreen = () => {
       quality: 1,
     });
 
-    if (result.canceled || ! result.assets?. length) return;
+    if (result.canceled || ! result.assets?.length) return;
 
     const asset = result.assets[0];
     let manipResult;
 
     try {
       manipResult = await ImageManipulator.manipulateAsync(
-        asset. uri,
+        asset.uri,
         [{ resize: { width: 600 } }],
         {
           compress: 0.7,
@@ -172,11 +172,11 @@ export const ProfileScreen = () => {
       );
     } catch (error) {
       console.error('Error manipulating image:', error);
-      Alert. alert("Image Error", "Could not process the selected image.");
+      Alert.alert("Image Error", "Could not process the selected image.");
       return;
     }
     
-    if (!manipResult?. base64) {
+    if (!manipResult?.base64) {
       Alert.alert("Image Error", "Could not retrieve image data.");
       return;
     }
@@ -187,8 +187,8 @@ export const ProfileScreen = () => {
       return;
     }
 
-    setImage(manipResult. uri);
-    await uploadImage(manipResult. base64);
+    setImage(manipResult.uri);
+    await uploadImage(manipResult.base64);
   }
 
   const uploadImage = useCallback(async (base64) => {
@@ -202,7 +202,7 @@ export const ProfileScreen = () => {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`,
         },
-        body: JSON. stringify({ image: base64 }),
+        body: JSON.stringify({ image: base64 }),
       });
 
       if (! res.ok) {
@@ -248,7 +248,7 @@ export const ProfileScreen = () => {
     ? { uri: image }
     : user?.profilePicture
     ? { uri: user.profilePicture }
-    : require('../../assets/images/learning-cuate.png');
+    : require('../../assets/images/icon_nzete.png');
 
   return (
     <KeyboardAvoidingView
@@ -278,7 +278,7 @@ export const ProfileScreen = () => {
                 <Image
                   source={imageSource}
                   style={[
-                    styles. avatar,
+                    styles.avatar,
                     {
                       width: avatarSize,
                       height: avatarSize,

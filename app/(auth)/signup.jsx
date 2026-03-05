@@ -91,13 +91,13 @@ const SignUp = () => {
                     <View>
                     <TextInput
                         placeholder="koma Password na yo awa"
-                        placeholderTextColor="#888"
+                        placeholderTextColor="#7d7d7d"
                         value={password}
                         onChangeText={setPassword}
                         secureTextEntry={!showPassword}
                         autoCapitalize='none'
                         autoCorrect={false}
-                        style={styles.emailInput}
+                        style={[styles.emailInput, { color: '#000' }]}
                       />
                       <TouchableOpacity
                         onPress={() => setShowPassword(!showPassword)}
@@ -138,7 +138,7 @@ const SignUp = () => {
                     <Text style={{ marginRight: 5, fontSize: 15, color: '#666', }}>Already have an account?</Text>
                     <TouchableOpacity onPress={() => router.back()}>
                         <Text style={{ fontSize: 15, color: '#007AFF', fontWeight: '600',
-    marginLeft: 6, }}>Login</Text>
+                                        marginLeft: 6, }}>Login</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     borderRadius: 12,
     padding: 20,
-    width: '100%',
+    width: '90%',
     maxWidth: 400,
     backgroundColor: '#fff',
 

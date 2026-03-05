@@ -306,7 +306,7 @@ const QAListScreen = () => {
       setScoreSaved(false);
       
       const finalCorrect = Object.values(newResults).filter(r => r.isCorrect).length;
-      const finalWrong = Object.values(newResults).filter(r => !r.isCorrect). length;
+      const finalWrong = Object.values(newResults).filter(r => !r.isCorrect).length;
       const finalTotal = Object.keys(newResults).length;
       
       autoSaveScore(finalCorrect, finalWrong, finalTotal, selectedCategory);
@@ -314,13 +314,13 @@ const QAListScreen = () => {
   };
 
   const handleRetryFailed = () => {
-    const failedCount = Object.values(results). filter(r => ! r.isCorrect).length;
+    const failedCount = Object.values(results).filter(r => ! r.isCorrect).length;
     if (failedCount === 0) return;
     
     setPreviousScore({ correct: correctCount, total: totalAnswered });
     
     const newResults = {};
-    Object.entries(results). forEach(([id, result]) => {
+    Object.entries(results).forEach(([id, result]) => {
       if (result.isCorrect) {
         newResults[id] = result;
       }
@@ -606,13 +606,13 @@ const QAListScreen = () => {
                 >
                   <View style={styles.answeredHeader}>
                     <Text style={styles.answeredEmoji}>
-                      {item.result. isCorrect ? '✅' : '❌'}
+                      {item.result.isCorrect ? '✅' : '❌'}
                     </Text>
                     <Text style={[
                       styles.answeredStatus,
                       item.result.isCorrect ? styles.statusCorrect : styles.statusWrong,
                     ]}>
-                      {item. result.isCorrect ? 'Malamu!' : 'Elongi te'}
+                      {item.result.isCorrect ? 'Malamu!' : 'Elongi te'}
                     </Text>
                   </View>
                   

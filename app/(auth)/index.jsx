@@ -102,9 +102,9 @@ const Login = () => {
             {/* Header / Image */}
             <View style={styles.imageContainer}>
               <Image
-                source={require('../../assets/images/icon_nzete1.png')}
+                source={require('../../assets/images/nzete@1.png')}
                 style={styles.image}
-                resizeMode="contain"
+                contentFit="contain"
               />
             </View>
 

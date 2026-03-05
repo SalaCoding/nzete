@@ -25,7 +25,7 @@ export default function NumberListScreen() {
 
 const styles = StyleSheet.create({
   header: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "bold",
     textAlign: "center",
     marginVertical: 16,
