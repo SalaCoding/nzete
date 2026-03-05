@@ -4,11 +4,11 @@
     "slug": "mosisa-ya-nse",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon_nzete@.png",
+    "icon": "./assets/images/icon_nzete.png",
     "scheme": "mosisananse",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/images/icon_nzete@.png",
+      "icon": "./assets/images/icon_nzete.png",
       "supportsTablet": true,
       "bundleIdentifier": "com.salacoding.mosisananse",
       "infoPlist": {
@@ -18,7 +18,7 @@
       "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
-      "icon": "./assets/images/icon_nzete@.png",
+      "icon": "./assets/images/icon_nzete.png",
       "package": "com.salacoding.mosisananse",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",

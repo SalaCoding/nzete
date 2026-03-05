@@ -6,7 +6,8 @@ import {
   ScrollView, 
   FlatList, 
   ActivityIndicator, 
-  Button 
+  Button, 
+  StatusBar
 } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useState, useCallback, useRef } from 'react';
@@ -205,6 +206,7 @@ export default function Index() {
         <Text style={styles.title__top}>Masapo</Text>
         {renderStoryContent()}
       </View>
+      <StatusBar style="dark" />
     </SafeAreaView>
   );
 }
