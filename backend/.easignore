@@ -1,0 +1,12 @@
+serviceAccountKey.json
+
+!serviceAccountKey.json
+
+AppData/
+
+.env
+.env.local
+.env.*.local
+service-account-key.json
+*.key
+*.pem
