@@ -58,7 +58,7 @@ export default ({ config }) => ({
     reactCompiler: true,
   },
   extra: {
-    EXPO_PUBLIC_API_URL: "http://192.168.0.165:3001",
+    EXPO_PUBLIC_API_URL: "https://nzete.onrender.com",
     router: {},
     eas: { projectId: "4c21570f-f55a-409e-aeff-2b9c981412fd" },
   },

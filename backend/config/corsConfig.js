@@ -1,7 +1,8 @@
 // config/corsConfig.js
 const allowedOrigins = [
   "http://192.168.0.165:3001",
-  "http://192.168.0.165:8081"
+  "http://192.168.0.165:8081",
+  process.env.EXPO_PUBLIC_API_URL
 ];
 
 export const corsOptions = {
