@@ -12,6 +12,7 @@ export default ({ config }) => ({
     icon: "./assets/images/icon_nzete@1.png",
     supportsTablet: true,
     bundleIdentifier: "com.salacoding.mosisananse",
+    buildNumber: "42",
     googleServicesFile: "./GoogleService-Info.plist",
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,

@@ -15,7 +15,7 @@ import bcryptjs from 'bcryptjs';
 
 // ✅ 1. Import Firebase Admin
 import admin from 'firebase-admin';
-import serviceAccountKey from './config/firebase-Key.js';
+import serviceAccount from './serviceAccountKey.json' assert { type: 'json' };
 import { createRequire } from 'module';
 
 // Initialize Admin using Environment Variables

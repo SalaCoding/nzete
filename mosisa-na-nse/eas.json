@@ -43,6 +43,7 @@
   "submit": {
     "production": {
       "ios": {
+        "ascApiKeyPath": "/Users/Sala/Downloads/AuthKey_RZK46M3J4Q.p8",
         "appleId": "salaarnold14@gmail.com",
         "ascAppId": "6757685562"
       }
