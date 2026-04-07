@@ -49,6 +49,9 @@ export default ({ config }) => ({
     "expo-image",
     ["expo-build-properties", { buildReactNativeFromSource: true, android: { compileSdkVersion: 36, targetSdkVersion: 36, buildToolsVersion: "36.0.0" }, ios: { deploymentTarget: "15.1" } }],
   ],
+   runtimeVersion: {
+      policy: "appVersion",
+    },
   updates: {
     url: "https://u.expo.dev/4c21570f-f55a-409e-aeff-2b9c981412fd",
     enableBsdiffPatchSupport: true,

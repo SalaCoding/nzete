@@ -19,9 +19,3 @@ export const corsOptions = {
   },
   credentials: true,
 };
-// This file can be imported in your main server file to apply CORS settings
-// Example usage:  
-// 
-
-// import { corsOptions } from './config/corsConfig.js';
-// app.use(cors(corsOptions));

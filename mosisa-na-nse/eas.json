@@ -12,19 +12,23 @@
       },
       "ios": {
         "simulator": true
-      }
+      },
+      "channel": "development"
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "channel": "preview"
     },
     "production": {
       "autoIncrement": true,
       "env": {
         "GOOGLE_SERVICES_JSON": "@GOOGLE_SERVICES_JSON"
-      }
+      },
+      "channel": "production"
     },
     "test": {
-      "config": "test.yml"
+      "config": "test.yml",
+      "channel": "test"
     },
     "development-simulator": {
       "developmentClient": true,
@@ -32,7 +36,8 @@
       "ios": {
         "simulator": true
       },
-      "environment": "development"
+      "environment": "development",
+      "channel": "development-simulator"
     }
   },
   "submit": {
