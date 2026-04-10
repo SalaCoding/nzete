@@ -13,16 +13,12 @@ import rateLimit from 'express-rate-limit';
 
 import bcryptjs from 'bcryptjs';
 
-// ✅ 1. Import Firebase Admin
 import admin from 'firebase-admin';
-import serviceAccount from './serviceAccountKey.json' assert { type: 'json' };
 import { createRequire } from 'module';
 
 // Initialize Admin using Environment Variables
 const require = createRequire(import.meta.url);
 
-// Ensure this file exists at backend/serviceAccountKey.json
-// Get the raw value and remove any accidental whitespace/newlines at the start or end
 const rawServiceAccount = process.env.FIREBASE_SERVICE_ACCOUNT ? process.env.FIREBASE_SERVICE_ACCOUNT.trim() : null;
 
 if (!rawServiceAccount) {
@@ -32,12 +28,9 @@ if (!rawServiceAccount) {
 let serviceAccount;
 
 try {
-  // 1. Try to parse it directly first
   serviceAccount = JSON.parse(rawServiceAccount);
 } catch (e) {
   try {
-    // 2. If it fails, it's likely due to escaped newlines (\n) in the string
-    // We replace the literal string "\n" with actual newline characters
     const fixedJson = rawServiceAccount.replace(/\\n/g, '\n');
     serviceAccount = JSON.parse(fixedJson);
   } catch (finalError) {

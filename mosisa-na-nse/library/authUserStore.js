@@ -367,7 +367,17 @@ export const login = async (email, password) => {
       }),
     });
 
-    const data = await response.json();
+    const rawText = await response.text();
+    console.log(`[LOGIN RESPONSE] Raw response text: ${rawText}`);
+
+    let data;
+    try {
+      data = JSON.parse(rawText);
+    } catch (e) {
+      console.error("🔥 Failed to parse JSON response:", e);
+      console.error("🔥 Server did not return JSON. It returned:", rawText);
+      throw new Error(`Server Error: ${rawText.substring(0, 20)}...`);
+}
 
     if (!response.ok) {
       throw new Error(data.message || 'Login failed');
