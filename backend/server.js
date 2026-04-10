@@ -52,6 +52,7 @@ io.on('connection', (socket) => {
 });
 
 // Routes
+app.set('trust proxy', 1);
 app.get('/', (req, res) => res.json({ status: 'ok', message: 'Server is running' }));
 app.use('/api/number', authNumbers);
 app.use('/api/auth', authRoutes);
