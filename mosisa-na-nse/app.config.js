@@ -62,9 +62,9 @@ export default ({ config }) => ({
     reactCompiler: true,
   },
   extra: {
-    EXPO_PUBLIC_API_URL: process.env.EXPO_PUBLIC_API_URL,
-    router: {},
-    eas: { projectId: "4c21570f-f55a-409e-aeff-2b9c981412fd" },
+    EXPO_PUBLIC_API_URL: "https://nzete.onrender.com",
+    router: { origin: "https://nzete.onrender.com" },
+    eas: { projectId: process.env.EAS_PROJECT_ID },
   },
   owner: "salacoding",
 });
