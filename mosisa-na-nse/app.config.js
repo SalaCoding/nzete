@@ -64,7 +64,7 @@ export default ({ config }) => ({
   extra: {
     EXPO_PUBLIC_API_URL: "https://nzete.onrender.com",
     router: { origin: "https://nzete.onrender.com" },
-    eas: { projectId: process.env.EAS_PROJECT_ID },
+    eas: { projectId: "4c21570f-f55a-409e-aeff-2b9c981412fd" },
   },
   owner: "salacoding",
 });

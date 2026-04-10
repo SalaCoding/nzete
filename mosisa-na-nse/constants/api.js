@@ -1,4 +1,4 @@
 import Constants from 'expo-constants';
-export const API_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_API_URL;
+export const API_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_API_URL || "https://nzete.onrender.com";
 
 console.log("Connecting to:", API_URL);
