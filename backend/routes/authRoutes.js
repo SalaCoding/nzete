@@ -19,7 +19,7 @@ import { createRequire } from 'module';
 // Initialize Admin using Environment Variables
 const require = createRequire(import.meta.url);
 
-const rawServiceAccount = process.env.FIREBASE_SERVICE_ACCOUNT ? process.env.FIREBASE_SERVICE_ACCOUNT.trim() : null;
+const rawServiceAccount = process.env.FIREBASE_SERVICE_ACCOUNT?.trim();
 
 if (!rawServiceAccount) {
   throw new Error("FIREBASE_SERVICE_ACCOUNT environment variable is missing!");
@@ -31,14 +31,26 @@ try {
   serviceAccount = JSON.parse(rawServiceAccount);
 } catch (e) {
   try {
-    const fixedJson = rawServiceAccount.replace(/\\n/g, '\n');
+    const fixedJson = rawServiceAccount
+      .replace(/\\n/g, '\n')
+      .replace(/\\r/g, '\r')
+      .replace(/\\t/g, '\t');
+    
     serviceAccount = JSON.parse(fixedJson);
   } catch (finalError) {
     console.error("❌ Critical: Firebase Service Account JSON is malformed.");
     console.error("Error Detail:", finalError.message);
-    // In a local environment, this is usually because the .env string isn't in one single line.
-    process.exit(1); 
+    process.exit(1);
   }
+}
+
+// Validate required Firebase fields
+const requiredFields = ['type', 'project_id', 'private_key', 'client_email'];
+const missing = requiredFields.filter(field => !serviceAccount[field]);
+
+if (missing.length > 0) {
+  console.error(`❌ Critical: Missing required Firebase fields: ${missing.join(', ')}`);
+  process.exit(1);
 }
 
 if (!admin.apps.length) {
