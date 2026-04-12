@@ -243,12 +243,12 @@ export default function StoryPage() {
               zIndex: 100,
             }}
           >
-            <Text style={{ fontSize: 15, fontWeight: '600', color: '#68696aff' }}>Kabola</Text>
+            <Text style={{ fontSize: Platform.OS === 'ios' ? 16 : 15, fontWeight: '600', color: '#68696aff' }}>Kabola</Text>
             <Ionicons name="share-social-outline" size={25} color="#333" />
           </TouchableOpacity>
 
           {/* Title */}
-          <Text style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 18, textAlign: 'center', marginTop: 40 }}>
+          <Text style={{ fontSize: Platform.OS === 'ios' ? 24 : 22, fontWeight: 'bold', marginBottom: 18, textAlign: 'center', marginTop: 40 }}>
             {story?.title}
           </Text>
 
@@ -264,13 +264,13 @@ export default function StoryPage() {
           )}
 
           {/* Content */}
-          <Text style={{ fontSize: 17, marginTop: 18, lineHeight: 28, marginBottom: 20, fontFamily: 'Palatino'}}>
+          <Text style={{ fontSize: Platform.OS === 'ios' ? 18 : 17, marginTop: 18, lineHeight: 28, marginBottom: 20, fontFamily: 'Palatino'}}>
             {story?.content}
           </Text>
 
           {/* Rating Section */}
           <View style={{ marginBottom: 4, marginTop: 2 }}>
-            <Text style={{ fontSize: 17, fontWeight: 'bold' }}>Monzoto:</Text>
+            <Text style={{ fontSize: Platform.OS === 'ios' ? 18 : 17, fontWeight: 'bold' }}>Monzoto:</Text>
             {renderRatingStar()}
             <TouchableOpacity
               onPress={submitRating}

@@ -7,7 +7,8 @@ import {
   FlatList, 
   ActivityIndicator, 
   Button, 
-  StatusBar
+  StatusBar,
+  Platform
 } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useState, useCallback, useRef } from 'react';
@@ -228,7 +229,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 12,
-    fontSize: 16,
+    fontSize: Platform.OS === 'ios' ? 20 : 16,
     color: '#666',
   },
   errorContainer: {
@@ -239,14 +240,14 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: '#d9534f',
-    fontSize: 16,
+    fontSize: Platform.OS === 'ios' ? 18 : 16,
     textAlign: 'center',
     marginVertical: 15,
   },
   emptyListText: {
     textAlign: 'center',
     marginTop: 15,
-    fontSize: 16,
+    fontSize: Platform.OS === 'ios' ? 18 : 16,
     color: '#888',
   },
   motango_container: {
@@ -257,7 +258,7 @@ const styles = StyleSheet.create({
   },
   motango: {
     color: '#000',
-    fontSize: 16,
+    fontSize: Platform.OS === 'ios' ? 18 : 16,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 12,
@@ -279,14 +280,14 @@ const styles = StyleSheet.create({
   },
   yekola: {
     color: '#000',
-    fontSize: 17,
+    fontSize: Platform.OS === 'ios' ? 20 : 18,
     textAlign: 'center',
     marginBottom: 5,
     marginTop: 8,
     fontFamily: 'Palatino',
   },
   yekola__moko: {
-    fontSize: 20,
+    fontSize: Platform.OS === 'ios' ? 20 : 18,
     fontWeight: 'bold',
     textAlign: 'center',
     color: 'rgb(255, 255, 255)',
@@ -302,7 +303,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   title__top: {
-    fontSize: 16,
+    fontSize: Platform.OS === 'ios' ? 16 : 15,
     color: '#000',
     fontWeight: 'bold',
     textAlign: 'center',
@@ -345,7 +346,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 12,
   },
   lisolo: {
-    fontSize: 18,
+    fontSize: Platform.OS === 'ios' ? 20 : 17,
     color: '#0e0d0d',
     padding: 16,
     textAlign: 'justify',
@@ -353,7 +354,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Times New Roman',
   },
   lisapo__title: {
-    fontSize: 18,
+    fontSize: Platform.OS === 'ios' ? 20 : 18,
     color: '#161516',
     fontWeight: 'bold',
     textAlign: 'center',
@@ -364,7 +365,7 @@ const styles = StyleSheet.create({
   samboleSection: {
     marginHorizontal: 12,
     marginTop: 6,
-    marginBottom: 28,
+    marginBottom: 30,
     padding: 10,
     backgroundColor: '#4a487d',
     borderRadius: 12,

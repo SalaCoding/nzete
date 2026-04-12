@@ -1,5 +1,5 @@
 import React from "react";
-import { Text, StyleSheet} from "react-native";
+import { Text, StyleSheet, Platform} from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import NumberBrowser from "../../../components/number"; // adjust path as needed
 import { Ionicons } from "@expo/vector-icons";
@@ -25,7 +25,7 @@ export default function NumberListScreen() {
 
 const styles = StyleSheet.create({
   header: {
-    fontSize: 20,
+    fontSize: Platform.OS === 'ios' ? 20 : 19,
     fontWeight: "bold",
     textAlign: "center",
     marginVertical: 16,
