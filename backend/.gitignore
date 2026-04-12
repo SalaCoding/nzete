@@ -10,10 +10,8 @@ service-account-key.json
 *.key
 *.pem
 
-.env
 serviceAccountKey.json
 google-services.json
 GoogleService-Info.plist
-*.json
 *.json
 

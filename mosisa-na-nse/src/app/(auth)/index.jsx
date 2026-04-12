@@ -184,7 +184,7 @@ const Login = () => {
           </View>
         </SafeAreaView>
       </ScrollView>
-      <StatusBar style="auto" />
+      <StatusBar style="dark" />
     </KeyboardAvoidingView>
   )
 }
