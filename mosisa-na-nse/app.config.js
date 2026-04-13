@@ -8,16 +8,15 @@ export default ({ config }) => ({
   scheme: "mosisananse",
   userInterfaceStyle: "automatic",
   ios: {
-    ...config.ios,
-    icon: "./assets/images/icon_nzete@1.png",
-    supportsTablet: true,
-    bundleIdentifier: "com.salacoding.mosisananse",
-    buildNumber: "42",
-    googleServicesFile: "./GoogleService-Info.plist",
-    infoPlist: {
-      ITSAppUsesNonExemptEncryption: false,
-    },
+  ...config.ios,
+  icon: "./assets/images/icon_nzete@1.png",
+  supportsTablet: true,
+  bundleIdentifier: "com.salacoding.mosisananse",
+  googleServicesFile: process.env.IOS_GOOGLE_SERVICES_FILE,
+  infoPlist: {
+    ITSAppUsesNonExemptEncryption: false,
   },
+},
   android: {
     ...config.android,
     icon: "./assets/images/icon_nzete@1.png",
