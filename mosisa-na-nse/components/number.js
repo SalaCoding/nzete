@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
+  Platform
 } from 'react-native';
 import { useNumberStore } from '../library/useNumberStore';
 import { StatusBar } from 'expo-status-bar';
@@ -216,7 +217,7 @@ const styles = StyleSheet.create({
     padding: 6,
   },
   value: {
-    fontSize: 14,
+    fontSize: Platform.OS === 'ios' ? 16 : 15,
     fontWeight: 'bold',
     color: '#1b0146',
     marginLeft: 10,
@@ -224,7 +225,7 @@ const styles = StyleSheet.create({
   word: {
     flex: 1,
     marginLeft: 12,
-    fontSize: 14,
+    fontSize: Platform.OS === 'ios' ? 16 : 15,
     fontFamily: 'Times New Roman',
     fontWeight: '600',
   },

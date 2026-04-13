@@ -615,3 +615,38 @@ export const checkUserWithRetry = async (retries = 3) => {
   }
   return { success: false, error: 'Max retries reached' };
 };
+
+// ============================================================
+// CONFIGURE GOOGLE SIGN IN
+// ============================================================
+export const googleLogin = async (firebaseToken) => {
+  if (isProcessingAuth) return;
+  isProcessingAuth = true;
+
+  // ✅ Set loadingType to 'google'
+  useAuthUserStore.setState({ isLoading: true, loadingType: 'google', error: null });
+
+  try {
+    // Send Firebase Token to your backend
+    const response = await fetchWithRetries(`${API_URL}/api/auth/google`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: firebaseToken }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) throw new Error(data.message || 'Google login failed');
+
+    useAuthUserStore.getState().setAuth(data.token, data.user);
+    useAuthUserStore.setState({ isLoading: false, loadingType: null });
+
+    return { success: true };
+  } catch (error) {
+    console.error('[googleLogin] error:', error);
+    useAuthUserStore.setState({ error: error.message, isLoading: false, loadingType: null });
+    return { success: false, error: error.message };
+  } finally {
+    isProcessingAuth = false;
+  }
+};

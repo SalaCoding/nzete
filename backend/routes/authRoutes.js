@@ -14,6 +14,7 @@ import rateLimit from 'express-rate-limit';
 import bcryptjs from 'bcryptjs';
 
 import admin from 'firebase-admin';
+import { getAuth } from 'firebase-admin/auth';
 import { createRequire } from 'module';
 
 // Initialize Admin using Environment Variables
@@ -430,6 +431,21 @@ router.patch('/user/profile', authMiddleware, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+// ============================================================
+// GOOGLE SIGN IN
+// ============================================================
+router.post('/google', async (req, res) => {
+  const { email } = req.body;
+  try {
+    const userRecord = await getAuth().getUserByEmail(email);
+    return 
+  } catch (error) {
+    console.error('[POST /google]', error);
+    res.status(500).json({ message: 'Server error during Google sign-in' });
+  }
+});
+
 
 
 export default router;
