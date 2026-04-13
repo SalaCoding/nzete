@@ -9,6 +9,7 @@ export default ({ config }) => ({
   userInterfaceStyle: "automatic",
   ios: {
   ...config.ios,
+  buildNumber: "2",
   icon: "./assets/images/icon_nzete@1.png",
   supportsTablet: true,
   bundleIdentifier: "com.salacoding.mosisananse",
@@ -18,22 +19,23 @@ export default ({ config }) => ({
   },
 },
   android: {
-    ...config.android,
-    icon: "./assets/images/icon_nzete@1.png",
-    package: "com.salacoding.mosisananse",
-    adaptiveIcon: {
-      backgroundColor: "#E6F4FE",
-      foregroundImage: "./assets/images/android-icon-foreground.png",
-      backgroundImage: "./assets/images/android-icon-background.png",
-      monochromeImage: "./assets/images/android-icon-monochrome.png",
-    },
-    predictiveBackGestureEnabled: false,
-    googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? "./google-services.json",
-    permissions: [
-      "android.permission.ACCESS_COARSE_LOCATION",
-      "android.permission.ACCESS_FINE_LOCATION",
-    ],
+  ...config.android,
+  versionCode: 60,
+  icon: "./assets/images/icon_nzete@1.png",
+  package: "com.salacoding.mosisananse",
+  adaptiveIcon: {
+    backgroundColor: "#E6F4FE",
+    foregroundImage: "./assets/images/android-icon-foreground.png",
+    backgroundImage: "./assets/images/android-icon-background.png",
+    monochromeImage: "./assets/images/android-icon-monochrome.png",
   },
+  predictiveBackGestureEnabled: false,
+  googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? "./google-services.json",
+  permissions: [
+    "android.permission.ACCESS_COARSE_LOCATION",
+    "android.permission.ACCESS_FINE_LOCATION",
+  ],
+},
   web: {
     output: "static",
     favicon: "./assets/images/favicon.png",
