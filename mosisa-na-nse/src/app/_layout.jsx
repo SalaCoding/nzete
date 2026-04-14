@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
-import { useAuthUserStore } from '../../library/authUserStore';
-import { syncUserToStoryStore } from '../../library/useSyncAuthToStoryStore';
+import { useAuthUserStore } from '../library/authUserStore';
+import { syncUserToStoryStore } from '../library/useSyncAuthToStoryStore';
 import { View, ActivityIndicator } from 'react-native';
 import { useEffect } from 'react';
 

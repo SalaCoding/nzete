@@ -13,9 +13,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'expo-router';
-import { API_URL } from '../../../constants/api';
-import NumberList from "../../../components/number";
-import { useAuthUserStore, checkUser } from '../../../library/authUserStore';
+import { API_URL } from '../../constants/api';
+import NumberList from "../../components/number";
+import { useAuthUserStore, checkUser } from '../../library/authUserStore';
 import { Ionicons } from "@expo/vector-icons";
 
 const Api_Url = `${API_URL}/api/blog/stories`;

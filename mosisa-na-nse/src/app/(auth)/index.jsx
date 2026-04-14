@@ -16,7 +16,7 @@ import { Image } from 'expo-image'
 import { StatusBar } from 'expo-status-bar'
 import { Link, useRouter } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
-import { useAuthUserStore, login } from '../../../library/authUserStore';
+import { useAuthUserStore, login } from '../../library/authUserStore';
 
 const Login = () => {
   const router = useRouter()

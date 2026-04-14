@@ -1,7 +1,7 @@
 import React from "react";
 import { Text, StyleSheet, Platform} from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
-import NumberBrowser from "../../../components/number"; // adjust path as needed
+import NumberBrowser from "../../components/number"; // adjust path as needed
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from '@react-navigation/native';
 

@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import React, { useState } from 'react'
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
-import { useAuthUserStore, register } from '../../../library/authUserStore'
+import { useAuthUserStore, register } from '../../library/authUserStore'
 import { Ionicons } from '@expo/vector-icons';
 
 const SignUp = () => {

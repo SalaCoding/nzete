@@ -23,11 +23,11 @@ import {
   useAuthUserStore,
   checkUser,
   logout
-} from "../../../library/authUserStore";
-import { useStoryStore } from "../../../library/storyStore";
-import { RatedStoryList, selectUserRating } from "../../../components/RatedStory";
-import { syncUserToStoryStore } from "../../../library/useSyncAuthToStoryStore";
-import { API_URL } from "../../../constants/api";
+} from "../../library/authUserStore";
+import { useStoryStore } from "../../library/storyStore";
+import { RatedStoryList, selectUserRating } from "../../components/RatedStory";
+import { syncUserToStoryStore } from "../../library/useSyncAuthToStoryStore";
+import { API_URL } from "../../constants/api";
 
 const MAX_BASE64_SIZE_KB = 5000;
 const MIN_RATING_SCORE = 1;

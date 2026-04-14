@@ -10,9 +10,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import StoryRatingChart from "../../../components/StoryRatingChart";
-import { useStoryStore } from "../../../library/storyStore";
-import { getStoryRatingDistribution } from "../../../components/RatedStory";
+import StoryRatingChart from "../../components/StoryRatingChart";
+import { useStoryStore } from "../../library/storyStore";
+import { getStoryRatingDistribution } from "../../components/RatedStory";
 
 const MIN_RATING_SCORE = 1;
 

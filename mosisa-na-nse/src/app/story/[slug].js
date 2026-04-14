@@ -13,15 +13,15 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 // ✅ IMPORT fetchProtected FROM STORE TO GET TIMEOUT/RETRY LOGIC
-import { useAuthUserStore, fetchProtected } from '../../../library/authUserStore'; 
-import { useStoryStore } from '../../../library/storyStore';
-import { StoryImage } from '../../../components/StoryImage';
+import { useAuthUserStore, fetchProtected } from '../../library/authUserStore'; 
+import { useStoryStore } from '../../library/storyStore';
+import { StoryImage } from '../../components/StoryImage';
 import { StatusBar } from 'expo-status-bar';
-import { getRatingMessage } from '../../../lib/message';
+import { getRatingMessage } from '../../lib/message';
 import { Ionicons } from '@expo/vector-icons';
 import { addNetworkStateListener } from 'expo-network';
-import { StoryLiveCount } from '../../../components/StoryLiveCount';
-import { useShareStory } from '../../../hooks/useShareStory';
+import { StoryLiveCount } from '../../components/StoryLiveCount';
+import { useShareStory } from '../../hooks/useShareStory';
 //import { AdBanner } from '../../components/AdBanner.js';
 
 export default function StoryPage() {

@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useQAStore } from '../../../library/storeQA';
+import { useQAStore } from '../../library/storeQA';
 import { StatusBar } from 'expo-status-bar';
 
 const QUIZ_STATE_KEY = 'quiz_state';
