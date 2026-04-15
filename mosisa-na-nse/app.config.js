@@ -9,7 +9,6 @@ export default ({ config }) => ({
   userInterfaceStyle: "automatic",
   ios: {
   ...config.ios,
-  buildNumber: "2",
   icon: "./assets/images/icon_nzete@1.png",
   supportsTablet: true,
   bundleIdentifier: "com.salacoding.mosisananse",
@@ -49,7 +48,17 @@ export default ({ config }) => ({
     "expo-notifications",
     "expo-font",
     "expo-image",
-    ["expo-build-properties", { buildReactNativeFromSource: true, android: { compileSdkVersion: 36, targetSdkVersion: 36, buildToolsVersion: "36.0.0" }, ios: { deploymentTarget: "15.1" } }],
+    ["expo-build-properties", {
+      buildReactNativeFromSource: false,
+      android: {
+        compileSdkVersion: 36,
+        targetSdkVersion: 36,
+        buildToolsVersion: "36.0.0"
+      },
+      ios: {
+        deploymentTarget: "15.1"
+      }
+    }],
   ],
    runtimeVersion: {
       policy: "appVersion",
