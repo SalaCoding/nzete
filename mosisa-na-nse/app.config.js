@@ -53,10 +53,12 @@ export default ({ config }) => ({
       android: {
         compileSdkVersion: 36,
         targetSdkVersion: 36,
-        buildToolsVersion: "36.0.0"
+        buildToolsVersion: "36.0.0",
+        "buildReactNativeFromSource": true
       },
       ios: {
-        deploymentTarget: "15.1"
+        deploymentTarget: "15.1",
+        "buildReactNativeFromSource": true
       }
     }],
   ],
