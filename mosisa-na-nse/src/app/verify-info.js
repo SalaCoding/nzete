@@ -1,4 +1,4 @@
-import { VerificationInfoScreen } from './VerificationInfoScreen';
+import { VerificationInfoScreen } from '../components/VerificationInfoScreen';
 import { useLocalSearchParams } from 'expo-router';
 
 export default function VerifyInfoRoute() {
