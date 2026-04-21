@@ -1,11 +1,7 @@
 export default function getRatingMessage(
-  score: number | null,
-  options: {
-    lang?: string;
-    tense?: 'present' | 'past';
-    fallback?: string;
-  } = {}
-): string {
+  score,
+  options = {}
+) {
   const lang = (options.lang || 'en').toLowerCase();
   const tense = options.tense || 'present';
 
@@ -26,4 +22,4 @@ export default function getRatingMessage(
     : (tense === 'past' ? 'You gave' : 'You’re giving');
 
   return `✅ ${verb} ${score} ${noun}`;
-};
+}

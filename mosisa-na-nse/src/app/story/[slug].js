@@ -17,7 +17,7 @@ import { useAuthUserStore, fetchProtected } from '../../library/authUserStore';
 import { useStoryStore } from '../../library/storyStore';
 import { StoryImage } from '../../components/StoryImage';
 import { StatusBar } from 'expo-status-bar';
-import { getRatingMessage } from '../../lib/message';
+import getRatingMessage from '../../lib/message';
 import { Ionicons } from '@expo/vector-icons';
 import { addNetworkStateListener } from 'expo-network';
 import { StoryLiveCount } from '../../components/StoryLiveCount';
