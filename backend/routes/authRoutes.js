@@ -15,7 +15,6 @@ import bcryptjs from 'bcryptjs';
 import crypto from 'crypto';
 import sendEmail from '../utils/sendEmail.js';
 
-import admin from 'firebase-admin';
 import { getAuth } from 'firebase-admin/auth';
 import { createRequire } from 'module';
 
@@ -554,39 +553,5 @@ router.post('/reset-password', async (req, res) => {
   res.json({ message: "Password reset successfully." });
 });
 
-// ============================================================
-// GOOGLE SIGN IN
-// ============================================================
-router.post('/google', async (req, res) => {
-  const { token } = req.body;
-  if (!token) return res.status(400).json({ message: 'Missing Google token' });
-
-  try {
-    // Verify the token with Firebase Admin:
-    const decoded = await getAuth().verifyIdToken(token);
-    const email = decoded.email;
-    if (!email) {
-      return res.status(400).json({ message: 'No email found in Google account' });
-    }
-
-    // Lookup or create user as needed
-    let user = await User.findOne({ email });
-    if (!user) {
-      user = await User.create({
-        email,
-        username: decoded.name || email.split('@')[0],
-        googleId: decoded.uid,    // <-- from Firebase token
-        profilePicture: decoded.picture,
-        verified: true,
-      });
-    }
-
-    const jwtToken = generateToken(user._id);
-    return res.status(200).json({ token: jwtToken, user: sanitizeUser(user) });
-  } catch (error) {
-    console.error('🔥 Google sign-in error', error);
-    return res.status(400).json({ message: 'Invalid Google token or server error' });
-  }
-});
 
 export default router;
