@@ -423,26 +423,3 @@ export const requestPasswordReset = async (email) => {
     return { success: false, error: errorMessage };
   }
 };
-
-export const googleLogin = async (firebaseToken) => {
-  if (isProcessingAuth) return;
-  isProcessingAuth = true;
-  useAuthUserStore.setState({ isLoading: true, loadingType: 'google', error: null });
-  try {
-    const response = await fetchWithRetries(`${API_URL}/api/auth/google`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: firebaseToken }),
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || 'Google login failed');
-    useAuthUserStore.getState().setAuth(data.token, data.user);
-    useAuthUserStore.setState({ isLoading: false, loadingType: null });
-    return { success: true };
-  } catch (error) {
-    useAuthUserStore.setState({ error: error.message, isLoading: false, loadingType: null });
-    return { success: false, error: error.message };
-  } finally {
-    isProcessingAuth = false;
-  }
-};
