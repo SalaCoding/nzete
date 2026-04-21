@@ -24,6 +24,11 @@ const userSchema = new mongoose.Schema({
     trim: true 
   },
   profilePicture: { type: String, trim: true },
+
+  verified: { type: Boolean, default: false },
+
+  verificationToken: { type: String },
+  verificationExpires: { type: Date },
   
   // ✅ 1. Google Auth ID (Firebase UID)
   googleId: { type: String, unique: true, sparse: true },
@@ -57,6 +62,8 @@ userSchema.set("toJSON", {
   transform(doc, ret) {
     delete ret.password;
     delete ret.__v;
+    delete ret.verificationToken;
+    delete ret.verificationExpires;
     return ret;
   }
 });

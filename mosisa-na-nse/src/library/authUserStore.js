@@ -390,6 +390,40 @@ export const checkUserWithRetry = async (retries = 3) => {
   return { success: false, error: 'Max retries reached' };
 };
 
+export const requestPasswordReset = async (email) => {
+  useAuthUserStore.setState({ isLoading: true, loadingType: 'reset', error: null });
+  try {
+    const sanitizedEmail = email.trim().toLowerCase();
+    if (!sanitizedEmail) throw new Error("Email is required");
+
+    const response = await fetchWithRetries(`${API_URL}/api/auth/request-password-reset`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: sanitizedEmail }),
+    });
+
+    // Always get the text first, so we can debug non-JSON responses
+    const text = await response.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      // Debug: log raw text to the console so you can see what you got
+      console.log("Forgot password API raw response:", text);
+      throw new Error("Server sent invalid response. Check API URL and backend logs.");
+    }
+
+    useAuthUserStore.setState({ isLoading: false, loadingType: null });
+
+    if (!response.ok) throw new Error(data.message || 'Failed to send password reset email');
+    return { success: true, message: data.message };
+  } catch (error) {
+    const errorMessage = getGenericError(error);
+    useAuthUserStore.setState({ error: errorMessage, isLoading: false, loadingType: null });
+    return { success: false, error: errorMessage };
+  }
+};
+
 export const googleLogin = async (firebaseToken) => {
   if (isProcessingAuth) return;
   isProcessingAuth = true;

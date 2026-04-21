@@ -35,8 +35,15 @@ const SignUp = () => {
 
         const result = await register(username, email, password);
         if (result.success) {
-            router.replace("/(tabs)");
-        } else {
+            Alert.alert(
+                "Verify your email",
+                "Registration successful! Please check your inbox and click the verification link before logging in."
+            );
+            router.replace({
+                pathname: "/verify-info",
+                params: { email }, // pass email for personalization
+                });
+            } else {
             Alert.alert("Error", result.error || "Signup failed. Please try again.");
         }
 

@@ -8,7 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert
+  Alert,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import React, { useState, useEffect } from 'react'
@@ -23,29 +23,26 @@ const Login = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  
-  // ✅ Create a local loading state specifically for Email Login
-  const [isEmailLoading, setIsEmailLoading] = useState(false);
+  const [isEmailLoading, setIsEmailLoading] = useState(false)
 
   const { user, error, _hasHydrated } = useAuthUserStore();
 
-  // 1. Handle Successful Login Navigation
+  // Redirect on login
   useEffect(() => {
     if (user) {
       router.replace('/(tabs)');
     }
   }, [user, router]);
 
-  // 2. Handle Errors
+  // Show any error alert
   useEffect(() => {
     if (error) {
-      // Reset local loading if there's a global error
       setIsEmailLoading(false);
       Alert.alert('Login Failed', error)
     }
   }, [error])
 
-  // 3. Loading State for Hydration
+  // Wait for auth state to rehydrate
   if (!_hasHydrated) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -54,45 +51,29 @@ const Login = () => {
     )
   }
 
-  // 4. Handle Login Button Press
+  // Login handler
   const handleLogin = async () => {
-  if (isEmailLoading) return;
+    if (isEmailLoading) return;
 
-  console.log("🔵 Login button pressed");
-  console.log("Email:", email);
-  console.log("Password length:", password.length);
-
-  if (!email.trim() || !password) {
-    console.log("⚠️ Missing input");
-    Alert.alert('Missing Input', 'Please enter both email and password.');
-    return;
-  }
-
-  setIsEmailLoading(true);
-  console.log("⏳ isEmailLoading set to TRUE");
-
-  try {
-    console.log("➡️ Calling loginUser()");
-    const result = await login(email, password);
-    console.log("⬅️ loginUser() returned:", result);
-
-    if (!result?.success) {
-      console.log("❌ Login failed, stopping loader");
-      setIsEmailLoading(false);
-    } else {
-      console.log("✅ Login success — navigation will occur via useEffect");
+    if (!email.trim() || !password) {
+      Alert.alert('Missing Input', 'Please enter both email and password.');
+      return;
     }
 
-  } catch (err) {
-    console.log("🔥 Login error caught:", err);
-    setIsEmailLoading(false);
-  }
-};
+    setIsEmailLoading(true);
 
+    try {
+      const result = await login(email, password);
+      if (!result?.success) setIsEmailLoading(false);
+      // Navigation will be handled by useEffect upon login success
+    } catch (_err) {
+      setIsEmailLoading(false);
+    }
+  };
 
   return (
-    <KeyboardAvoidingView 
-      style={{ flex: 1 }} 
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
@@ -123,8 +104,7 @@ const Login = () => {
                   autoCapitalize="none"
                   autoCorrect={false}
                   style={styles.input}
-                  // Disable input while any loading happens
-                  editable={!isEmailLoading} 
+                  editable={!isEmailLoading}
                 />
               </View>
 
@@ -145,6 +125,7 @@ const Login = () => {
                   <TouchableOpacity
                     onPress={() => setShowPassword(!showPassword)}
                     style={styles.passwordToggle}
+                    accessibilityLabel="Show or hide password"
                   >
                     <Ionicons
                       name={showPassword ? 'eye-off-outline' : 'eye-outline'}
@@ -155,7 +136,7 @@ const Login = () => {
                 </View>
               </View>
 
-              {/* Login Button (Uses local isEmailLoading) */}
+              {/* Login Button */}
               <TouchableOpacity
                 onPress={handleLogin}
                 disabled={isEmailLoading}
@@ -170,6 +151,16 @@ const Login = () => {
                   <Text style={styles.buttonText}>Login</Text>
                 )}
               </TouchableOpacity>
+
+              {/* Forgot Password */}
+              <Link href="/forgotPassword" asChild>
+                <TouchableOpacity
+                  style={styles.passForgotContainer}
+                  accessibilityLabel="Forgot password"
+                >
+                  <Text style={styles.forgotText}>Forgot password?</Text>
+                </TouchableOpacity>
+              </Link>
 
               {/* Footer Links */}
               <View style={styles.footer}>
@@ -268,6 +259,17 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  passForgotContainer: {
+    marginTop: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  forgotText: {
+    color: '#007AFF',
+    fontSize: 15,
+    fontWeight: '600',
+    textAlign: 'right',
   },
   footer: {
     marginTop: 24,

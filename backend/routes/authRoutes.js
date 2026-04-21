@@ -12,6 +12,8 @@ import sharp from 'sharp';
 import rateLimit from 'express-rate-limit';
 
 import bcryptjs from 'bcryptjs';
+import crypto from 'crypto';
+import sendEmail from '../utils/sendEmail.js';
 
 import admin from 'firebase-admin';
 import { getAuth } from 'firebase-admin/auth';
@@ -222,20 +224,34 @@ router.post('/register', authLimiter, async (req, res) => {
       });
     }
 
+    // -----------------------------
+    // EMAIL VERIFICATION SECTION
+    // -----------------------------
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const verificationExpires = Date.now() + 1000 * 60 * 60 * 24; // 24 hours
+
     const user = new User({
       email: normalizedEmail,
       password,
       username: normalizedUsername,
       profilePicture: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(normalizedUsername)}`,
+      verified: false,
+      verificationToken,
+      verificationExpires
     });
 
     await user.save();
 
-    const token = generateToken(user._id);
-    
+    const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+
+    await sendEmail(
+      normalizedEmail,
+      "Verify your Nzete account",
+      `Welcome to Nzete! Click the link to verify your email:\n\n${verifyUrl}\n\nThis link expires in 24 hours.`
+    );
+
     return res.status(201).json({
-      token,
-      user: sanitizeUser(user),
+      message: "Verification email sent. Please check your inbox."
     });
 
   } catch (error) {
@@ -317,6 +333,59 @@ router.get('/me', authMiddleware, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+// ============================================================
+// EMAIL VERIFICATION
+// ============================================================
+
+router.get('/verify-email', async (req, res) => {
+  const { token } = req.query;
+
+  const user = await User.findOne({
+    verificationToken: token,
+    verificationExpires: { $gt: Date.now() }
+  });
+
+  if (!user) {
+    return res.status(400).json({ message: "Invalid or expired token" });
+  }
+
+  user.verified = true;
+  user.verificationToken = undefined;
+  user.verificationExpires = undefined;
+
+  await user.save();
+
+  return res.json({ message: "Email verified successfully" });
+});
+
+// ============================================================
+// RESEND VERIFICATION EMAIL
+// ============================================================
+
+router.post('/resend-verification', async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ message: "Email required" });
+
+  const user = await User.findOne({ email: email.trim().toLowerCase() });
+  if (!user) return res.status(200).json({ message: "If your account exists, we'll send instructions." });
+  if (user.verified) return res.status(200).json({ message: "Email is already verified." });
+
+  const verificationToken = crypto.randomBytes(32).toString("hex");
+  const verificationExpires = Date.now() + 1000 * 60 * 60 * 24;
+  user.verificationToken = verificationToken;
+  user.verificationExpires = verificationExpires;
+  await user.save();
+
+  const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+  await sendEmail(
+    user.email,
+    "Verify your Nzete account",
+    `Click this link to verify your account:\n\n${verifyUrl}\n\nLink expires in 24 hours.`
+  );
+  return res.json({ message: "Verification email sent." });
+});
+
 
 // ============================================================
 // UPLOAD PROFILE PICTURE
@@ -433,19 +502,91 @@ router.patch('/user/profile', authMiddleware, async (req, res) => {
 });
 
 // ============================================================
+// REQUEST PASSWORD RESET
+// ============================================================
+
+router.post('/request-password-reset', async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ message: 'Email required.' });
+
+  const normalizedEmail = email.trim().toLowerCase();
+  const user = await User.findOne({ email: normalizedEmail });
+  if (!user) return res.status(200).json({ message: "If that user exists, we've sent instructions." });
+
+  // Generate token & expiry
+  const resetToken = crypto.randomBytes(32).toString("hex");
+  const resetExpires = Date.now() + 1000 * 60 * 30; // 30 minutes
+  user.resetToken = resetToken;
+  user.resetExpires = resetExpires;
+  await user.save();
+
+  const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+  await sendEmail(
+    normalizedEmail,
+    "Reset your Nzete password",
+    `Reset your password using this link:\n\n${resetUrl}\n\nThis link expires in 30 minutes.`
+  );
+
+  return res.status(200).json({ message: "If that user exists, we've sent instructions." });
+});
+
+// ============================================================
+// RESET PASSWORD
+// ============================================================
+
+router.post('/reset-password', async (req, res) => {
+  const { token, password } = req.body;
+  if (!token || !password) return res.status(400).json({ message: 'Token and new password required.' });
+
+  const user = await User.findOne({
+    resetToken: token,
+    resetExpires: { $gt: Date.now() }
+  });
+  if (!user) {
+    return res.status(400).json({ message: "Invalid or expired token." });
+  }
+  // Add password strength validation here
+  user.password = password; // Assuming pre-save hash
+  user.resetToken = undefined;
+  user.resetExpires = undefined;
+  await user.save();
+
+  res.json({ message: "Password reset successfully." });
+});
+
+// ============================================================
 // GOOGLE SIGN IN
 // ============================================================
 router.post('/google', async (req, res) => {
-  const { email } = req.body;
+  const { token } = req.body;
+  if (!token) return res.status(400).json({ message: 'Missing Google token' });
+
   try {
-    const userRecord = await getAuth().getUserByEmail(email);
-    return 
+    // Verify the token with Firebase Admin:
+    const decoded = await getAuth().verifyIdToken(token);
+    const email = decoded.email;
+    if (!email) {
+      return res.status(400).json({ message: 'No email found in Google account' });
+    }
+
+    // Lookup or create user as needed
+    let user = await User.findOne({ email });
+    if (!user) {
+      user = await User.create({
+        email,
+        username: decoded.name || email.split('@')[0],
+        googleId: decoded.uid,    // <-- from Firebase token
+        profilePicture: decoded.picture,
+        verified: true,
+      });
+    }
+
+    const jwtToken = generateToken(user._id);
+    return res.status(200).json({ token: jwtToken, user: sanitizeUser(user) });
   } catch (error) {
-    console.error('[POST /google]', error);
-    res.status(500).json({ message: 'Server error during Google sign-in' });
+    console.error('🔥 Google sign-in error', error);
+    return res.status(400).json({ message: 'Invalid Google token or server error' });
   }
 });
-
-
 
 export default router;
