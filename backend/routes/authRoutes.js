@@ -15,6 +15,7 @@ import bcryptjs from 'bcryptjs';
 import crypto from 'crypto';
 import sendEmail from '../utils/sendEmail.js';
 
+import admin from 'firebase-admin';
 import { getAuth } from 'firebase-admin/auth';
 import { createRequire } from 'module';
 
