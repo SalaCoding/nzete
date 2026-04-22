@@ -36,7 +36,7 @@ export default ({ config }) => ({
   ],
 },
   web: {
-    output: "static",
+    output: "server",
     favicon: "./assets/images/favicon.png",
   },
   plugins: [
