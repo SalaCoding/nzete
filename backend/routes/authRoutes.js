@@ -506,12 +506,19 @@ router.patch('/user/profile', authMiddleware, async (req, res) => {
 // ============================================================
 
 router.post('/request-password-reset', async (req, res) => {
+  if (!req.body) {
+    return res.status(400).json({ message: 'Invalid request body.' });
+  }
   const { email } = req.body;
   if (!email) return res.status(400).json({ message: 'Email required.' });
 
   const normalizedEmail = email.trim().toLowerCase();
   const user = await User.findOne({ email: normalizedEmail });
-  if (!user) return res.status(200).json({ message: "If that user exists, we've sent instructions." });
+
+  if (!user) {
+    console.log(`[RESET][no user] Email: ${normalizedEmail}`);
+    return res.status(200).json({ message: "If that user exists, we've sent instructions." });
+  }
 
   // Generate token & expiry
   const resetToken = crypto.randomBytes(32).toString("hex");
@@ -521,11 +528,19 @@ router.post('/request-password-reset', async (req, res) => {
   await user.save();
 
   const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
-  await sendEmail(
-    normalizedEmail,
-    "Reset your Nzete password",
-    `Reset your password using this link:\n\n${resetUrl}\n\nThis link expires in 30 minutes.`
-  );
+
+  try {
+    console.log(`[RESET][sendEmail] Email: ${normalizedEmail}, URL: ${resetUrl}`);
+    await sendEmail(
+      normalizedEmail,
+      "Reset your Nzete password",
+      `Reset your password using this link:\n\n${resetUrl}\n\nThis link expires in 30 minutes.`
+    );
+    console.log(`[RESET][SUCCESS] Sent to: ${normalizedEmail}`);
+  } catch (error) {
+    console.error(`[RESET][EMAIL ERROR] To: ${normalizedEmail}`, error);
+    // Optionally you could return an error to the frontend, or just log it
+  }
 
   return res.status(200).json({ message: "If that user exists, we've sent instructions." });
 });
