@@ -13,6 +13,10 @@ export default ({ config }) => ({
   supportsTablet: true,
   bundleIdentifier: "com.salacoding.mosisananse",
   googleServicesFile: process.env.IOS_GOOGLE_SERVICES_FILE,
+  associatedDomains: [
+    "applinks:nzete.onrender.com",
+    "applinks:www.nzete.onrender.com"
+  ],
   infoPlist: {
     ITSAppUsesNonExemptEncryption: false,
   },
