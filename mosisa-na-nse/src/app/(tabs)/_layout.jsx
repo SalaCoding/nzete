@@ -1,6 +1,7 @@
 import { Tabs } from "expo-router"
 import React from 'react'
 import { Ionicons } from "@expo/vector-icons"
+import { Platform } from "react-native"
 
 const TabLayout = () => {
   return (
@@ -13,7 +14,7 @@ const TabLayout = () => {
         tabBarStyle: {
           backgroundColor: '#fff',
           borderTopColor: 'rgb(38, 154, 155)',
-          paddingTop: 14,
+          paddingTop: Platform.OS === 'android' ? 12 : 8,
         }
       }}
     >

@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   Pressable,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -154,7 +155,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerText: {
-    fontSize: 20,
+    fontSize: Platform.OS === 'ios' ? 18 : 16,
     fontWeight: 'bold',
     color: '#333',
     textAlign: 'center',
@@ -174,7 +175,7 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
   },
   storyTitle: {
-    fontSize: 17,
+    fontSize: Platform.OS === 'ios' ? 17 : 16,
     fontWeight: 'bold',
     color: '#333',
     textAlign: 'center',

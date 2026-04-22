@@ -190,7 +190,7 @@ export default function Index() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, Platform.OS === 'android' ]}>
       <View style={styles.container}>
         <View style={styles.motango_container}>
           <Text style={styles.motango}>Motango</Text>
@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Palatino',
   },
   yekola__moko: {
-    fontSize: Platform.OS === 'ios' ? 20 : 18,
+    fontSize: Platform.OS === 'ios' ? 20 : 19,
     fontWeight: 'bold',
     textAlign: 'center',
     color: 'rgb(255, 255, 255)',
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    padding: 10,
+    padding: Platform.OS === 'ios' ? 10 : 8,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
@@ -334,20 +334,20 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#000',
+    color: '#232323',
     textTransform: 'uppercase',
     textAlign: 'center',
   },
   lisapo_container: {
     backgroundColor: 'rgb(38, 154, 155)',
-    padding: 2,
+    padding:  Platform.OS === 'ios' ? 2 : 2,
     borderRadius: 10,
-    marginTop: 11,
+    marginTop:  Platform.OS === 'ios' ? 11 : 11,
     marginHorizontal: 12,
   },
   lisolo: {
     fontSize: Platform.OS === 'ios' ? 20 : 17,
-    color: '#0e0d0d',
+    color: '#1e1e1e',
     padding: 16,
     textAlign: 'justify',
     lineHeight: 26,
@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
   },
   lisapo__title: {
     fontSize: Platform.OS === 'ios' ? 20 : 18,
-    color: '#161516',
+    color: '#260e26',
     fontWeight: 'bold',
     textAlign: 'center',
     marginVertical: 10,
@@ -363,10 +363,15 @@ const styles = StyleSheet.create({
     marginBottom: 1,
   },
   samboleSection: {
+    shadowColor: '#ffffff',
+    shadowOffset: { width: 0, height: 0.10 },
+    shadowOpacity: 4.95,
+    shadowRadius: 8,
+    elevation: 18,
+
     marginHorizontal: 12,
-    marginTop: 6,
-    marginBottom: 30,
-    padding: 10,
+    marginBottom:  Platform.OS === 'ios' ? 36 : 22,
+    padding: Platform.OS === 'ios' ? 8 : 7,
     backgroundColor: '#4a487d',
     borderRadius: 12,
     alignItems: 'center',
@@ -381,7 +386,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFB800',
-    paddingVertical: 9,
+    paddingVertical: Platform.OS === 'ios' ? 9 : 8,
     paddingHorizontal: 14,
     borderRadius: 8,
     gap: 6,

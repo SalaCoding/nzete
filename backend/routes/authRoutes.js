@@ -214,11 +214,11 @@ router.post('/register', authLimiter, async (req, res) => {
     }
 
     console.log('[SignUp] Register attempt:', {normalizedEmail, normalizedUsername});
-const [existingEmail, existingUsername] = await Promise.all([
-  User.findOne({ email: normalizedEmail }).select('_id email').lean(),
-  User.findOne({ username: normalizedUsername }).select('_id username').lean()
-]);
-console.log('[SignUp] Query results:', {existingEmail, existingUsername});
+    const [existingEmail, existingUsername] = await Promise.all([
+      User.findOne({ email: normalizedEmail }).select('_id email').lean(),
+      User.findOne({ username: normalizedUsername }).select('_id username').lean()
+    ]);
+    console.log('[SignUp] Query results:', {existingEmail, existingUsername});
 
     if (existingEmail || existingUsername) {
       return res.status(409).json({ 
