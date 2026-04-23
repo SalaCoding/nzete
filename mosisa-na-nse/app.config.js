@@ -46,6 +46,14 @@ export default ({ config }) => ({
   plugins: [
     ["expo-location", { locationAlwaysAndWhenInUsePermission: "Allow $(PRODUCT_NAME) to use your location." }],
     "expo-router",
+      {
+        "redirects": [
+          {
+            "source": "/reset-password",
+            "destination": "/resetPassword"
+          }
+        ]
+      },
     ["expo-splash-screen", { image: "./assets/images/splash-icon.png", imageWidth: 200, contentFit: "contain", backgroundColor: "#ffffff", dark: { backgroundColor: "#000000" } }],
     "expo-secure-store",
     "expo-web-browser",
