@@ -34,6 +34,20 @@ export default ({ config }) => ({
   },
   predictiveBackGestureEnabled: false,
   googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? "./google-services.json",
+  "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "nzete.onrender.com",
+              "pathPrefix": "/reset-password"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ],
   permissions: [
     "android.permission.ACCESS_COARSE_LOCATION",
     "android.permission.ACCESS_FINE_LOCATION",
