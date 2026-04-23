@@ -46,14 +46,6 @@ export default ({ config }) => ({
   plugins: [
     ["expo-location", { locationAlwaysAndWhenInUsePermission: "Allow $(PRODUCT_NAME) to use your location." }],
     "expo-router",
-      {
-        "redirects": [
-          {
-            "source": "/reset-password",
-            "destination": "/resetPassword"
-          }
-        ]
-      },
     ["expo-splash-screen", { image: "./assets/images/splash-icon.png", imageWidth: 200, contentFit: "contain", backgroundColor: "#ffffff", dark: { backgroundColor: "#000000" } }],
     "expo-secure-store",
     "expo-web-browser",
@@ -87,6 +79,7 @@ export default ({ config }) => ({
   },
   extra: {
     EXPO_PUBLIC_API_URL: "https://nzete.onrender.com",
+    EXPO_PUBLIC_FRONTEND_URL: "https://nzete.onrender.com/reset-password",
     router: { origin: "https://nzete.onrender.com" },
     eas: { projectId: "4c21570f-f55a-409e-aeff-2b9c981412fd" },
   },

@@ -429,13 +429,11 @@ export const requestPasswordReset = async (email) => {
 export const resetPassword = async (token, password) => {
   try {
     if (!token || !password) throw new Error('Missing reset token or password.');
-    
     const response = await fetch(`${API_URL}/api/auth/reset-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token, password }),
     });
-
     const text = await response.text();
     let data;
     try {
@@ -444,7 +442,6 @@ export const resetPassword = async (token, password) => {
       console.log("Reset password API raw response:", text);
       throw new Error("Server sent invalid response. Check API URL and backend logs.");
     }
-
     if (!response.ok) {
       throw new Error(data.message || 'Failed to reset password.');
     }
