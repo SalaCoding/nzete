@@ -1,52 +1,97 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { resetPassword } from '../../library/authUserStore';
+import {
+  Text,
+  View,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Alert,
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { Ionicons } from '@expo/vector-icons';
+import { requestPasswordReset } from '../../library/authUserStore';
 
 const ForgotPassword = () => {
   const router = useRouter();
-  // If you use expo-router (web or mobile deep link), you'll get ?token=... from params:
-  const { token } = useLocalSearchParams();
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [sent, setSent] = useState(false);
 
-  const handleReset = async () => {
-    if (!password || password.length < 8) {
-      Alert.alert('Invalid password', 'Password must be at least 8 characters.');
+  const handleForgot = async () => {
+    if (isLoading) return;
+    if (!email.trim() || !email.includes('@')) {
+      Alert.alert('Invalid Email', 'Please enter a valid email address.');
       return;
     }
     setIsLoading(true);
-    const result = await resetPassword(token, password);
-    setIsLoading(false);
-    if (result.success) {
-      Alert.alert('Success', result.message || 'Password reset! Please log in.');
-      router.replace('/login');
-    } else {
-      Alert.alert('Error', result.error || 'Could not reset password.');
+    try {
+      const result = await requestPasswordReset(email);
+      setIsLoading(false);
+      if (result.success) {
+        setSent(true);
+        Alert.alert('Email Sent', result.message || 'Check your inbox for reset instructions.');
+      } else {
+        Alert.alert('Error', result.error || 'Could not send reset email.');
+      }
+    } catch (_e) {
+      setIsLoading(false);
+      Alert.alert('Error', 'Could not contact server. Try again.');
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Reset Password</Text>
-      <TextInput
-        placeholder="New Password"
-        secureTextEntry
-        style={styles.input}
-        value={password}
-        onChangeText={setPassword}
-        editable={!isLoading}
-      />
-      <TouchableOpacity
-        style={styles.button}
-        onPress={handleReset}
-        disabled={isLoading}
-      >
-        <Text style={styles.buttonText}>
-          {isLoading ? 'Resetting...' : 'Reset Password'}
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: '#fff' }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <StatusBar style="dark" />
+      <View style={styles.container}>
+        <Text style={styles.title}>Forgot Password</Text>
+        <Text style={styles.description}>
+          Enter your email address and we&apos;ll send you a link to reset your password.
         </Text>
-      </TouchableOpacity>
-    </View>
+        <TextInput
+          placeholder="Email"
+          placeholderTextColor="#888"
+          autoCapitalize="none"
+          keyboardType="email-address"
+          style={styles.input}
+          value={email}
+          onChangeText={setEmail}
+          editable={!isLoading && !sent}
+        />
+        <TouchableOpacity
+          style={[
+            styles.button,
+            { backgroundColor: isLoading || sent ? '#ccc' : '#007AFF' },
+          ]}
+          onPress={handleForgot}
+          disabled={isLoading || sent}
+          accessibilityRole="button"
+        >
+          {isLoading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>
+              {sent ? 'Email Sent!' : 'Send Reset Email'}
+            </Text>
+          )}
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.backLink}
+          onPress={() => router.back()}
+          disabled={isLoading}
+          accessibilityRole="button"
+        >
+          <Ionicons name="arrow-back" size={20} color="#007AFF" />
+          <Text style={styles.backText}>Back to login</Text>
+        </TouchableOpacity>
+      </View>
+    </KeyboardAvoidingView>
   );
 };
 
