@@ -9,7 +9,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "build": "react-scripts build"
+    "build": "expo export -p web"
   },
   "dependencies": {
     "@expo-google-fonts/merriweather": "^0.4.2",
@@ -21,7 +21,7 @@
     "@react-navigation/native": "^7.1.8",
     "date-fns": "^4.1.0",
     "doctor": "^0.3.0",
-    "expo": "~55.0.16",
+    "expo": "~55.0.17",
     "expo-auth-session": "~55.0.15",
     "expo-build-properties": "~55.0.10",
     "expo-constants": "~55.0.10",
