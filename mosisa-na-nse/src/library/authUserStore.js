@@ -424,8 +424,6 @@ export const requestPasswordReset = async (email) => {
   }
 };
 
-// In library/authUserStore.js
-
 export const resetPassword = async (token, password) => {
   try {
     if (!token || !password) throw new Error('Missing reset token or password.');
