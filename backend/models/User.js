@@ -26,21 +26,20 @@ const userSchema = new mongoose.Schema({
   profilePicture: { type: String, trim: true },
 
   verified: { type: Boolean, default: false },
-
   verificationToken: { type: String },
   verificationExpires: { type: Date },
+
+  resetPasswordToken: { type: String },
+  resetPasswordExpires: { type: Date },
   
   // ✅ 1. Google Auth ID (Firebase UID)
   googleId: { type: String, unique: true, sparse: true },
-
   // ✅ 2. Monetization Tracking
   numbersViewedCount: { type: Number, default: 0 },
   storiesReadCount: { type: Number, default: 0 },
-  
   // ✅ 3. Premium Status Flags
   isPremiumNumbers: { type: Boolean, default: false }, // Paid £0.35
   isPremiumStories: { type: Boolean, default: false }, // Paid £0.65
-  
   lastLogin: { type: Date, default: Date.now },
   failedLoginAttempts: { type: Number, default: 0 },
 }, { 
@@ -64,6 +63,8 @@ userSchema.set("toJSON", {
     delete ret.__v;
     delete ret.verificationToken;
     delete ret.verificationExpires;
+    delete ret.resetPasswordToken;
+    delete ret.resetPasswordExpires;
     return ret;
   }
 });

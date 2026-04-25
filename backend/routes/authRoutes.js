@@ -360,11 +360,9 @@ router.get('/verify-email', async (req, res) => {
 
   return res.json({ message: "Email verified successfully" });
 });
-
 // ============================================================
 // RESEND VERIFICATION EMAIL
 // ============================================================
-
 router.post('/resend-verification', async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ message: "Email required" });
@@ -387,8 +385,6 @@ router.post('/resend-verification', async (req, res) => {
   );
   return res.json({ message: "Verification email sent." });
 });
-
-
 // ============================================================
 // UPLOAD PROFILE PICTURE
 // ============================================================
@@ -452,7 +448,6 @@ router.post('/upload', authMiddleware, uploadLimiter, async (req, res) => {
     res.status(500).json({ error: 'Server error during upload' });
   }
 });
-
 // ============================================================
 // PATCH USER PROFILE
 // ============================================================
@@ -502,11 +497,9 @@ router.patch('/user/profile', authMiddleware, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
-
 // ============================================================
 // REQUEST PASSWORD RESET
 // ============================================================
-
 router.post('/request-password-reset', async (req, res) => {
   if (!req.body) {
     return res.status(400).json({ message: 'Invalid request body.' });
@@ -517,31 +510,29 @@ router.post('/request-password-reset', async (req, res) => {
   const normalizedEmail = email.trim().toLowerCase();
   const user = await User.findOne({ email: normalizedEmail });
 
+  // Always respond success for security, even if user not found
   if (!user) {
-    console.log(`[RESET][no user] Email: ${normalizedEmail}`);
     return res.status(200).json({ message: "If that user exists, we've sent instructions." });
   }
 
   // Generate token & expiry
   const resetToken = crypto.randomBytes(32).toString("hex");
   const resetExpires = Date.now() + 1000 * 60 * 30; // 30 minutes
-  user.resetToken = resetToken;
-  user.resetExpires = resetExpires;
+  user.resetPasswordToken = resetToken;
+  user.resetPasswordExpires = resetExpires;
   await user.save();
 
   const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
 
   try {
-    console.log(`[RESET][sendEmail] Email: ${normalizedEmail}, URL: ${resetUrl}`);
     await sendEmail(
       normalizedEmail,
       "Reset your Nzete password",
       `Reset your password using this link:\n\n${resetUrl}\n\nThis link expires in 30 minutes.`
     );
-    console.log(`[RESET][SUCCESS] Sent to: ${normalizedEmail}`);
   } catch (error) {
-    console.error(`[RESET][EMAIL ERROR] To: ${normalizedEmail}`, error);
-    // Optionally you could return an error to the frontend, or just log it
+    // Fail quietly; don't inform user of valid/invalid emails
+    console.error("[RESET][EMAIL ERROR]", error);
   }
 
   return res.status(200).json({ message: "If that user exists, we've sent instructions." });
@@ -550,26 +541,30 @@ router.post('/request-password-reset', async (req, res) => {
 // ============================================================
 // RESET PASSWORD
 // ============================================================
-
 router.post('/reset-password', async (req, res) => {
   const { token, password } = req.body;
   if (!token || !password) return res.status(400).json({ message: 'Token and new password required.' });
 
+  // Check password strength (optional, recommended!)
+  if (typeof password !== "string" || password.length < 8) {
+    return res.status(400).json({ message: 'Password must be at least 8 characters.' });
+  }
+
   const user = await User.findOne({
-    resetToken: token,
-    resetExpires: { $gt: Date.now() }
+    resetPasswordToken: token,
+    resetPasswordExpires: { $gt: Date.now() }
   });
+
   if (!user) {
     return res.status(400).json({ message: "Invalid or expired token." });
   }
-  // Add password strength validation here
-  user.password = password; // Assuming pre-save hash
-  user.resetToken = undefined;
-  user.resetExpires = undefined;
+
+  user.password = password; // Will be hashed by pre-save middleware
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpires = undefined;
   await user.save();
 
   res.json({ message: "Password reset successfully." });
 });
-
 
 export default router;

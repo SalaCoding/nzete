@@ -188,7 +188,6 @@ export const register = async (username, email, password) => {
     isProcessingAuth = false;
   }
 };
-
 export const login = async (email, password) => {
   if (isProcessingAuth) return;
   isProcessingAuth = true;
@@ -234,7 +233,6 @@ export const login = async (email, password) => {
     isProcessingAuth = false;
   }
 };
-
 export const logout = async () => {
   try {
     const { token } = useAuthUserStore.getState();
@@ -252,7 +250,6 @@ export const logout = async () => {
     useAuthUserStore.getState().clearAuth();
   }
 };
-
 export const updateUser = async (updatedData) => {
   const { token, user } = useAuthUserStore.getState();
   if (!token || !user) return { success: false, error: 'User not authenticated' };
@@ -297,7 +294,6 @@ export const updateUser = async (updatedData) => {
     return { success: false, error: errorMessage };
   }
 };
-
 export const fetchProtected = async (path, options = {}, retries = MAX_RETRIES) => {
   const { token } = useAuthUserStore.getState();
   if (!token) throw new Error('No token available');
@@ -328,7 +324,6 @@ export const fetchProtected = async (path, options = {}, retries = MAX_RETRIES) 
     throw error;
   }
 };
-
 export const refreshUser = async () => {
   const { token } = useAuthUserStore.getState();
   if (!token || isTokenExpired(token)) return { success: false, error: 'Not authenticated' };
@@ -340,7 +335,6 @@ export const refreshUser = async () => {
     return { success: false, error: error.message };
   }
 };
-
 export const checkUser = async () => {
   useAuthUserStore.setState({ isLoading: true, error: null });
   try {
@@ -374,7 +368,6 @@ export const checkUser = async () => {
     return { success: false, error: error.message };
   }
 };
-
 export const checkUserWithRetry = async (retries = 3) => {
   for (let i = 0; i < retries; i++) {
     try {
@@ -389,7 +382,6 @@ export const checkUserWithRetry = async (retries = 3) => {
   }
   return { success: false, error: 'Max retries reached' };
 };
-
 export const requestPasswordReset = async (email) => {
   useAuthUserStore.setState({ isLoading: true, loadingType: 'reset', error: null });
   try {
@@ -423,7 +415,6 @@ export const requestPasswordReset = async (email) => {
     return { success: false, error: errorMessage };
   }
 };
-
 export const resetPassword = async (token, password) => {
   try {
     if (!token || !password) throw new Error('Missing reset token or password.');
