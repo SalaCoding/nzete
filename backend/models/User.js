@@ -24,15 +24,11 @@ const userSchema = new mongoose.Schema({
     trim: true 
   },
   profilePicture: { type: String, trim: true },
-
   verified: { type: Boolean, default: false },
   verificationToken: { type: String },
   verificationExpires: { type: Date },
-
   resetPasswordToken: { type: String },
   resetPasswordExpires: { type: Date },
-  
-  // ✅ 1. Google Auth ID (Firebase UID)
   googleId: { type: String, unique: true, sparse: true },
   // ✅ 2. Monetization Tracking
   numbersViewedCount: { type: Number, default: 0 },
@@ -56,7 +52,6 @@ userSchema.pre("save", async function (next) {
     next(err);
   }
 });
-
 userSchema.set("toJSON", {
   transform(doc, ret) {
     delete ret.password;
@@ -68,11 +63,9 @@ userSchema.set("toJSON", {
     return ret;
   }
 });
-
 userSchema.methods.comparePassword = function (candidate) {
   return bcryptjs.compare(candidate, this.password);
 };
-
 const User = mongoose.model("User", userSchema);
 
 export default User;
