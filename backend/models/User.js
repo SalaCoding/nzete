@@ -38,7 +38,7 @@ const userSchema = new mongoose.Schema({
   isPremiumStories: { type: Boolean, default: false }, // Paid £0.65
   lastLogin: { type: Date, default: Date.now },
   failedLoginAttempts: { type: Number, default: 0 },
-}, { 
+}, {
   timestamps: true
 });
 userSchema.pre("save", async function (next) {
@@ -61,7 +61,8 @@ userSchema.set("toJSON", {
     return ret;
   }
 });
-userSchema.methods.comparePassword = function (candidate) {
+userSchema.methods.comparePassword = async function (candidate) {
+  if (!this.password) throw new Error("Password not set for this user");
   return bcryptjs.compare(candidate, this.password);
 };
 const User = mongoose.model("User", userSchema);
