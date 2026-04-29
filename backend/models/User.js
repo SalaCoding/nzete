@@ -30,7 +30,6 @@ const userSchema = new mongoose.Schema({
   resetPasswordToken: { type: String },
   resetPasswordExpires: { type: Date },
   googleId: { type: String, unique: true, sparse: true },
-  // ✅ 2. Monetization Tracking
   numbersViewedCount: { type: Number, default: 0 },
   storiesReadCount: { type: Number, default: 0 },
   // ✅ 3. Premium Status Flags
