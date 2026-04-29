@@ -41,13 +41,12 @@ const userSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+userSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
   try {
     this.password = await bcryptjs.hash(this.password, 12);
-    next();
   } catch (err) {
-    next(err);
+    throw err;
   }
 });
 userSchema.set("toJSON", {
