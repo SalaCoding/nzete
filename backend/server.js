@@ -1,8 +1,13 @@
+
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
+
+import { corsOptions } from './config/corsConfig.js';
 import http from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import dns from "node:dns/promises";
 import helmet from 'helmet';
 import path, { dirname } from 'path';
@@ -10,13 +15,10 @@ import { fileURLToPath } from 'url';
 
 // Config & Routes
 import { connectDB } from './config/db.js';
-import { corsOptions } from './config/corsConfig.js';
 import authStory from './routes/authStory.js';
 import authRoutes from './routes/authRoutes.js';
 import authNumbers from './routes/authNumbers.js';
 import samboleRoute from './routes/samboleRoute.js';
-
-dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
