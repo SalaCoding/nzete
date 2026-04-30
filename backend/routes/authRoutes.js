@@ -519,7 +519,7 @@ router.post('/request-password-reset', async (req, res) => {
     
     await user.save(); // This triggers the pre-save hook we fixed above
 
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+    const resetUrl = `${process.env.EXPO_PUBLIC_FRONTEND_URL}/reset-password?token=${resetToken}`;
 
     await sendEmail(
       normalizedEmail,
