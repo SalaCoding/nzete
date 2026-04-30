@@ -25,8 +25,12 @@ const PORT = process.env.PORT || 3001;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+
+app.use(express.static(path.join(__dirname, '../mosisa-na-nse/dist')));
 // Middleware
-app.use(helmet({ crossOriginResourcePolicy: false }));
+app.use(helmet({ crossOriginResourcePolicy: false,
+  contentSecurityPolicy: false,
+ }));
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ limit: '20mb', extended: true }));
@@ -71,6 +75,12 @@ app.use((err, req, res, next) => {
   console.error('🔥 Server Error:', err.stack);
   res.status(500).json({ success: false, message: err.message || "Internal Server Error" });
 });
+
+app.get(/^(?!\/(api|uploads|assets)).*/, (req, res) => {
+  res.sendFile(path.join(__dirname, '../mosisa-na-nse/dist/index.html'));
+});
+
+
 
 // Server Start
 server.listen(PORT, '0.0.0.0', () => {
