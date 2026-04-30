@@ -6,6 +6,7 @@ export default ({ config }) => ({
   orientation: "portrait",
   icon: "./assets/images/icon_nzete@1.png",
   scheme: "mosisananse",
+  platform: ["ios", "android", "web"],
   userInterfaceStyle: "automatic",
   ios: {
   ...config.ios,
@@ -56,6 +57,7 @@ export default ({ config }) => ({
   web: {
     output: "static",
     favicon: "./assets/images/favicon.png",
+    bundler: "metro",
   },
   plugins: [
     ["expo-location", { locationAlwaysAndWhenInUsePermission: "Allow $(PRODUCT_NAME) to use your location." }],

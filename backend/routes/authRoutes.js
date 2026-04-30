@@ -520,14 +520,14 @@ router.post('/request-password-reset', async (req, res) => {
     await user.save(); // This triggers the pre-save hook we fixed above
 
     // Replace the old resetUrl line with these two:
-const baseUrl = process.env.EXPO_PUBLIC_FRONTEND_URL || 'https://onrender.com';
+const baseUrl = process.env.EXPO_PUBLIC_FRONTEND_URL || 'mosisananse://';
 const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`;
 
 
     await sendEmail(
       normalizedEmail,
       "Reset your Nzete password",
-      `Click here to reset: ${resetUrl}`
+      `Click here to reset: \n\n${resetUrl}`
     );
 
     return res.status(200).json({ message: "Instructions sent." });
