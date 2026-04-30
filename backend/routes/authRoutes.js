@@ -527,7 +527,8 @@ const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`;
     await sendEmail(
       normalizedEmail,
       "Reset your Nzete password",
-      `Click here to reset: ${resetUrl}`
+      `Click the link below to reset your password:\n\n${resetUrl}`,
+      `<p>Click <a href="${resetUrl}">here</a> to reset your password.</p>` 
     );
 
     return res.status(200).json({ message: "Instructions sent." });
