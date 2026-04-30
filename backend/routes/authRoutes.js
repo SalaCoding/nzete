@@ -520,8 +520,12 @@ router.post('/request-password-reset', async (req, res) => {
     await user.save(); // This triggers the pre-save hook we fixed above
 
     // Replace the old resetUrl line with these two:
+//const baseUrl = process.env.EXPO_PUBLIC_FRONTEND_URL || 'mosisananse://';
+// 1. Use a fallback that matches your mobile scheme exactly
 const baseUrl = process.env.EXPO_PUBLIC_FRONTEND_URL || 'mosisananse://';
-const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`;
+
+// 2. Remove the manual slash '/' before 'reset-password'
+const resetUrl = `${baseUrl}reset-password?token=${resetToken}`;
 
 
     await sendEmail(
