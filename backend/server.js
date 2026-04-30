@@ -28,7 +28,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 
-app.use(express.static(path.join(__dirname, '../mosisa-ya-nzete/dist')));
+app.use(express.static(path.join(__dirname, '..', 'mosisa-na-nse', 'dist')));
 // Middleware
 app.use(helmet({ crossOriginResourcePolicy: false,
   contentSecurityPolicy: false,
@@ -79,7 +79,7 @@ app.use((err, req, res, next) => {
 });
 
 app.get(/^(?!\/(api|uploads|assets)).*/, (req, res) => {
-  res.sendFile(path.join(__dirname, '../mosisa-ya-nzete/dist/index.html'));
+  res.sendFile(path.join(__dirname, '../mosisa-na-nse/dist/index.html'));
 });
 
 
