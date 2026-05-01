@@ -79,7 +79,7 @@ app.use((err, req, res, next) => {
 });
 
 app.get(/^(?!\/(api|uploads|assets)).*/, (req, res) => {
-  res.sendFile(path.join(__dirname, '../mosisa-na-nse/dist/index.html'));
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 
