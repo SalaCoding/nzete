@@ -28,7 +28,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 
-app.use(express.static(path.join(__dirname, '..', 'mosisa-na-nse', 'dist')));
+app.use(express.static(path.join(__dirname, '../mosisa-na-nse/dist')));
 // Middleware
 app.use(helmet({ crossOriginResourcePolicy: false,
   contentSecurityPolicy: false,
