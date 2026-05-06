@@ -64,10 +64,28 @@ const Login = () => {
 
     try {
       const result = await login(email, password);
-      if (!result?.success) setIsEmailLoading(false);
-      // Navigation will be handled by useEffect upon login success
+      
+      // 1. If login fails because user is unverified
+      if (result?.isUnverified) {
+        setIsEmailLoading(false);
+        // Redirect to your verification screen and pass the email
+        router.push({
+          pathname: '/verifyEmail', // Ensure this route exists
+          params: { email: email.trim().toLowerCase() }
+        });
+        return;
+      }
+
+      // 2. If login fails for any other reason
+      if (!result?.success) {
+        setIsEmailLoading(false);
+        // The error useEffect will show the Alert based on the store's error state
+      }
+
+      // 3. Success is handled by the useEffect [user] redirect above
     } catch (_err) {
       setIsEmailLoading(false);
+      Alert.alert('Error', 'An unexpected error occurred.');
     }
   };
 

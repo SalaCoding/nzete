@@ -339,29 +339,59 @@ export const checkUser = async () => {
   useAuthUserStore.setState({ isLoading: true, error: null });
   try {
     const { token, user } = useAuthUserStore.getState();
+
+    // 1. Check for token presence
     if (!token) {
       useAuthUserStore.setState({ isLoading: false });
       return { success: false, error: 'No token' };
     }
+
+    // 2. Check for token expiration
     if (isTokenExpired(token)) {
       useAuthUserStore.getState().clearAuth();
       useAuthUserStore.setState({ isLoading: false });
       return { success: false, error: 'Token expired' };
     }
-    if (user) {
+
+    // 3. MANDATORY VERIFICATION CHECK (from Local Store)
+    // If user is in store but NOT verified, log them out
+    if (user && !user.verified) {
+      useAuthUserStore.getState().clearAuth();
       useAuthUserStore.setState({ isLoading: false });
-      return { success: true, user };
+      return { success: false, error: 'User not verified', isUnverified: true };
     }
+
+    // 4. Fetch fresh user data if needed
+    // (We skip the 'if (user) return' shortcut to ensure we get the latest 'verified' status from DB)
     const response = await fetchWithTimeout(`${API_URL}/api/auth/me`, {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
     });
+
     const data = await response.json();
-    if (!response.ok) throw new Error(data.message || 'Failed to verify user');
+
+    if (!response.ok) {
+      // Handle the case where the backend says user is unverified (403)
+      if (response.status === 403) {
+        useAuthUserStore.getState().clearAuth();
+        useAuthUserStore.setState({ isLoading: false });
+        return { success: false, error: 'Email not verified', isUnverified: true };
+      }
+      throw new Error(data.message || 'Failed to verify user');
+    }
+
+    // 5. FINAL SERVER-SIDE VERIFICATION CHECK
+    if (!data.user.verified) {
+      useAuthUserStore.getState().clearAuth();
+      useAuthUserStore.setState({ isLoading: false });
+      return { success: false, error: 'Email not verified', isUnverified: true };
+    }
+
     useAuthUserStore.setState({ user: data.user, isLoading: false });
     return { success: true, user: data.user };
+
   } catch (error) {
     useAuthUserStore.getState().clearAuth();
     useAuthUserStore.setState({ isLoading: false });

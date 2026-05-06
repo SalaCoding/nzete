@@ -295,13 +295,20 @@ router.post('/login', loginLimiter, async (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
+    if (!user.verified) {
+      return res.status(403).json({ 
+        message: 'Please verify your email before logging in.',
+        isUnverified: true 
+      });
+    }
+
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
     user.lastLogin = new Date();
-    await User.findByIdAndUpdate(user._id, { $set: { lastLogin: new Date() } });
+    await user.save(); 
 
     const token = generateToken(user._id);
     const freshUser = await User.findById(user._id).select('-password');
@@ -329,6 +336,9 @@ router.get('/me', authMiddleware, async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
+    if (!user.verified) {
+    return res.status(403).json({ message: "Email not verified", isUnverified: true });
+  }
     res.json({ user: sanitizeUser(user) });
   } catch (err) {
     console.error('[GET /me]', err);
