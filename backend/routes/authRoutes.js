@@ -548,30 +548,37 @@ router.post('/request-password-reset', async (req, res) => {
 
     const genericResponse = { message: "If an account matches that email, instructions have been sent." };
 
-    // Prevent user enumeration
+    // Prevent user enumeration attacks safely
     if (!user) {
       return res.status(200).json(genericResponse);
     }
 
     const rawResetToken = crypto.randomBytes(32).toString("hex");
     
-    // Hash token for secure database storage
+    // Hash token string for secure database storage parameters
     user.resetPasswordToken = crypto.createHash('sha256').update(rawResetToken).digest('hex');
     user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
     
     await user.save();
 
+    // Environment fallbacks to completely insulate your code from producing "undefined" URLs
+    const baseUrl = process.env.FRONTEND_URL || process.env.EXPO_PUBLIC_FRONTEND_URL || 'onrender.com';
     const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    
+    // Corrected target path parameter assignment string map definition
     const resetUrl = `${cleanBaseUrl}/reset-password?token=${rawResetToken}`;
 
-
-    await sendEmail(
+    // PERFORMANCE OPTIMIZATION: Dispatched in background without using 'await' to boost speed
+    sendEmail(
       normalizedEmail,
       "Reset your Nzete password",
       `Click the link below to reset your password:\n\n${resetUrl}`,
       `<p>Click <a href="${resetUrl}">here</a> to reset your password. This link expires in 1 hour.</p>` 
-    );
+    ).catch(err => {
+      console.error("Background Reset Email Delivery Failed:", err);
+    });
 
+    // Server returns an immediate responsive feedback confirmation straight back to the user interface
     return res.status(200).json(genericResponse);
   } catch (error) {
     console.error("Reset Error:", error);
