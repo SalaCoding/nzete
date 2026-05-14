@@ -146,9 +146,8 @@ const sanitizeUser = (user) => ({
 });
 
 // ============================================================
-// REGISTER
+// REGISTER (Optimized)
 // ============================================================
-
 router.post('/register', authLimiter, async (req, res) => {
   try {
     const extraFields = Object.keys(req.body).filter(
@@ -244,13 +243,20 @@ router.post('/register', authLimiter, async (req, res) => {
 
     await user.save();
 
-    const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+    // Environment fallbacks insulate from breaking links with 'undefined' properties
+    const baseUrl = process.env.FRONTEND_URL || process.env.EXPO_PUBLIC_FRONTEND_URL || 'onrender.com';
+    const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    const verifyUrl = `${cleanBaseUrl}/verify-email?token=${verificationToken}`;
 
-    await sendEmail(
+    // NON-BLOCKING OPTIMIZATION: Runs asynchronously in background to speed up app response
+    sendEmail(
       normalizedEmail,
       "Verify your Nzete account",
-      `Welcome to Nzete! Click the link to verify your email:\n\n${verifyUrl}\n\nThis link expires in 24 hours.`
-    );
+      `Welcome to Nzete! Click the link to verify your email:\n\n${verifyUrl}\n\nThis link expires in 24 hours.`,
+      `<p>Welcome to Nzete! Click <a href="${verifyUrl}">here</a> to verify your email. This link expires in 24 hours.</p>`
+    ).catch(err => {
+      console.error("Background Registration Email Delivery Failed:", err);
+    });
 
     return res.status(201).json({
       message: "Verification email sent. Please check your inbox."
@@ -270,9 +276,8 @@ router.post('/register', authLimiter, async (req, res) => {
 });
 
 // ============================================================
-// LOGIN (Optimized)
+// LOGIN
 // ============================================================
-
 router.post('/login', loginLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -305,14 +310,11 @@ router.post('/login', loginLimiter, async (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    // Update login timestamp
     user.lastLogin = new Date();
     await user.save(); 
 
-    // Generate token
     const token = generateToken(user._id);
 
-    // No need to query the database a second time; pass 'user' straight to sanitizer
     return res.status(200).json({
       token,
       user: sanitizeUser(user),
@@ -327,7 +329,6 @@ router.post('/login', loginLimiter, async (req, res) => {
 // ============================================================
 // GET CURRENT USER
 // ============================================================
-
 router.get('/me', authMiddleware, async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select('-password');
@@ -335,12 +336,12 @@ router.get('/me', authMiddleware, async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
     if (!user.verified) {
-    return res.status(403).json({ message: "Email not verified", isUnverified: true });
-  }
-    res.json({ user: sanitizeUser(user) });
+      return res.status(403).json({ message: "Email not verified", isUnverified: true });
+    }
+    return res.json({ user: sanitizeUser(user) });
   } catch (err) {
     console.error('[GET /me]', err);
-    res.status(500).json({ message: 'Server error' });
+    return res.status(500).json({ message: 'Server error' });
   }
 });
 // ============================================================
@@ -359,9 +360,13 @@ router.get('/verify-email', async (req, res) => {
       verificationExpires: { $gt: Date.now() }
     });
 
+    // Insulate the redirection targets from dropping down into 'undefined' string patterns
+    const baseUrl = process.env.FRONTEND_URL || process.env.EXPO_PUBLIC_FRONTEND_URL || 'onrender.com';
+    const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+
     if (!user) {
       // Redirect to a frontend failure screen if link expires
-      return res.redirect(`${process.env.FRONTEND_URL}/login?verified=false&reason=expired`);
+      return res.redirect(`${cleanBaseUrl}/login?verified=false&reason=expired`);
     }
 
     user.verified = true;
@@ -370,7 +375,7 @@ router.get('/verify-email', async (req, res) => {
     await user.save();
 
     // Smooth redirection back to your Expo mobile/web application 
-    return res.redirect(`${process.env.FRONTEND_URL}/login?verified=true`);
+    return res.redirect(`${cleanBaseUrl}/login?verified=true`);
   } catch (error) {
     console.error('[GET /verify-email] Error:', error);
     return res.status(500).json({ message: "Internal server error during verification" });
@@ -400,7 +405,10 @@ router.post('/resend-verification', async (req, res) => {
     user.verificationExpires = verificationExpires;
     await user.save();
 
-    const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+    // Setup uniform fallback controls to lock path string outputs securely
+    const baseUrl = process.env.FRONTEND_URL || process.env.EXPO_PUBLIC_FRONTEND_URL || 'onrender.com';
+    const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    const verifyUrl = `${cleanBaseUrl}/verify-email?token=${verificationToken}`;
     
     // NON-BLOCKING OPTIMIZATION: Remove 'await' so email sends in the background
     sendEmail(
@@ -419,7 +427,6 @@ router.post('/resend-verification', async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 });
-
 
 // ============================================================
 // UPLOAD PROFILE PICTURE
