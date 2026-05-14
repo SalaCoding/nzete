@@ -492,6 +492,45 @@ export const requestPasswordReset = async (email) => {
     return { success: false, error: errorMessage };
   }
 };
+export const resendVerification = async (email) => {
+  if (!email) return { success: false, error: 'Email address parameter is required' };
+  
+  useAuthUserStore.setState({ isLoading: true, loadingType: 'resend', error: null });
+
+  try {
+    const sanitizedEmail = email.trim().toLowerCase();
+
+    // Use fetchWithRetries or standard fetch to align with your store configuration utilities
+    const response = await fetchWithRetries(`${API_URL}/api/auth/resend-verification`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: sanitizedEmail }),
+    });
+
+    // Insulate mobile runtime engine from non-JSON backend container crash scripts
+    const text = await response.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      console.error('[resendVerification] Server returned non-JSON response:', text);
+      throw new Error("Server sent an invalid response context layout. Check backend configurations.");
+    }
+
+    useAuthUserStore.setState({ isLoading: false, loadingType: null });
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to dispatch new verification link');
+    }
+
+    return { success: true, message: data.message };
+
+  } catch (error) {
+    const errorMessage = getGenericError ? getGenericError(error) : error.message;
+    useAuthUserStore.setState({ error: errorMessage, isLoading: false, loadingType: null });
+    return { success: false, error: errorMessage };
+  }
+};
 export const resetPassword = async (token, password) => {
   try {
     if (!token || !password) throw new Error('Missing reset token or password.');

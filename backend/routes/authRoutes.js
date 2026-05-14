@@ -324,7 +324,6 @@ router.post('/login', loginLimiter, async (req, res) => {
   }
 });
 
-
 // ============================================================
 // GET CURRENT USER
 // ============================================================
@@ -344,11 +343,6 @@ router.get('/me', authMiddleware, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
-
-// ============================================================
-// EMAIL VERIFICATION
-// ============================================================
-
 // ============================================================
 // EMAIL VERIFICATION
 // ============================================================
@@ -561,8 +555,9 @@ router.post('/request-password-reset', async (req, res) => {
     
     await user.save();
 
-    const baseUrl = process.env.FRONTEND_URL || process.env.EXPO_PUBLIC_FRONTEND_URL || 'https://nzete.onrender.com';
-    const resetUrl = `${baseUrl}/reset-password?token=${rawResetToken}`;
+    const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    const resetUrl = `${cleanBaseUrl}/reset-password?token=${rawResetToken}`;
+
 
     await sendEmail(
       normalizedEmail,

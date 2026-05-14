@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useAuthUserStore, checkUserWithRetry } from '../library/authUserStore';
+// Import the centralized action to handle networking safely
+import { checkUserWithRetry, resendVerification } from '../library/authUserStore';
 
 export const VerificationInfoScreen = ({ email }) => {
   const router = useRouter();
@@ -42,26 +43,23 @@ export const VerificationInfoScreen = ({ email }) => {
     }
   };
 
-  // Action: Call the backend endpoint to request a fresh token link
+  // Action: Securely request a new link through your core state action store wrapper
   const handleResendLink = async () => {
     if (countdown > 0 || isResending || !normalizedEmail) return;
     setIsResending(true);
 
     try {
-      const { API_URL } = useAuthUserStore.getState();
-      const response = await fetch(`${API_URL}/api/auth/resend-verification`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: normalizedEmail }),
-      });
+      // Clean, robust connection utilizing your auth store's fetch configurations
+      const result = await resendVerification(normalizedEmail);
       
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || 'Resend request failed');
-
-      Alert.alert('Email Sent', data.message || 'A new validation link has been sent.');
-      setCountdown(60); // Impose a 60-second execution shield protection block
-    } catch (error) {
-      Alert.alert('Error', error.message || 'Failed to send new email. Please try again.');
+      if (result.success) {
+        Alert.alert('Email Sent', result.message || 'A new validation link has been sent.');
+        setCountdown(60); // Impose a 60-second anti-spam execution guard
+      } else {
+        Alert.alert('Error', result.error || 'Failed to send new email. Please try again.');
+      }
+    } catch (_error) {
+      Alert.alert('Network Error', 'An unexpected transport connection exception occurred. Please verify your internet connection.');
     } finally {
       setIsResending(false);
     }
@@ -81,7 +79,7 @@ export const VerificationInfoScreen = ({ email }) => {
         Please check your inbox and click the link to continue.
       </Text>
 
-      {/* NEW: Action button to pull latest user status from server */}
+      {/* Action button to pull latest user status from server */}
       <TouchableOpacity
         style={[styles.actionBtn, { backgroundColor: '#007AFF', marginBottom: 12 }]}
         onPress={handleCheckStatus}
@@ -94,22 +92,30 @@ export const VerificationInfoScreen = ({ email }) => {
         )}
       </TouchableOpacity>
 
-      {/* NEW: Anti-Spam Resend Action button */}
+      {/* Anti-Spam Resend Action button */}
       <TouchableOpacity
-        style={[styles.actionBtn, { backgroundColor: '#transparent', borderWidth: 1, borderColor: countdown > 0 ? '#ccc' : '#007AFF', marginBottom: 24 }]}
+        style={[
+          styles.actionBtn, 
+          { 
+            backgroundColor: 'transparent', 
+            borderWidth: 1, 
+            borderColor: countdown > 0 || isResending || isChecking ? '#ccc' : '#007AFF', 
+            marginBottom: 24 
+          }
+        ]}
         onPress={handleResendLink}
         disabled={countdown > 0 || isResending || isChecking || !normalizedEmail}
       >
         {isResending ? (
           <ActivityIndicator color="#007AFF" />
         ) : (
-          <Text style={[styles.actionText, { color: countdown > 0 ? '#aaa' : '#007AFF' }]}>
+          <Text style={[styles.actionText, { color: countdown > 0 || isResending || isChecking ? '#aaa' : '#007AFF' }]}>
             {countdown > 0 ? `Resend Link in (${countdown}s)` : 'Resend verification email'}
           </Text>
         )}
       </TouchableOpacity>
 
-      {/* Retained original structural anchor layout */}
+      {/* Return back to the login interface block anchor */}
       <TouchableOpacity
         style={styles.backBtn}
         onPress={() => router.replace('/login')}
