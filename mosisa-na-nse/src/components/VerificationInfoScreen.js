@@ -118,7 +118,7 @@ export const VerificationInfoScreen = ({ email }) => {
       {/* Return back to the login interface block anchor */}
       <TouchableOpacity
         style={styles.backBtn}
-        onPress={() => router.replace('/login')}
+        onPress={() => router.replace('/(auth)/login')}
         disabled={isChecking || isResending}
         accessibilityLabel="Go to login"
       >

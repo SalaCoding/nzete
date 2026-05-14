@@ -360,13 +360,10 @@ router.get('/verify-email', async (req, res) => {
       verificationExpires: { $gt: Date.now() }
     });
 
-    // Insulate the redirection targets from dropping down into 'undefined' string patterns
-    const baseUrl = process.env.FRONTEND_URL || process.env.EXPO_PUBLIC_FRONTEND_URL || 'onrender.com';
-    const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
-
+    // CRITICAL FIX: Fall back to your app's explicit scheme if verification expires
     if (!user) {
-      // Redirect to a frontend failure screen if link expires
-      return res.redirect(`${cleanBaseUrl}/login?verified=false&reason=expired`);
+      console.log("[Verification] Token expired or invalid.");
+      return res.redirect(`mosisananse://login?verified=false&reason=expired`);
     }
 
     user.verified = true;
@@ -374,13 +371,18 @@ router.get('/verify-email', async (req, res) => {
     user.verificationExpires = undefined;
     await user.save();
 
-    // Smooth redirection back to your Expo mobile/web application 
-    return res.redirect(`${cleanBaseUrl}/login?verified=true`);
+    console.log(`[Verification] User ${user.email} successfully verified.`);
+
+    // CRITICAL FIX: Redirect using your custom app scheme prefix!
+    // This tells the phone's browser to instantly minimize and hand execution back to your Expo mobile app.
+    return res.redirect(`mosisananse://login?verified=true`);
+
   } catch (error) {
     console.error('[GET /verify-email] Error:', error);
     return res.status(500).json({ message: "Internal server error during verification" });
   }
 });
+
 
 // ============================================================
 // RESEND VERIFICATION EMAIL

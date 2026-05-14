@@ -14,18 +14,36 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import React, { useState, useEffect } from 'react'
 import { Image } from 'expo-image'
 import { StatusBar } from 'expo-status-bar'
-import { Link, useRouter } from 'expo-router'
+import { Link, useRouter, useLocalSearchParams } from 'expo-router' // Added useLocalSearchParams
 import { Ionicons } from '@expo/vector-icons'
 import { useAuthUserStore, login } from '../../library/authUserStore';
 
 const Login = () => {
   const router = useRouter()
+  // Intercept inbound url parameters from your custom app scheme (mosisananse://login?verified=true)
+  const { verified, reason } = useLocalSearchParams();
+  
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isEmailLoading, setIsEmailLoading] = useState(false)
 
   const { user, error, _hasHydrated } = useAuthUserStore();
+
+  // Watch for returning deep-linked verified users
+  useEffect(() => {
+    if (verified === 'true') {
+      Alert.alert(
+        'Account Verified!',
+        'Your Nzete account is active. You can now log in with your email and password.'
+      );
+    } else if (verified === 'false' && reason === 'expired') {
+      Alert.alert(
+        'Link Expired',
+        'This verification link is invalid or older than 24 hours. Please log in to resend a new link.'
+      );
+    }
+  }, [verified, reason]);
 
   // Redirect on successful login verification
   useEffect(() => {

@@ -15,7 +15,7 @@ const ResetPassword = () => {
       Alert.alert(
         'Missing Token',
         'This reset link is invalid or has expired. Please request a new recovery email.',
-        [{ text: 'OK', onPress: () => router.replace('/login') }]
+        [{ text: 'OK', onPress: () => router.replace('/(auth)/login') }]
       );
     }
   }, [token, router]);
@@ -42,7 +42,7 @@ const ResetPassword = () => {
           [
             {
               text: 'Login',
-              onPress: () => router.replace('/login')
+              onPress: () => router.replace('/(auth)/login')
             }
           ]
         );
@@ -85,6 +85,15 @@ const ResetPassword = () => {
         ) : (
           <Text style={styles.buttonText}>Reset Password</Text>
         )}
+      </TouchableOpacity>
+
+      {/* FIXED: Clean escape route to guarantee users are never trapped on this view */}
+      <TouchableOpacity
+        style={styles.cancelLink}
+        onPress={() => router.replace('/(auth)/login')}
+        disabled={isLoading}
+      >
+        <Text style={styles.cancelText}>Cancel and return to Login</Text>
       </TouchableOpacity>
     </View>
   );
@@ -138,8 +147,17 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   buttonText: {
-    color: '#fff', // High contrast white layout definition
+    color: '#fff',
     fontSize: 16,
+    fontWeight: '600',
+  },
+  cancelLink: {
+    marginTop: 24,
+    padding: 8,
+  },
+  cancelText: {
+    color: '#007AFF',
+    fontSize: 15,
     fontWeight: '600',
   },
 });

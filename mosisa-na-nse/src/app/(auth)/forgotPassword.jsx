@@ -37,14 +37,14 @@ const ForgotPassword = () => {
       
       if (result.success) {
         setSent(true);
-        // Standardized alert routing pattern ensuring redirection fires cleanly after confirmation click
+        // Alert confirmation action handles the path redirect cleanly
         Alert.alert(
           'Email Sent', 
           result.message || 'Check your inbox for reset instructions.',
           [
             {
               text: 'Back to Login',
-              onPress: () => router.replace('/login')
+              onPress: () => router.replace('/(auth)/login') // Explicit secure routing
             }
           ]
         );
@@ -98,9 +98,10 @@ const ForgotPassword = () => {
           )}
         </TouchableOpacity>
         
+        {/* FIXED: Replaced unsafe router.back() with direct fallback redirect */}
         <TouchableOpacity
           style={styles.backLink}
-          onPress={() => router.back()}
+          onPress={() => router.replace('/(auth)/login')}
           disabled={isLoading}
           accessibilityRole="button"
         >
