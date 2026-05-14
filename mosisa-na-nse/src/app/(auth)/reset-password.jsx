@@ -1,50 +1,90 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { resetPassword } from '../../library/authUserStore';
 
 const ResetPassword = () => {
   const router = useRouter();
-  // If you use expo-router (web or mobile deep link), you'll get ?token=... from params:
   const { token } = useLocalSearchParams();
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  // Safety Trap: Intercept missing incoming request tokens early to block illegal execution loops
+  useEffect(() => {
+    if (!token) {
+      Alert.alert(
+        'Missing Token',
+        'This reset link is invalid or has expired. Please request a new recovery email.',
+        [{ text: 'OK', onPress: () => router.replace('/login') }]
+      );
+    }
+  }, [token, router]);
+
   const handleReset = async () => {
+    if (!token) return;
+
     if (!password || password.length < 8) {
-      Alert.alert('Invalid password', 'Password must be at least 8 characters.');
+      Alert.alert('Invalid Password', 'Password must be at least 8 characters long.');
       return;
     }
+
     setIsLoading(true);
-    const result = await resetPassword(token, password);
-    setIsLoading(false);
-    if (result.success) {
-      Alert.alert('Success', result.message || 'Password reset! Please log in.');
-      router.replace('/login');
-    } else {
-      Alert.alert('Error', result.error || 'Could not reset password.');
+    try {
+      // Execute the SHA-256 secure database token validation path check 
+      const result = await resetPassword(token, password);
+      setIsLoading(false);
+
+      if (result.success) {
+        // Callback encapsulation guarantees text parsing clarity before system routing changes occur
+        Alert.alert(
+          'Success', 
+          result.message || 'Password reset successfully! Please log in with your new credentials.',
+          [
+            {
+              text: 'Login',
+              onPress: () => router.replace('/login')
+            }
+          ]
+        );
+      } else {
+        Alert.alert('Reset Failed', result.error || 'Could not reset password. The link may be expired.');
+      }
+    } catch (_e) {
+      setIsLoading(false);
+      Alert.alert('Error', 'Could not contact server. Please try again.');
     }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Reset Password</Text>
+      <Text style={styles.description}>Please create a secure new password for your Nzete account below.</Text>
+      
       <TextInput
         placeholder="New Password"
+        placeholderTextColor="#888"
         secureTextEntry
+        autoCapitalize="none"
+        autoCorrect={false}
         style={styles.input}
         value={password}
         onChangeText={setPassword}
-        editable={!isLoading}
+        editable={!isLoading && !!token}
       />
+      
       <TouchableOpacity
-        style={styles.button}
+        style={[
+          styles.button,
+          { backgroundColor: isLoading || !token ? '#ccc' : '#007AFF' }
+        ]}
         onPress={handleReset}
-        disabled={isLoading}
+        disabled={isLoading || !token}
       >
-        <Text style={styles.buttonText}>
-          {isLoading ? 'Resetting...' : 'Reset Password'}
-        </Text>
+        {isLoading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Reset Password</Text>
+        )}
       </TouchableOpacity>
     </View>
   );
@@ -61,14 +101,15 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    marginBottom: 14,
+    marginBottom: 8,
     color: '#007AFF',
   },
   description: {
     textAlign: 'center',
-    color: '#000000',
-    marginBottom: 22,
-    fontSize: 16,
+    color: '#666',
+    marginBottom: 24,
+    fontSize: 15,
+    lineHeight: 20
   },
   input: {
     width: '100%',
@@ -81,7 +122,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: '#FAFAFA',
     color: '#000',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   button: {
     width: '100%',
@@ -90,8 +131,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 8,
-    marginBottom: 18,
     shadowColor: '#007AFF',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
@@ -99,20 +138,10 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   buttonText: {
-    color: '#2f2f2f',
-    fontSize: 17,
-    fontWeight: '600',
-  },
-  backLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 24,
-  },
-  backText: {
-    color: '#007AFF',
+    color: '#fff', // High contrast white layout definition
     fontSize: 16,
-    marginLeft: 8,
     fontWeight: '600',
   },
 });
+
 export default ResetPassword;

@@ -13,32 +13,45 @@ import {
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import { requestPasswordReset } from '../../library/authUserStore';
+import { useAuthUserStore, requestPasswordReset } from '../../library/authUserStore';
 
 const ForgotPassword = () => {
   const router = useRouter();
   const [email, setEmail] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [sent, setSent] = useState(false);
+
+  // Sync component lifecycle to Zustand's unified single-source loading context flags
+  const { isLoading } = useAuthUserStore();
 
   const handleForgot = async () => {
     if (isLoading) return;
-    if (!email.trim() || !email.includes('@')) {
+    
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail || !normalizedEmail.includes('@')) {
       Alert.alert('Invalid Email', 'Please enter a valid email address.');
       return;
     }
-    setIsLoading(true);
+
     try {
-      const result = await requestPasswordReset(email);
-      setIsLoading(false);
+      const result = await requestPasswordReset(normalizedEmail);
+      
       if (result.success) {
         setSent(true);
-        Alert.alert('Email Sent', result.message || 'Check your inbox for reset instructions.');
+        // Standardized alert routing pattern ensuring redirection fires cleanly after confirmation click
+        Alert.alert(
+          'Email Sent', 
+          result.message || 'Check your inbox for reset instructions.',
+          [
+            {
+              text: 'Back to Login',
+              onPress: () => router.replace('/login')
+            }
+          ]
+        );
       } else {
         Alert.alert('Error', result.error || 'Could not send reset email.');
       }
     } catch (_e) {
-      setIsLoading(false);
       Alert.alert('Error', 'Could not contact server. Try again.');
     }
   };
@@ -54,33 +67,37 @@ const ForgotPassword = () => {
         <Text style={styles.description}>
           Enter your email address and we&apos;ll send you a link to reset your password.
         </Text>
+        
         <TextInput
           placeholder="Email"
           placeholderTextColor="#888"
           autoCapitalize="none"
+          autoCorrect={false}
           keyboardType="email-address"
           style={styles.input}
           value={email}
           onChangeText={setEmail}
-          editable={!isLoading && !sent}
+          editable={!isLoading}
         />
+        
         <TouchableOpacity
           style={[
             styles.button,
-            { backgroundColor: isLoading || sent ? '#ccc' : '#007AFF' },
+            { backgroundColor: isLoading ? '#ccc' : '#007AFF' },
           ]}
           onPress={handleForgot}
-          disabled={isLoading || sent}
+          disabled={isLoading}
           accessibilityRole="button"
         >
           {isLoading ? (
             <ActivityIndicator color="#fff" />
           ) : (
             <Text style={styles.buttonText}>
-              {sent ? 'Email Sent!' : 'Send Reset Email'}
+              {sent ? 'Resend Reset Email' : 'Send Reset Email'}
             </Text>
           )}
         </TouchableOpacity>
+        
         <TouchableOpacity
           style={styles.backLink}
           onPress={() => router.back()}
