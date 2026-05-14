@@ -270,7 +270,7 @@ router.post('/register', authLimiter, async (req, res) => {
 });
 
 // ============================================================
-// LOGIN
+// LOGIN (Optimized)
 // ============================================================
 
 router.post('/login', loginLimiter, async (req, res) => {
@@ -278,9 +278,7 @@ router.post('/login', loginLimiter, async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ 
-        message: 'Email and password are required' 
-      });
+      return res.status(400).json({ message: 'Email and password are required' });
     }
 
     if (!isValidString(email, 100) || !isValidString(password, 100)) {
@@ -307,24 +305,25 @@ router.post('/login', loginLimiter, async (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
+    // Update login timestamp
     user.lastLogin = new Date();
     await user.save(); 
 
+    // Generate token
     const token = generateToken(user._id);
-    const freshUser = await User.findById(user._id).select('-password');
 
+    // No need to query the database a second time; pass 'user' straight to sanitizer
     return res.status(200).json({
       token,
-      user: sanitizeUser(freshUser),
+      user: sanitizeUser(user),
     });
 
   } catch (error) {
     console.error('[LOGIN] Error:', error);
-    return res.status(500).json({ 
-      message: 'Server error during login' 
-    });
+    return res.status(500).json({ message: 'Server error during login' });
   }
 });
+
 
 // ============================================================
 // GET CURRENT USER
@@ -350,61 +349,87 @@ router.get('/me', authMiddleware, async (req, res) => {
 // EMAIL VERIFICATION
 // ============================================================
 
+// ============================================================
+// EMAIL VERIFICATION
+// ============================================================
 router.get('/verify-email', async (req, res) => {
-  const { token } = req.query;
+  try {
+    const { token } = req.query;
 
-  const user = await User.findOne({
-    verificationToken: token,
-    verificationExpires: { $gt: Date.now() }
-  });
+    if (!token) {
+      return res.status(400).json({ message: "Token is required" });
+    }
 
-  if (!user) {
-    return res.status(400).json({ message: "Invalid or expired token" });
+    const user = await User.findOne({
+      verificationToken: token,
+      verificationExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      // Redirect to a frontend failure screen if link expires
+      return res.redirect(`${process.env.FRONTEND_URL}/login?verified=false&reason=expired`);
+    }
+
+    user.verified = true;
+    user.verificationToken = undefined;
+    user.verificationExpires = undefined;
+    await user.save();
+
+    // Smooth redirection back to your Expo mobile/web application 
+    return res.redirect(`${process.env.FRONTEND_URL}/login?verified=true`);
+  } catch (error) {
+    console.error('[GET /verify-email] Error:', error);
+    return res.status(500).json({ message: "Internal server error during verification" });
   }
-
-  user.verified = true;
-  user.verificationToken = undefined;
-  user.verificationExpires = undefined;
-
-  await user.save();
-
-  return res.json({ message: "Email verified successfully" });
 });
+
 // ============================================================
 // RESEND VERIFICATION EMAIL
 // ============================================================
 router.post('/resend-verification', async (req, res) => {
-  const { email } = req.body;
-  if (!email) return res.status(400).json({ message: "Email required" });
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: "Email required" });
 
-  const user = await User.findOne({ email: email.trim().toLowerCase() });
-  if (!user) return res.status(200).json({ message: "If your account exists, we'll send instructions." });
-  if (user.verified) return res.status(200).json({ message: "Email is already verified." });
+    const user = await User.findOne({ email: email.trim().toLowerCase() });
+    
+    // Mitigate user enumeration attacks by matching responses
+    const genericSuccessMessage = { message: "If your account exists, a verification link has been sent." };
+    
+    if (!user) return res.status(200).json(genericSuccessMessage);
+    if (user.verified) return res.status(200).json({ message: "Email is already verified." });
 
-  const verificationToken = crypto.randomBytes(32).toString("hex");
-  const verificationExpires = Date.now() + 1000 * 60 * 60 * 24;
-  user.verificationToken = verificationToken;
-  user.verificationExpires = verificationExpires;
-  await user.save();
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const verificationExpires = Date.now() + 1000 * 60 * 60 * 24; // 24 hours
+    
+    user.verificationToken = verificationToken;
+    user.verificationExpires = verificationExpires;
+    await user.save();
 
-  const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
-  await sendEmail(
-    user.email,
-    "Verify your Nzete account",
-    `Click this link to verify your account:\n\n${verifyUrl}\n\nLink expires in 24 hours.`
-  );
-  return res.json({ message: "Verification email sent." });
+    const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+    
+    await sendEmail(
+      user.email,
+      "Verify your Nzete account",
+      `Click this link to verify your account:\n\n${verifyUrl}\n\nLink expires in 24 hours.`
+    );
+    
+    return res.json(genericSuccessMessage);
+  } catch (error) {
+    console.error('[POST /resend-verification] Error:', error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
 });
+
 // ============================================================
 // UPLOAD PROFILE PICTURE
 // ============================================================
-
 router.post('/upload', authMiddleware, uploadLimiter, async (req, res) => {
   const { image } = req.body;
   const userId = req.user._id;
 
   if (!image) return res.status(400).json({ error: 'No image provided' });
-  if (!isValidString(image, 10 * 1024 * 1024)) return res.status(400).json({ error: 'Invalid image data' });
+  if (!isValidString(image, 10 * 1024 * 1024)) return res.status(400).json({ error: 'Invalid image data size' });
 
   try {
     let base64Data = image;
@@ -426,7 +451,7 @@ router.post('/upload', authMiddleware, uploadLimiter, async (req, res) => {
     try {
       const sharpInstance = sharp(buffer)
         .resize(500, 500, { fit: 'cover', withoutEnlargement: true })
-        .removeAlpha();
+        .flatten({ background: '#ffffff' }); // Cleaner approach to transparency layer handling
 
       if (type.mime === 'image/png') {
         processedBuffer = await sharpInstance.png({ compressionLevel: 9 }).toBuffer();
@@ -434,7 +459,7 @@ router.post('/upload', authMiddleware, uploadLimiter, async (req, res) => {
         processedBuffer = await sharpInstance.jpeg({ quality: 85 }).toBuffer();
       }
     } catch (err) {
-      return res.status(400).json({ error: 'Failed to process image' });
+      return res.status(400).json({ error: 'Failed to compress image file parameters' });
     }
 
     const filename = `${userId}-${uuidv4()}.${type.ext}`;
@@ -451,17 +476,17 @@ router.post('/upload', authMiddleware, uploadLimiter, async (req, res) => {
       { new: true, runValidators: true, select: '-password' }
     );
 
-    res.json({ message: 'Profile picture updated', user: sanitizeUser(updatedUser) });
+    return res.json({ message: 'Profile picture updated', user: sanitizeUser(updatedUser) });
 
   } catch (err) {
     console.error('[POST /upload]', err);
-    res.status(500).json({ error: 'Server error during upload' });
+    return res.status(500).json({ error: 'Server error during upload handling' });
   }
 });
+
 // ============================================================
 // PATCH USER PROFILE
 // ============================================================
-
 router.patch('/user/profile', authMiddleware, async (req, res) => {
   try {
     const userId = req.user._id;
@@ -486,7 +511,9 @@ router.patch('/user/profile', authMiddleware, async (req, res) => {
 
     if (profilePicture !== undefined) {
       if (!isValidString(profilePicture, 500)) return res.status(400).json({ message: 'Invalid profile picture URL' });
-      if (!isAllowedImageUrl(profilePicture) && !profilePicture.includes(`${req.get('host')}/uploads/`)) {
+      
+      const host = req.get('host');
+      if (!isAllowedImageUrl(profilePicture) && !profilePicture.includes(`${host}/uploads/`)) {
         return res.status(400).json({ message: 'Invalid picture source' });
       }
       updateData.profilePicture = profilePicture;
@@ -500,13 +527,14 @@ router.patch('/user/profile', authMiddleware, async (req, res) => {
       { new: true, runValidators: true, select: '-password' }
     );
 
-    res.status(200).json({ message: 'Profile updated', user: sanitizeUser(updatedUser) });
+    return res.status(200).json({ message: 'Profile updated', user: sanitizeUser(updatedUser) });
 
   } catch (error) {
     if (error.code === 11000) return res.status(409).json({ message: 'Username in use' });
-    res.status(500).json({ message: 'Server error' });
+    return res.status(500).json({ message: 'Server error' });
   }
 });
+
 // ============================================================
 // REQUEST PASSWORD RESET
 // ============================================================
@@ -518,35 +546,38 @@ router.post('/request-password-reset', async (req, res) => {
     const normalizedEmail = email.trim().toLowerCase();
     const user = await User.findOne({ email: normalizedEmail });
 
-    // Security: Don't reveal if a user exists
+    const genericResponse = { message: "If an account matches that email, instructions have been sent." };
+
+    // Prevent user enumeration
     if (!user) {
-      return res.status(200).json({ message: "If that user exists, we've sent instructions." });
+      return res.status(200).json(genericResponse);
     }
 
-    const resetToken = crypto.randomBytes(32).toString("hex");
-    user.resetPasswordToken = resetToken;
+    const rawResetToken = crypto.randomBytes(32).toString("hex");
+    
+    // Hash token for secure database storage
+    user.resetPasswordToken = crypto.createHash('sha256').update(rawResetToken).digest('hex');
     user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
     
-    await user.save(); // This triggers the pre-save hook we fixed above
+    await user.save();
 
-    // Replace the old resetUrl line with these two:
-const baseUrl = process.env.EXPO_PUBLIC_FRONTEND_URL || 'https://onrender.com';
-const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`;
-
+    const baseUrl = process.env.FRONTEND_URL || process.env.EXPO_PUBLIC_FRONTEND_URL || 'https://nzete.onrender.com';
+    const resetUrl = `${baseUrl}/reset-password?token=${rawResetToken}`;
 
     await sendEmail(
       normalizedEmail,
       "Reset your Nzete password",
       `Click the link below to reset your password:\n\n${resetUrl}`,
-      `<p>Click <a href="${resetUrl}">here</a> to reset your password.</p>` 
+      `<p>Click <a href="${resetUrl}">here</a> to reset your password. This link expires in 1 hour.</p>` 
     );
 
-    return res.status(200).json({ message: "Instructions sent." });
+    return res.status(200).json(genericResponse);
   } catch (error) {
     console.error("Reset Error:", error);
     return res.status(500).json({ message: "Internal server error." });
   }
 });
+
 // ============================================================
 // RESET PASSWORD
 // ============================================================
@@ -555,8 +586,11 @@ router.post('/reset-password', async (req, res) => {
     const { token, password } = req.body;
     if (!token || !password) return res.status(400).json({ message: 'Token and new password required.' });
 
+    // Hash the incoming plaintext token to match the database value
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
     const user = await User.findOne({
-      resetPasswordToken: token,
+      resetPasswordToken: hashedToken,
       resetPasswordExpires: { $gt: Date.now() }
     });
 
@@ -568,12 +602,12 @@ router.post('/reset-password', async (req, res) => {
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
     
-    await user.save(); // The fix in User.js makes this work!
+    await user.save();
 
-    res.json({ message: "Password reset successfully." });
+    return res.json({ message: "Password reset successfully." });
   } catch (error) {
     console.error("Reset Finalize Error:", error);
-    res.status(500).json({ message: "Internal server error." });
+    return res.status(500).json({ message: "Internal server error." });
   }
 });
 

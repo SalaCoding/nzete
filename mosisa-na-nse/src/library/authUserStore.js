@@ -173,13 +173,18 @@ export const register = async (username, email, password) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: sanitizedUsername, email: sanitizedEmail, password }),
     });
+
     const data = await response.json();
     if (!response.ok) throw new Error(data.message || 'Registration failed');
-    if (!data.token || !data.user) throw new Error('Invalid server response');
 
-    useAuthUserStore.getState().setAuth(data.token, data.user);
+    // DO NOT write auth details to the store here because the account is unverified!
     useAuthUserStore.setState({ isLoading: false, loadingType: null });
-    return { success: true };
+    
+    return { 
+      success: true, 
+      message: data.message || "Verification email sent. Please check your inbox.",
+      email: sanitizedEmail 
+    };
   } catch (error) {
     const errorMessage = getGenericError(error);
     useAuthUserStore.setState({ error: errorMessage, isLoading: false, loadingType: null });
@@ -202,10 +207,7 @@ export const login = async (email, password) => {
     const response = await fetchWithRetries(`${API_URL}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: sanitizedEmail,
-        password,
-      }),
+      body: JSON.stringify({ email: sanitizedEmail, password }),
     });
 
     const rawText = await response.text();
@@ -213,14 +215,27 @@ export const login = async (email, password) => {
     try {
       data = JSON.parse(rawText);
     } catch (_error) {
-      // Optionally add extra debug log here for unexpected server errors
       console.error('[login] Server returned non-JSON response:', rawText);
       throw new Error(`Server Error: ${rawText.substring(0, 20)}...`);
     }
 
-    if (!response.ok) throw new Error(data.message || 'Login failed');
+    if (!response.ok) {
+      // Correctly intercept the strict backend verification check
+      if (response.status === 403 && data.isUnverified) {
+        useAuthUserStore.setState({ isLoading: false, loadingType: null });
+        return { 
+          success: false, 
+          isUnverified: true, 
+          email: sanitizedEmail, 
+          error: data.message 
+        };
+      }
+      throw new Error(data.message || 'Login failed');
+    }
+
     if (!data.token || !data.user) throw new Error('Invalid server response');
 
+    // Commit authentication payload upon true verification validation
     useAuthUserStore.getState().setAuth(data.token, data.user);
     useAuthUserStore.setState({ isLoading: false, loadingType: null });
     return { success: true };
@@ -253,6 +268,7 @@ export const logout = async () => {
 export const updateUser = async (updatedData) => {
   const { token, user } = useAuthUserStore.getState();
   if (!token || !user) return { success: false, error: 'User not authenticated' };
+  
   if (isTokenExpired(token)) {
     await logout();
     return { success: false, error: 'Session expired. Please log in again.' };
@@ -263,7 +279,10 @@ export const updateUser = async (updatedData) => {
   try {
     const sanitizedData = {};
     if (updatedData.username) sanitizedData.username = sanitizeInput(updatedData.username);
-    if (updatedData.profilePicture) sanitizedData.profilePicture = sanitizeInput(updatedData.profilePicture);
+    
+    // Safety Fix: Do not run sanitizeInput on URL string patterns to protect path structures
+    if (updatedData.profilePicture) sanitizedData.profilePicture = updatedData.profilePicture;
+    
     if (Object.keys(sanitizedData).length === 0) throw new Error('No valid update data provided');
 
     const response = await fetchWithRetries(`${API_URL}/api/auth/user/profile`, {
@@ -274,6 +293,7 @@ export const updateUser = async (updatedData) => {
       },
       body: JSON.stringify(sanitizedData),
     });
+    
     const data = await response.json();
     if (!response.ok) {
       if (response.status === 401) {
@@ -282,6 +302,7 @@ export const updateUser = async (updatedData) => {
       }
       throw new Error(data.message || 'Failed to update profile');
     }
+    
     useAuthUserStore.setState({
       user: data.user,
       isLoading: false,
@@ -297,10 +318,12 @@ export const updateUser = async (updatedData) => {
 export const fetchProtected = async (path, options = {}, retries = MAX_RETRIES) => {
   const { token } = useAuthUserStore.getState();
   if (!token) throw new Error('No token available');
+  
   if (isTokenExpired(token)) {
     await logout();
     throw new Error('Session expired. Please log in again.');
   }
+  
   try {
     const response = await fetchWithRetries(`${API_URL}${path}`, {
       ...options,
@@ -310,29 +333,36 @@ export const fetchProtected = async (path, options = {}, retries = MAX_RETRIES) 
         Authorization: `Bearer ${token}`,
       },
     }, retries);
+    
     const data = await response.json();
     if (!response.ok) {
-      if (response.status === 401) {
+      // Direct session invalidation triggers
+      if (response.status === 401 || response.status === 403) {
         await logout();
-        throw new Error('Session expired. Please log in again.');
+        throw new Error(data.message || 'Session invalidated. Please log in again.');
       }
       throw new Error(data.message || 'Request failed');
     }
     return data;
   } catch (error) {
-    if (error.message.includes('expired') || error.message.includes('401')) await logout();
+    // Structural cleanup trap to clear local store states
+    if (error.message.includes('expired') || error.message.includes('401') || error.message.includes('verified')) {
+      await logout();
+    }
     throw error;
   }
 };
 export const refreshUser = async () => {
   const { token } = useAuthUserStore.getState();
   if (!token || isTokenExpired(token)) return { success: false, error: 'Not authenticated' };
+  
   try {
     const data = await fetchProtected('/api/auth/me');
     useAuthUserStore.setState({ user: data.user });
     return { success: true, user: data.user };
   } catch (error) {
-    return { success: false, error: error.message };
+    // If background sync reveals an unverified state, drop session and notify navigation guards
+    return { success: false, error: error.message, isUnverified: error.message.includes('verified') };
   }
 };
 export const checkUser = async () => {
@@ -354,15 +384,13 @@ export const checkUser = async () => {
     }
 
     // 3. MANDATORY VERIFICATION CHECK (from Local Store)
-    // If user is in store but NOT verified, log them out
     if (user && !user.verified) {
       useAuthUserStore.getState().clearAuth();
       useAuthUserStore.setState({ isLoading: false });
-      return { success: false, error: 'User not verified', isUnverified: true };
+      return { success: false, error: 'Email not verified', isUnverified: true };
     }
 
-    // 4. Fetch fresh user data if needed
-    // (We skip the 'if (user) return' shortcut to ensure we get the latest 'verified' status from DB)
+    // 4. Fetch fresh user data securely
     const response = await fetchWithTimeout(`${API_URL}/api/auth/me`, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -370,20 +398,28 @@ export const checkUser = async () => {
       },
     });
 
-    const data = await response.json();
+    // Extract raw stream to insulate store logic from non-JSON server crash components
+    const rawText = await response.text();
+    let data;
+    try {
+      data = JSON.parse(rawText);
+    } catch {
+      // Throw standard message to protect local store authentication data from cleaning out on network timeouts
+      throw new Error(`Server configuration mismatch. Error snippet: ${rawText.substring(0, 20)}...`);
+    }
 
     if (!response.ok) {
       // Handle the case where the backend says user is unverified (403)
-      if (response.status === 403) {
+      if (response.status === 403 && data.isUnverified) {
         useAuthUserStore.getState().clearAuth();
         useAuthUserStore.setState({ isLoading: false });
         return { success: false, error: 'Email not verified', isUnverified: true };
       }
-      throw new Error(data.message || 'Failed to verify user');
+      throw new Error(data.message || 'Failed to verify user session context');
     }
 
     // 5. FINAL SERVER-SIDE VERIFICATION CHECK
-    if (!data.user.verified) {
+    if (!data.user || !data.user.verified) {
       useAuthUserStore.getState().clearAuth();
       useAuthUserStore.setState({ isLoading: false });
       return { success: false, error: 'Email not verified', isUnverified: true };
@@ -393,6 +429,12 @@ export const checkUser = async () => {
     return { success: true, user: data.user };
 
   } catch (error) {
+    // Intercept network/parsing anomalies safely without destroying persistent device state structures
+    if (error.message.includes('Server configuration') || error.message.includes('timeout') || error.message.includes('Network')) {
+      useAuthUserStore.setState({ isLoading: false });
+      return { success: false, error: error.message };
+    }
+    
     useAuthUserStore.getState().clearAuth();
     useAuthUserStore.setState({ isLoading: false });
     return { success: false, error: error.message };
@@ -403,7 +445,12 @@ export const checkUserWithRetry = async (retries = 3) => {
     try {
       const result = await checkUser();
       if (result.success) return result;
-      if (result.error === 'No token' || result.error === 'Token expired') return result;
+      
+      // Stop unverified or unauthenticated requests immediately from generating unnecessary request traffic
+      if (result.error === 'No token' || result.error === 'Token expired' || result.isUnverified) {
+        return result;
+      }
+      
       if (i < retries - 1) await new Promise((resolve) => setTimeout(resolve, 500 * (i + 1)));
     } catch (err) {
       if (i === retries - 1) return { success: false, error: err.message };
