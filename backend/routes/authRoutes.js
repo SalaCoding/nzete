@@ -402,18 +402,24 @@ router.post('/resend-verification', async (req, res) => {
 
     const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
     
-    await sendEmail(
+    // NON-BLOCKING OPTIMIZATION: Remove 'await' so email sends in the background
+    sendEmail(
       user.email,
       "Verify your Nzete account",
-      `Click this link to verify your account:\n\n${verifyUrl}\n\nLink expires in 24 hours.`
-    );
+      `Click this link to verify your account:\n\n${verifyUrl}\n\nLink expires in 24 hours.`,
+      `<p>Click <a href="${verifyUrl}">here</a> to verify your account. This link expires in 24 hours.</p>`
+    ).catch(err => {
+      console.error("Background Email Delivery Failed:", err);
+    });
     
+    // The server responds instantly to the frontend now
     return res.json(genericSuccessMessage);
   } catch (error) {
     console.error('[POST /resend-verification] Error:', error);
     return res.status(500).json({ message: "Internal server error" });
   }
 });
+
 
 // ============================================================
 // UPLOAD PROFILE PICTURE
