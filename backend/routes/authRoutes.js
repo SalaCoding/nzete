@@ -382,8 +382,6 @@ router.get('/verify-email', async (req, res) => {
     return res.status(500).json({ message: "Internal server error during verification" });
   }
 });
-
-
 // ============================================================
 // RESEND VERIFICATION EMAIL
 // ============================================================
@@ -429,7 +427,6 @@ router.post('/resend-verification', async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 });
-
 // ============================================================
 // UPLOAD PROFILE PICTURE
 // ============================================================
@@ -492,7 +489,6 @@ router.post('/upload', authMiddleware, uploadLimiter, async (req, res) => {
     return res.status(500).json({ error: 'Server error during upload handling' });
   }
 });
-
 // ============================================================
 // PATCH USER PROFILE
 // ============================================================
@@ -594,7 +590,6 @@ router.post('/request-password-reset', async (req, res) => {
     return res.status(500).json({ message: "Internal server error." });
   }
 });
-
 // ============================================================
 // RESET PASSWORD
 // ============================================================
