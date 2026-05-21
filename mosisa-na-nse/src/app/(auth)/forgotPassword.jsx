@@ -44,7 +44,7 @@ const ForgotPassword = () => {
           [
             {
               text: 'Back to Login',
-              onPress: () => router.replace('/(auth)/login') // Explicit secure routing
+              onPress: () => router.replace('/(auth)')
             }
           ]
         );
@@ -101,7 +101,7 @@ const ForgotPassword = () => {
         {/* FIXED: Replaced unsafe router.back() with direct fallback redirect */}
         <TouchableOpacity
           style={styles.backLink}
-          onPress={() => router.replace('/(auth)/login')}
+          onPress={() => router.replace('/(auth)')}
           disabled={isLoading}
           accessibilityRole="button"
         >

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, ActivityIndicator, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { resetPassword } from '../../library/authUserStore';
 
@@ -11,14 +11,19 @@ const ResetPassword = () => {
 
   // Safety Trap: Intercept missing incoming request tokens early to block illegal execution loops
   useEffect(() => {
-    if (!token) {
+  if (!token) {
+    if (Platform.OS === 'web') {
+      alert("This reset link is invalid or has expired.");
+      router.replace('/(auth)');
+    } else {
       Alert.alert(
         'Missing Token',
-        'This reset link is invalid or has expired. Please request a new recovery email.',
-        [{ text: 'OK', onPress: () => router.replace('/(auth)/login') }]
+        'This reset link is invalid or has expired.',
+        [{ text: 'OK', onPress: () => router.replace('/(auth)') }]
       );
     }
-  }, [token, router]);
+  }
+}, [token, router]);
 
   const handleReset = async () => {
     if (!token) return;
@@ -42,7 +47,7 @@ const ResetPassword = () => {
           [
             {
               text: 'Login',
-              onPress: () => router.replace('/(auth)/login')
+              onPress: () => router.replace('/(auth)')
             }
           ]
         );
@@ -90,7 +95,7 @@ const ResetPassword = () => {
       {/* FIXED: Clean escape route to guarantee users are never trapped on this view */}
       <TouchableOpacity
         style={styles.cancelLink}
-        onPress={() => router.replace('/(auth)/login')}
+        onPress={() => router.replace('/(auth)')}
         disabled={isLoading}
       >
         <Text style={styles.cancelText}>Cancel and return to Login</Text>
