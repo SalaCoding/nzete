@@ -1,5 +1,7 @@
-import Constants from 'expo-constants';
-export const API_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_API_URL || "https://nzete.onrender.com";
-export const FRONTEND_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_FRONTEND_URL || "https://nzete.onrender.com"; //"https://nzete.onrender.com/reset-password"
+export const API_URL =
+  process.env.EXPO_PUBLIC_API_URL || "https://nzete.onrender.com";
+
+export const FRONTEND_URL =
+  process.env.EXPO_PUBLIC_FRONTEND_URL || "https://mosisa-ya-nzete.onrender.com";
 
 console.log("Connecting to:", API_URL);
