@@ -55,7 +55,7 @@ export default ({ config }) => ({
   ],
 },
   web: {
-    output: "single",
+    output: "static",
     favicon: "./assets/images/favicon.png",
     bundler: "metro",
   },
