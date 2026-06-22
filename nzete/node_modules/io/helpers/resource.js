@@ -171,12 +171,12 @@ class APIResourceRequest {
           });
           if (expectJSON) {
             try {
-              data = JSON.parse(data);
+              data = JSON.parse(data.split('\n').join(''));
             } catch (e) {
               // do nothing
             }
           }
-          let eventData = {event, data, id};
+          let eventData = { event, data, id };
           SSE.events[event] = SSE.events[event] || [];
           SSE.events[event].push(eventData);
           streamListener(eventData);
