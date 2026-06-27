@@ -13,7 +13,7 @@ import {
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuthUserStore, requestPasswordReset } from '../library/authUserStore';
+import { useAuthUserStore, requestPasswordReset } from '../../library/authUserStore';
 
 const ForgotPassword = () => {
   const router = useRouter();

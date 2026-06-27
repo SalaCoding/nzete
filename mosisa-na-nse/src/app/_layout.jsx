@@ -24,13 +24,15 @@ const RootLayout = () => {
 
   return (
     <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
-      <Stack.Protected guard={isSignedIn}>
-        <Stack.Screen name="(tabs)" />
-      </Stack.Protected>
+      {/* Reset password is declared at the top so it matches first, bypassing auth filters */}
+      <Stack.Screen name="reset-password" options={{ headerShown: false }} />
 
-      <Stack.Protected guard={!isSignedIn}>
+      {/* Standard routing split for signed-in vs guest users */}
+      {isSignedIn ? (
+        <Stack.Screen name="(tabs)" />
+      ) : (
         <Stack.Screen name="(auth)" />
-      </Stack.Protected>
+      )}
     </Stack>
   );
 };
