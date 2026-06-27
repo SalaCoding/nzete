@@ -12,7 +12,7 @@ import {
   ScrollView
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { resetPassword } from '../../library/authUserStore';
+import { resetPassword } from '../library/authUserStore';
 
 const ResetPassword = () => {
   const router = useRouter();

@@ -23,20 +23,16 @@ const RootLayout = () => {
   }
 
   return (
-  <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
-    <Stack.Protected guard={isSignedIn}>
-      <Stack.Screen name="(tabs)" />
-    </Stack.Protected>
+    <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
+      <Stack.Protected guard={isSignedIn}>
+        <Stack.Screen name="(tabs)" />
+      </Stack.Protected>
 
-    <Stack.Protected guard={!isSignedIn}>
-      <Stack.Screen name="(auth)" />
-    </Stack.Protected>
-
-    {/* Accessible to all users */}
-    <Stack.Screen name="reset-password" />
-  </Stack>
-
-);
-}
+      <Stack.Protected guard={!isSignedIn}>
+        <Stack.Screen name="(auth)" />
+      </Stack.Protected>
+    </Stack>
+  );
+};
 
 export default RootLayout;
