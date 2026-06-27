@@ -3,10 +3,10 @@ import { Text, StyleSheet, Platform} from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import NumberBrowser from "../../components/number"; // adjust path as needed
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 
 export default function NumberListScreen() {
-  const navigation = useNavigation();
+  const router = useRouter();
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff", padding: 16, flexGrow: 1 }}>
@@ -14,7 +14,7 @@ export default function NumberListScreen() {
         name="arrow-back"
         size={28}
         color="black"
-        onPress={() => navigation.goBack()}
+        onPress={() => router.back()}
         style={{ position: 'absolute', top: 90, left: 16, zIndex: 1 }}
       />
       <Text style={styles.header}>Motango</Text>
