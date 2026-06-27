@@ -31,6 +31,9 @@ const RootLayout = () => {
       <Stack.Protected guard={!isSignedIn}>
         <Stack.Screen name="(auth)" />
       </Stack.Protected>
+
+      {/* Accessible to all users, regardless of auth state */}
+      <Stack.Screen name="reset-password" />
     </Stack>
   );
 };
