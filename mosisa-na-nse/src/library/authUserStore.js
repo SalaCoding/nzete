@@ -225,7 +225,7 @@ export const login = async (email, password) => {
         useAuthUserStore.setState({ isLoading: false, loadingType: null });
         return { 
           success: false, 
-          isUnverified: true, 
+          //isUnverified: true, 
           email: sanitizedEmail, 
           error: data.message 
         };

@@ -298,12 +298,12 @@ router.post('/login', loginLimiter, async (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    if (!user.verified) {
-      return res.status(403).json({ 
-        message: 'Please verify your email before logging in.',
-        isUnverified: true 
-      });
-    }
+    //if (!user.verified) {
+    //  return res.status(403).json({ 
+    //    message: 'Please verify your email before logging in.',
+    //    isUnverified: true 
+    //  });
+    //}
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
