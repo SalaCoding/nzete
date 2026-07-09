@@ -11,12 +11,16 @@ import {
   Animated,
   ScrollView
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useSearchParams  } from 'expo-router';
 import { resetPassword } from '../library/authUserStore';
 
 const ResetPassword = () => {
   const router = useRouter();
-  const { token } = useLocalSearchParams();
+
+  const searchParams = useSearchParams();
+  const { token } = searchParams.get('token');
+
+  console.log('TOKEN FROM URL:', token); // Debugging line to check the token value
   
   // Form states
   const [password, setPassword] = useState('');
