@@ -28,11 +28,9 @@ const ResetPassword = () => {
   const [modalTitle, setModalTitle] = useState('');
   const [modalMessage, setModalMessage] = useState('');
   
-  // FIXED: Using a Ref instead of State to store the callback prevents infinite render loops
   const closeCallbackRef = useRef(null);
   const [fadeAnim] = useState(() => new Animated.Value(0));
 
-  // FIXED: Safe modal trigger utilizing the stable ref
   const triggerModal = useCallback((title, message, onCloseCallback = null) => {
     setModalTitle(title);
     setModalMessage(message);
@@ -46,14 +44,18 @@ const ResetPassword = () => {
     }).start();
   }, [fadeAnim]);
 
-  // Handle missing token safely on initial load
+  // FIXED: Added full cleanup listener to drop async timers during unmounts
   useEffect(() => {
     if (!token) {
-      triggerModal(
-        'Missing Token',
-        'This reset link is invalid or has expired.',
-        () => router.replace('/(auth)')
-      );
+      const timeoutId = setTimeout(() => {
+        triggerModal(
+          'Missing Token',
+          'This reset link is invalid or has expired.',
+          () => router.replace('/(auth)')
+        );
+      }, 1000);
+
+      return () => clearTimeout(timeoutId);
     }
   }, [token, triggerModal, router]);
 
@@ -64,7 +66,6 @@ const ResetPassword = () => {
       useNativeDriver: true,
     }).start(() => {
       setModalVisible(false);
-      // Safely read and execute callback from ref without triggering renders
       if (closeCallbackRef.current) {
         closeCallbackRef.current();
         closeCallbackRef.current = null;
@@ -106,7 +107,6 @@ const ResetPassword = () => {
   };
 
   return (
-    // FIXED: Added absolute min-height styling rules to prevent zero-pixel collapses on web viewports
     <ScrollView 
       contentContainerStyle={styles.scrollContainer} 
       style={styles.container}
@@ -164,7 +164,6 @@ const ResetPassword = () => {
         </TouchableOpacity>
       </View>
 
-      {/* CUSTOM UI MODAL WRAPPER */}
       <Modal
         transparent
         visible={modalVisible}
@@ -196,7 +195,7 @@ const styles = StyleSheet.create({
     padding: 24,
     ...Platform.select({
       web: {
-        minHeight: '100vh', // Forces full browser screen height usage
+        minHeight: '100vh',
       }
     })
   },
@@ -239,7 +238,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    // FIXED: Cross-platform shadow layout configuration mapping rules
     ...Platform.select({
       ios: {
         shadowColor: '#007AFF',
@@ -251,7 +249,10 @@ const styles = StyleSheet.create({
         elevation: 4,
       },
       web: {
-        boxShadow: '0px 4px 8px 0px rgba(0, 122, 255, 0.2)',
+        shadowColor: '#007AFF',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
       }
     })
   },
@@ -294,7 +295,10 @@ const styles = StyleSheet.create({
         elevation: 8,
       },
       web: {
-        boxShadow: '0px 4px 12px 0px rgba(0, 0, 0, 0.15)',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
       }
     }),
   },
@@ -305,19 +309,20 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     textAlign: 'center',
   },
+  // FIXED: Restored complete closing style object bindings
   modalMessage: {
     fontSize: 14,
     color: '#666',
     textAlign: 'center',
-    lineHeight: 20,
     marginBottom: 20,
+    lineHeight: 18,
   },
   modalButton: {
     backgroundColor: '#007AFF',
-    width: '100%',
-    height: 44,
+    paddingVertical: 12,
+    paddingHorizontal: 32,
     borderRadius: 8,
-    justifyContent: 'center',
+    width: '100%',
     alignItems: 'center',
   },
   modalButtonText: {
