@@ -15,8 +15,8 @@ export default ({ config }) => ({
   bundleIdentifier: "com.salacoding.mosisananse",
   googleServicesFile: process.env.IOS_GOOGLE_SERVICES_FILE,
   associatedDomains: [
-    "applinks:nzete.onrender.com",
-    "applinks:www.nzete.onrender.com"
+    "applinks:mosisa-ya-nzete.onrender.com",
+    "applinks:www.mosisa-ya-nzete.onrender.com"
   ],
   infoPlist: {
     ITSAppUsesNonExemptEncryption: false,
@@ -42,7 +42,7 @@ export default ({ config }) => ({
           "data": [
             {
               "scheme": "https",
-              "host": "nzete.onrender.com",
+              "host": "mosisa-ya-nzete.onrender.com",
               "pathPrefix": "/reset-password"
             }
           ],
