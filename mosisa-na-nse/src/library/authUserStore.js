@@ -534,7 +534,7 @@ export const resendVerification = async (email) => {
 export const resetPassword = async (token, password) => {
   try {
     if (!token || !password) throw new Error('Missing reset token or password.');
-    const response = await fetch(`/api/auth/reset-password`, {
+    const response = await fetch("https://nzete-backend.onrender.com/api/auth/reset-password", {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token, password }),
@@ -544,8 +544,6 @@ export const resetPassword = async (token, password) => {
     try {
       data = JSON.parse(text);
     } catch {
-      // VISUAL ANCHOR: Alert the raw text value directly to read the server's response on screen
-      alert("⚠️ RAW SERVER RESPONSE CONTENT:\n" + text.substring(0, 300));
       console.log("Reset password API raw response:", text);
       throw new Error("Server sent invalid response. Check API URL and backend logs.");
     }
