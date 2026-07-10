@@ -1,9 +1,7 @@
-
 import dotenv from 'dotenv';
 dotenv.config();
 
 import express from 'express';
-
 import { corsOptions } from './config/corsConfig.js';
 import http from 'http';
 import { Server } from 'socket.io';
@@ -27,17 +25,25 @@ const PORT = process.env.PORT || 3001;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-
-app.use(express.static(path.join(__dirname, '../mosisa-na-nse/dist')));
-// Middleware
-app.use(helmet({ crossOriginResourcePolicy: false,
+// ==========================================
+// 1. CRITICAL GLOBAL SECURITY MIDDLEWARE (Must run first)
+// ==========================================
+app.use(cors(corsOptions)); // FIXED: CORS must load before static/routes to apply security headers
+app.use(helmet({ 
+  crossOriginResourcePolicy: false,
   contentSecurityPolicy: false,
- }));
-app.use(cors(corsOptions));
+}));
+
+// ==========================================
+// 2. REQUEST PARSERS
+// ==========================================
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ limit: '20mb', extended: true }));
 
-// Static Files
+// ==========================================
+// 3. STATIC FILE DELIVERY
+// ==========================================
+app.use(express.static(path.join(__dirname, '../mosisa-na-nse/dist')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 dns.setServers(["1.1.1.1", "1.0.0.1"]);
@@ -57,7 +63,9 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => console.log('❌ Client disconnected:', socket.id));
 });
 
-// Routes
+// ==========================================
+// 4. API AND ENDPOINT ROUTES
+// ==========================================
 app.set('trust proxy', 1);
 app.get('/', (req, res) => res.json({ status: 'ok', message: 'Server is running' }));
 app.use('/api/number', authNumbers);
@@ -78,11 +86,10 @@ app.use((err, req, res, next) => {
   res.status(500).json({ success: false, message: err.message || "Internal Server Error" });
 });
 
+// Single Page Application (SPA) Web Routing Fallback Handler
 app.get(/^(?!\/(api|uploads|assets)).*/, (req, res) => {
   res.sendFile(path.join(__dirname, '../mosisa-na-nse/dist/index.html'));
 });
-
-
 
 // Server Start
 server.listen(PORT, '0.0.0.0', () => {
