@@ -11,16 +11,12 @@ import {
   Animated,
   ScrollView
 } from 'react-native';
-import { useRouter, useSearchParams  } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { resetPassword } from '../library/authUserStore';
 
 const ResetPassword = () => {
   const router = useRouter();
-
-  const searchParams = useSearchParams();
-  const { token } = searchParams.get('token');
-
-  console.log('TOKEN FROM URL:', token); // Debugging line to check the token value
+  const { token } = useLocalSearchParams();
   
   // Form states
   const [password, setPassword] = useState('');
@@ -48,20 +44,31 @@ const ResetPassword = () => {
     }).start();
   }, [fadeAnim]);
 
-  // FIXED: Added full cleanup listener to drop async timers during unmounts
+  // Handle missing token validation safely
   useEffect(() => {
-    if (!token) {
+    // If the router finishes loading states and explicitly confirms no token is present
+    if (token === null || token === "") {
       const timeoutId = setTimeout(() => {
         triggerModal(
           'Missing Token',
           'This reset link is invalid or has expired.',
           () => router.replace('/(auth)')
         );
-      }, 1000);
+      }, 100);
 
       return () => clearTimeout(timeoutId);
     }
   }, [token, triggerModal, router]);
+
+  // CRITICAL FIX: If token is still parsing, render a loader to avoid layout tree field crashes
+  if (token === undefined) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#007AFF" />
+        <Text style={{ marginTop: 12, color: '#666' }}>Validating reset token secure link...</Text>
+      </View>
+    );
+  }
 
   const closeModal = () => {
     Animated.timing(fadeAnim, {
@@ -129,7 +136,7 @@ const ResetPassword = () => {
           style={styles.input}
           value={password}
           onChangeText={setPassword}
-          editable={!isLoading && !!token}
+          editable={!isLoading}
         />
 
         <TextInput
@@ -141,16 +148,16 @@ const ResetPassword = () => {
           style={[styles.input, { marginBottom: 24 }]}
           value={confirmPassword}
           onChangeText={setConfirmPassword}
-          editable={!isLoading && !!token}
+          editable={!isLoading}
         />
         
         <TouchableOpacity
           style={[
             styles.button,
-            { backgroundColor: isLoading || !token ? '#ccc' : '#007AFF' }
+            { backgroundColor: isLoading ? '#ccc' : '#007AFF' }
           ]}
           onPress={handleReset}
-          disabled={isLoading || !token}
+          disabled={isLoading}
         >
           {isLoading ? (
             <ActivityIndicator color="#fff" />
@@ -313,7 +320,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     textAlign: 'center',
   },
-  // FIXED: Restored complete closing style object bindings
   modalMessage: {
     fontSize: 14,
     color: '#666',
