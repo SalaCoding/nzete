@@ -534,7 +534,7 @@ export const resendVerification = async (email) => {
 export const resetPassword = async (token, password) => {
   try {
     if (!token || !password) throw new Error('Missing reset token or password.');
-    const response = await fetch(`${API_URL}/api/auth/reset-password`, {
+    const response = await fetch(`/api/auth/reset-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token, password }),
