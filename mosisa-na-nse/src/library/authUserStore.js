@@ -168,7 +168,7 @@ export const register = async (username, email, password) => {
     if (!sanitizedUsername || !sanitizedEmail || !password) throw new Error('All fields are required');
     if (password.length < 8) throw new Error('Password must be at least 8 characters');
 
-    const response = await fetchWithRetries(`${API_URL}/api/auth/register`, {
+    const response = await fetchWithRetries(`https://nzete.onrender.com/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: sanitizedUsername, email: sanitizedEmail, password }),
@@ -204,7 +204,7 @@ export const login = async (email, password) => {
       throw new Error('Email and password are required');
     }
 
-    const response = await fetchWithRetries(`${API_URL}/api/auth/login`, {
+    const response = await fetchWithRetries(`https://nzete.onrender.com/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: sanitizedEmail, password }),
@@ -252,7 +252,7 @@ export const logout = async () => {
   try {
     const { token } = useAuthUserStore.getState();
     if (token) {
-      fetchWithTimeout(`${API_URL}/api/auth/logout`, {
+      fetchWithTimeout(`https://nzete.onrender.com/api/auth/logout`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -285,7 +285,7 @@ export const updateUser = async (updatedData) => {
     
     if (Object.keys(sanitizedData).length === 0) throw new Error('No valid update data provided');
 
-    const response = await fetchWithRetries(`${API_URL}/api/auth/user/profile`, {
+    const response = await fetchWithRetries(`https://nzete.onrender.com/api/auth/user/profile`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -325,7 +325,7 @@ export const fetchProtected = async (path, options = {}, retries = MAX_RETRIES) 
   }
   
   try {
-    const response = await fetchWithRetries(`${API_URL}${path}`, {
+    const response = await fetchWithRetries(`https://nzete.onrender.com${path}`, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
@@ -357,7 +357,7 @@ export const refreshUser = async () => {
   if (!token || isTokenExpired(token)) return { success: false, error: 'Not authenticated' };
   
   try {
-    const data = await fetchProtected('/api/auth/me');
+    const data = await fetchProtected('https://nzete.onrender.com/api/auth/me');
     useAuthUserStore.setState({ user: data.user });
     return { success: true, user: data.user };
   } catch (error) {
@@ -391,7 +391,7 @@ export const checkUser = async () => {
     }
 
     // 4. Fetch fresh user data securely
-    const response = await fetchWithTimeout(`${API_URL}/api/auth/me`, {
+    const response = await fetchWithTimeout(`https://nzete.onrender.com/api/auth/me`, {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -465,7 +465,7 @@ export const requestPasswordReset = async (email) => {
     const sanitizedEmail = email.trim().toLowerCase();
     if (!sanitizedEmail) throw new Error("Email is required");
 
-    const response = await fetchWithRetries(`${API_URL}/api/auth/request-password-reset`, {
+    const response = await fetchWithRetries(`https://nzete.onrender.com/api/auth/request-password-reset`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: sanitizedEmail }),
@@ -501,7 +501,7 @@ export const resendVerification = async (email) => {
     const sanitizedEmail = email.trim().toLowerCase();
 
     // Use fetchWithRetries or standard fetch to align with your store configuration utilities
-    const response = await fetchWithRetries(`${API_URL}/api/auth/resend-verification`, {
+    const response = await fetchWithRetries("https://nzete.onrender.com/api/auth/resend-verification", {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: sanitizedEmail }),
