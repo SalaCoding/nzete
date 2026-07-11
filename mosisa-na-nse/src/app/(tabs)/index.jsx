@@ -18,7 +18,12 @@ import NumberList from "../../components/number";
 import { useAuthUserStore, checkUser } from '../../library/authUserStore';
 import { Ionicons } from "@expo/vector-icons";
 
-const Api_Url = `${API_URL}/api/blog/stories`;
+// FIXED: Fallback to absolute base routing path if the global API_URL constant points to the old domain
+const BASE_HOST = API_URL && !API_URL.includes("://onrender.com") 
+  ? API_URL 
+  : 'https://mosisa-ya-nzete.onrender.com';
+
+const Api_Url = `${BASE_HOST}/api/blog/stories`;
 
 export default function Index() { 
   const router = useRouter();
@@ -108,19 +113,17 @@ export default function Index() {
     }
   }, [token]);
 
+    // FIXED: Wrapped state updates inside setTimeout to prevent React 19 cascading re-renders
   useEffect(() => {
-    if (_hasHydrated && token) {
-      fetchStories();
-    } else if (_hasHydrated && !token) {
-      setIsLoading(false);
-    }
-
-    // Cleanup: abort fetch when component unmounts
-    return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
+    const timer = setTimeout(() => {
+      if (_hasHydrated && token) {
+        fetchStories();
+      } else if (_hasHydrated && !token) {
+        setIsLoading(false);
       }
-    };
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [_hasHydrated, token, fetchStories]);
 
   const renderStoryContent = () => {

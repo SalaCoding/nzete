@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -191,7 +191,7 @@ export const ProfileScreen = () => {
     await uploadImage(manipResult.base64);
   }
 
-  const uploadImage = useCallback(async (base64) => {
+  async function uploadImage(base64) {
     setUploading(true);
     const { token } = useAuthUserStore.getState();
 
@@ -224,7 +224,7 @@ export const ProfileScreen = () => {
     } finally {
       setUploading(false);
     }
-  }, []);
+  };
 
   const confirmLogout = () => {
     Alert.alert("Kobima? ", "Osili na mobembo na oyo?", [

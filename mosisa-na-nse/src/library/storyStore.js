@@ -28,7 +28,7 @@ export const useStoryStore = create((set, get) => ({
   fetchAllStories: async (page = 1, limit = 20) => {
     set({ isLoading: true, error: null });
     try {
-      const json = await fetchProtected(`/api/blog/stories?page=${page}&limit=${limit}`);
+      const json = await fetchProtected(`${API_URL}/api/blog/stories?page=${page}&limit=${limit}`);
       const data = Array.isArray(json) ? json : (json. stories || json. data || []);
       set({ stories: data, isLoading: false });
     } catch (err) {
@@ -42,7 +42,7 @@ export const useStoryStore = create((set, get) => ({
 
     set({ isLoading: true, error: null });
     try {
-      const json = await fetchProtected(`/api/blog/user/rated-stories`);
+      const json = await fetchProtected(`${API_URL}/api/blog/user/rated-stories`);
       const ratedWithScore = (json?. stories ??  []).map(story => {
         const myRating = story. rating ??  (
           story.interactions?. find(
@@ -86,7 +86,7 @@ export const useStoryStore = create((set, get) => ({
     set({ ratingStatsLoading: true, ratingStatsError: null });
 
     try {
-      const stats = await fetchProtected(`/api/blog/user/${userId}/ratingStats`);
+      const stats = await fetchProtected(`${API_URL}/api/blog/user/${userId}/ratingStats`);
       set({ ratingStats: stats, ratingStatsLoading: false });
     } catch (err) {
       set({ ratingStatsError: err.message, ratingStatsLoading: false });
@@ -106,7 +106,7 @@ export const useStoryStore = create((set, get) => ({
         set({ isLoading: false, error: 'Missing required story fields.' });
         return { success: false, error: 'Missing required story fields.' };
       }
-      const data = await fetchProtected(`/api/blog/story`, {
+      const data = await fetchProtected(`${API_URL}/api/blog/story`, {
         method: 'POST',
         body: JSON.stringify(clean),
       });
@@ -169,7 +169,7 @@ export const useStoryStore = create((set, get) => ({
       return { storyId, likesCount: null, likedByUser: null, error: errorMsg };
     }
     try {
-      const res = await fetchProtected(`/api/blog/story/${storyId}/like`, {
+      const res = await fetchProtected(`${API_URL}/api/blog/story/${storyId}/like`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ userId }),
