@@ -134,7 +134,6 @@ export default function StoryPage() {
   }
 }, [token, fetchStoryData]);
 
-
   useEffect(() => {
   if (story?._id) {
     queueMicrotask(() => {
@@ -142,7 +141,6 @@ export default function StoryPage() {
     });
   }
 }, [story?._id, fetchRating]);
-
 
   useEffect(() => {
     const subscription = addNetworkStateListener(({ isInternetReachable }) => {

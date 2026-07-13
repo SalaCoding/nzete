@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { fetchProtected } from '../lib/api';
-import { API_URL } from '../constants/api';
+//import { API_URL } from '../constants/api';
 
 const gt = (score, min) => Number(score) > Number(min);
 
@@ -86,7 +86,7 @@ export const useStoryStore = create((set, get) => ({
     set({ ratingStatsLoading: true, ratingStatsError: null });
 
     try {
-      const stats = await fetchProtected(`${API_URL}/api/blog/user/${userId}/ratingStats`);
+      const stats = await fetchProtected(`https://nzete.onrender.com/api/blog/user/${userId}/ratingStats`);
       set({ ratingStats: stats, ratingStatsLoading: false });
     } catch (err) {
       set({ ratingStatsError: err.message, ratingStatsLoading: false });
