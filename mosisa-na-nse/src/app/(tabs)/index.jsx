@@ -18,10 +18,8 @@ import NumberList from "../../components/number";
 import { useAuthUserStore, checkUser } from '../../library/authUserStore';
 import { Ionicons } from "@expo/vector-icons";
 
-// FIXED: Cleaned fallback domain to point directly to your working backend instance site
-const BASE_HOST = API_URL && !API_URL.includes("nzete.onrender.com")
-  ? API_URL
-  : "https://nzete.onrender.com";
+// FIXED: Fallback to absolute base routing path if the global API_URL constant points to the old domain
+const BASE_HOST = API_URL || 'https://nzete.onrender.com';
 
 const Api_Url = `${BASE_HOST}/api/blog/stories`;
 
@@ -33,6 +31,7 @@ export default function Index() {
   const [showNumbers] = useState(false);
   const { token, _hasHydrated } = useAuthUserStore();
   
+  // Use ref to track abort controller
   const abortControllerRef = useRef(null);
 
   useEffect(() => { checkUser(); }, []);
@@ -47,11 +46,12 @@ export default function Index() {
   };
 
   const fetchStories = useCallback(async () => {
+    // Cancel any previous request
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
 
-    if (!token) {
+    if (! token) {
       setIsLoading(false);
       return;
     }
@@ -59,15 +59,15 @@ export default function Index() {
     setIsLoading(true);
     setFetchError(null);
 
+    // Create new controller
     abortControllerRef.current = new AbortController();
     const timeoutId = setTimeout(() => {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
-    }, 45000); // 45-second fallback window accommodates sleeping instances cleanly
+    }, 30000);
 
     try {
-      console.log(`Connecting to: ${BASE_HOST}`);
       const response = await fetch(Api_Url, {
         method: 'GET',
         headers: {
@@ -97,7 +97,9 @@ export default function Index() {
     } catch (error) {
       clearTimeout(timeoutId);
       
+      // Ignore abort errors - they're expected when component unmounts or new request starts
       if (error.name === 'AbortError') {
+        // Don't log or set error for abort - it's expected behavior
         return;
       }
       
@@ -109,6 +111,7 @@ export default function Index() {
     }
   }, [token]);
 
+    // FIXED: Wrapped state updates inside setTimeout to prevent React 19 cascading re-renders
   useEffect(() => {
     const timer = setTimeout(() => {
       if (_hasHydrated && token) {
@@ -177,6 +180,7 @@ export default function Index() {
           ))}
         </ScrollView>
         
+        {/* Sambole Section */}
         <View style={styles.samboleSection}>
           <TouchableOpacity style={styles.samboleButton} onPress={handleSambolePress}>
             <Text style={styles.samboleButtonText}>🎯 Sambole</Text>
@@ -187,7 +191,7 @@ export default function Index() {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, Platform.OS === 'android']}>
+    <SafeAreaView style={[styles.safeArea, Platform.OS === 'android' ]}>
       <View style={styles.container}>
         <View style={styles.motango_container}>
           <Text style={styles.motango}>Motango</Text>

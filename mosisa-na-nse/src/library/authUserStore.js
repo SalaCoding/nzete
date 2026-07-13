@@ -219,20 +219,6 @@ export const login = async (email, password) => {
       throw new Error(`Server Error: ${rawText.substring(0, 20)}...`);
     }
 
-    if (!response.ok) {
-      // Correctly intercept the strict backend verification check
-      if (response.status === 403 && data.isUnverified) {
-        useAuthUserStore.setState({ isLoading: false, loadingType: null });
-        return { 
-          success: false, 
-          //isUnverified: true, 
-          email: sanitizedEmail, 
-          error: data.message 
-        };
-      }
-      throw new Error(data.message || 'Login failed');
-    }
-
     if (!data.token || !data.user) throw new Error('Invalid server response');
 
     // Commit authentication payload upon true verification validation
