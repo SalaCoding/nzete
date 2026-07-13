@@ -54,11 +54,11 @@ const Login = () => {
 
   // Show generic error alerts safely
   useEffect(() => {
-    if (error) {
-      setIsEmailLoading(false);
-      Alert.alert('Login Failed', error)
-    }
-  }, [error])
+  if (error) {
+    queueMicrotask(() => setIsEmailLoading(false));
+    Alert.alert('Login Failed', error);
+  }
+}, [error]);
 
   // Wait for auth state to hydration check
   if (!_hasHydrated) {

@@ -99,7 +99,8 @@ export default function StoryPage() {
     } catch (err) {
       console.warn('Rating hydration failed:', err);
     }
-  }, [story?._id, token]);
+}, [story, token]);
+
 
   const submitRating = useCallback(async () => {
     if (!story?._id || rating === 0) {
@@ -123,17 +124,25 @@ export default function StoryPage() {
     // Refresh stats in background
     fetchRatedStories();
     fetchRatingStats();
-  }, [story?._id, rating, fetchRatedStories, fetchRatingStats]);
+  }, [story, rating, fetchRatedStories, fetchRatingStats]);
 
   useEffect(() => {
-    if (token) fetchStoryData();
-  }, [token, fetchStoryData]);
+  if (token) {
+    queueMicrotask(() => {
+      fetchStoryData();
+    });
+  }
+}, [token, fetchStoryData]);
+
 
   useEffect(() => {
-    if (story?._id) {
+  if (story?._id) {
+    queueMicrotask(() => {
       fetchRating();
-    }
-  }, [story?._id, fetchRating]);
+    });
+  }
+}, [story?._id, fetchRating]);
+
 
   useEffect(() => {
     const subscription = addNetworkStateListener(({ isInternetReachable }) => {

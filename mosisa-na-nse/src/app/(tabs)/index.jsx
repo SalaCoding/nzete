@@ -18,12 +18,9 @@ import NumberList from "../../components/number";
 import { useAuthUserStore, checkUser } from '../../library/authUserStore';
 import { Ionicons } from "@expo/vector-icons";
 
-// FIXED: Fallback to absolute base routing path if the global API_URL constant points to the old domain
-const BASE_HOST = API_URL && !API_URL.includes("://onrender.com") 
-  ? API_URL 
-  : 'https://mosisa-ya-nzete.onrender.com';
-
+const BASE_HOST = API_URL || "https://nzete.onrender.com";
 const Api_Url = `${BASE_HOST}/api/blog/stories`;
+
 
 export default function Index() { 
   const router = useRouter();

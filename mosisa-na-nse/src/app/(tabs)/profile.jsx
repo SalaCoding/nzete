@@ -191,7 +191,7 @@ export const ProfileScreen = () => {
     await uploadImage(manipResult.base64);
   }
 
-  async function uploadImage(base64) {
+  const uploadImage = async (base64) => {
     setUploading(true);
     const { token } = useAuthUserStore.getState();
 

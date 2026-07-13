@@ -214,10 +214,12 @@ const QAListScreen = () => {
   const totalAnswered = Object.keys(results).length;
 
   useEffect(() => {
-    if (mode === 'complete' && ! scoreSaved && ! isSaving && totalAnswered > 0) {
+  if (mode === 'complete' && !scoreSaved && !isSaving && totalAnswered > 0) {
+    queueMicrotask(() => {
       autoSaveScore(correctCount, wrongCount, totalAnswered, selectedCategory);
-    }
-  }, [mode, scoreSaved, isSaving, autoSaveScore, correctCount, selectedCategory, totalAnswered, wrongCount]);
+    });
+  }
+}, [mode, scoreSaved, isSaving, autoSaveScore, correctCount, selectedCategory, totalAnswered, wrongCount]);
 
   const resetQuizState = useCallback((clearStorage = false) => {
     // Store the last question ID before resetting
@@ -260,14 +262,26 @@ const QAListScreen = () => {
       const failedIds = Object.entries(results)
         .filter(([_, result]) => !result.isCorrect)
         .map(([id]) => id);
+
       const failedQAs = shuffledQAs.filter(qa => failedIds.includes(qa._id));
-      return shuffleArray(failedQAs, lastQuestionIdRef.current);
+
+      return failedQAs;   // ❗ no ref here
     }
+
     if (mode === 'retryAll') {
-      return shuffleArray([...shuffledQAs], lastQuestionIdRef.current);
+      return [...shuffledQAs];   // ❗ no ref here
     }
+
     return shuffledQAs;
-  }, [mode, shuffledQAs, results, shuffleArray]);
+}, [mode, shuffledQAs, results]);
+
+const setCurrentQuestionSetFinal = useState([]);
+
+useEffect(() => {
+    const shuffled = shuffleArray(currentQuestionSet, lastQuestionIdRef.current);
+    setCurrentQuestionSetFinal(shuffled);
+}, [currentQuestionSet, shuffleArray, setCurrentQuestionSetFinal]);
+
 
   const handleSubmit = async () => {
     const trimmedAnswer = userAnswer.trim();

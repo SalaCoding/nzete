@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import useHydrated from './useHydrated';
-import { API_URL } from '../constants/api';
+//import { API_URL } from '../constants/api';
 
 // Fetch rating from the server
 const fetchRatingFromServer = async (storyId, slug, token) => {
   const res = await fetch(
-    `${API_URL}/api/blog/check?storyId=${storyId}&slug=${encodeURIComponent(slug)}`,
+    `https://nzete.onrender.com/api/blog/check?storyId=${storyId}&slug=${encodeURIComponent(slug)}`,
     {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -35,7 +35,7 @@ async function submitRatingToServer(storyId, slug, score, token) {
   if (!storyId || !slug || typeof score !== 'number') return score;
 
   try {
-    const res = await fetch(`${API_URL}/api/blog/story/${storyId}/rate`, {
+    const res = await fetch(`https://nzete.onrender.com/api/blog/story/${storyId}/rate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -98,11 +98,12 @@ export default function useHydratedRating(storyId, slug, token, initialRating = 
   }, [storyId, slug, token, isHydrated]);
 
   useEffect(() => {
-    if (isHydrated) {
-      console.log('[useHydratedRating] Hydration complete, loading rating...');
+  if (isHydrated) {
+    setTimeout(() => {
       loadRating();
-    }
-  }, [isHydrated, loadRating]);
+    }, 0);
+  }
+}, [isHydrated, loadRating]);
 
   return {
     rating,
