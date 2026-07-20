@@ -12,19 +12,36 @@ import { jwtDecode } from 'jwt-decode';
 // =============
 
 const zustandStorage = {
-  getItem: async (key) =>
-    Platform.OS === 'web'
-      ? localStorage.getItem(key)
-      : await SecureStore.getItemAsync(key),
-  setItem: async (key, value) =>
-    Platform.OS === 'web'
-      ? localStorage.setItem(key, value)
-      : await SecureStore.setItemAsync(key, value),
-  removeItem: async (key) =>
-    Platform.OS === 'web'
-      ? localStorage.removeItem(key)
-      : await SecureStore.deleteItemAsync(key),
+  getItem: async (key) => {
+    if (Platform.OS === 'web') {
+      // Check if we are running in a browser environment
+      if (typeof window !== 'undefined' && window.localStorage) {
+        return localStorage.getItem(key);
+      }
+      return null; // Return null during server-side builds
+    }
+    return await SecureStore.getItemAsync(key);
+  },
+  setItem: async (key, value) => {
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem(key, value);
+      }
+      return;
+    }
+    await SecureStore.setItemAsync(key, value);
+  },
+  removeItem: async (key) => {
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.removeItem(key);
+      }
+      return;
+    }
+    await SecureStore.deleteItemAsync(key);
+  },
 };
+
 // =============
 // Helpers
 // =============
