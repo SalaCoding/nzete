@@ -12,24 +12,22 @@ import { jwtDecode } from 'jwt-decode';
 // =============
 
 const zustandStorage = {
-  getItem: (key) =>
+  getItem: async (key) =>
     Platform.OS === 'web'
       ? localStorage.getItem(key)
-      : SecureStore.getItemAsync(key),
-  setItem: (key, value) =>
+      : await SecureStore.getItemAsync(key),
+  setItem: async (key, value) =>
     Platform.OS === 'web'
       ? localStorage.setItem(key, value)
-      : SecureStore.setItemAsync(key, value),
-  removeItem: (key) =>
+      : await SecureStore.setItemAsync(key, value),
+  removeItem: async (key) =>
     Platform.OS === 'web'
       ? localStorage.removeItem(key)
-      : SecureStore.deleteItemAsync(key),
+      : await SecureStore.deleteItemAsync(key),
 };
-
 // =============
 // Helpers
 // =============
-
 const TOKEN_EXPIRY_BUFFER = 60 * 1000;
 const REQUEST_TIMEOUT = 30000;
 const MAX_RETRIES = 3;
@@ -49,7 +47,6 @@ const fetchWithTimeout = async (url, options = {}, timeout = REQUEST_TIMEOUT) =>
     clearTimeout(timeoutId);
   }
 };
-
 const fetchWithRetries = async (url, options = {}, retries = MAX_RETRIES) => {
   let lastError;
   for (let attempt = 0; attempt < retries; attempt++) {
@@ -69,7 +66,6 @@ const fetchWithRetries = async (url, options = {}, retries = MAX_RETRIES) => {
   }
   throw lastError;
 };
-
 const isTokenExpired = (token) => {
   if (!token) return true;
   try {
@@ -80,7 +76,6 @@ const isTokenExpired = (token) => {
     return true;
   }
 };
-
 const getTokenExpiry = (token) => {
   try {
     const decoded = jwtDecode(token);
@@ -92,7 +87,6 @@ const getTokenExpiry = (token) => {
 
 const sanitizeInput = (input) => (typeof input === 'string' ? input.trim().slice(0, 500) : '');
 const sanitizeEmail = (email) => sanitizeInput(email).toLowerCase();
-
 const getGenericError = (error) => {
   const message = error?.message?.toLowerCase() || '';
   if (message.includes('network') || message.includes('fetch'))
@@ -103,11 +97,9 @@ const getGenericError = (error) => {
     return 'Session expired. Please log in again.';
   return error?.message || 'An error occurred. Please try again.';
 };
-
 // =============
 // Zustand Store
 // =============
-
 export const useAuthUserStore = create(
   persist(
     (set, get) => ({
@@ -120,7 +112,6 @@ export const useAuthUserStore = create(
       _hasHydrated: false,
 
       setHasHydrated: (val) => set({ _hasHydrated: val }),
-
       isAuthenticated: () => {
         const { token, user } = get();
         return !!token && !!user && !isTokenExpired(token);
@@ -131,7 +122,7 @@ export const useAuthUserStore = create(
         set({ token, tokenExpiry: getTokenExpiry(token), user, error: null, loadingType: null }),
       isTokenValid: () => !isTokenExpired(get().token),
     }),
-    {
+        {
       name: 'auth-storage',
       storage: createJSONStorage(() => zustandStorage),
       partialize: (state) => ({
@@ -140,11 +131,14 @@ export const useAuthUserStore = create(
         user: state.user,
       }),
       onRehydrateStorage: () => (state, error) => {
-        if (error) {
-          state?.setHasHydrated?.(true);
+        if (error || !state) {
+          useAuthUserStore.setState({ _hasHydrated: true });
         } else {
-          if (state?.token && isTokenExpired(state.token)) state.clearAuth();
-          state.setHasHydrated?.(true);
+          // Safe to mutate via state parameter
+          if (state.token && isTokenExpired(state.token)) {
+            state.clearAuth();
+          }
+          state.setHasHydrated(true);
         }
       },
     }
@@ -154,32 +148,27 @@ export const useAuthUserStore = create(
 // =============
 // Auth Actions
 // =============
-
 let isProcessingAuth = false;
 
 export const register = async (username, email, password) => {
   if (isProcessingAuth) return;
   isProcessingAuth = true;
   useAuthUserStore.setState({ isLoading: true, loadingType: 'register', error: null });
-
   try {
     const sanitizedUsername = sanitizeInput(username);
     const sanitizedEmail = sanitizeEmail(email);
     if (!sanitizedUsername || !sanitizedEmail || !password) throw new Error('All fields are required');
     if (password.length < 8) throw new Error('Password must be at least 8 characters');
-
     const response = await fetchWithRetries(`https://nzete.onrender.com/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: sanitizedUsername, email: sanitizedEmail, password }),
     });
-
     const data = await response.json();
     if (!response.ok) throw new Error(data.message || 'Registration failed');
 
     // DO NOT write auth details to the store here because the account is unverified!
     useAuthUserStore.setState({ isLoading: false, loadingType: null });
-    
     return { 
       success: true, 
       message: data.message || "Verification email sent. Please check your inbox.",
@@ -254,19 +243,16 @@ export const logout = async () => {
 export const updateUser = async (updatedData) => {
   const { token, user } = useAuthUserStore.getState();
   if (!token || !user) return { success: false, error: 'User not authenticated' };
-  
+
   if (isTokenExpired(token)) {
     await logout();
     return { success: false, error: 'Session expired. Please log in again.' };
   }
-
   useAuthUserStore.setState({ isLoading: true, loadingType: 'update', error: null });
-
   try {
     const sanitizedData = {};
     if (updatedData.username) sanitizedData.username = sanitizeInput(updatedData.username);
     
-    // Safety Fix: Do not run sanitizeInput on URL string patterns to protect path structures
     if (updatedData.profilePicture) sanitizedData.profilePicture = updatedData.profilePicture;
     
     if (Object.keys(sanitizedData).length === 0) throw new Error('No valid update data provided');
@@ -279,7 +265,6 @@ export const updateUser = async (updatedData) => {
       },
       body: JSON.stringify(sanitizedData),
     });
-    
     const data = await response.json();
     if (!response.ok) {
       if (response.status === 401) {
@@ -288,7 +273,6 @@ export const updateUser = async (updatedData) => {
       }
       throw new Error(data.message || 'Failed to update profile');
     }
-    
     useAuthUserStore.setState({
       user: data.user,
       isLoading: false,
