@@ -67,7 +67,7 @@ export default function Index() {
     }, 30000);
 
     try {
-      const response = await fetch(Api_Url, {
+      const response = await fetch(`${Api_Url}?page=1&limit=20`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
