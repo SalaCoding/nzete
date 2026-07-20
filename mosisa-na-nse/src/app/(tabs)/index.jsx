@@ -46,7 +46,6 @@ export default function Index() {
   };
 
   const fetchStories = useCallback(async () => {
-    // Cancel any previous request
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }

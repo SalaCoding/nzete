@@ -222,13 +222,31 @@ router.post('/story/:id/like', authMiddleware, likeStory);
 
 router.get("/stories", async (req, res) => {
   try {
-    const stories = await Blog.find().sort({ title: 1 }). lean();
-    res. json(stories);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    const stories = await Blog.find()
+      .sort({ title: 1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    const total = await Blog.countDocuments();
+
+    res.json({
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit),
+      stories
+    });
   } catch (error) {
     console.error("Error getting all stories:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
+
 
 router.get("/story/:storyId", async (req, res) => {
   try {

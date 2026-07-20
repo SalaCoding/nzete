@@ -35,7 +35,6 @@ export const useStoryStore = create((set, get) => ({
       set({ isLoading: false, error: err.message });
     }
   },
-
   fetchRatedStories: async () => {
     const { userId } = get();
     if (!userId) return;
@@ -56,7 +55,6 @@ export const useStoryStore = create((set, get) => ({
       set({ isLoading: false, error: err.message });
     }
   },
-
   // NEW: Fetch all stories rated by any user
   fetchAllRatedStories: async (minScore = 1) => {
     set({ allRatedStoriesLoading: true, allRatedStoriesError: null });
