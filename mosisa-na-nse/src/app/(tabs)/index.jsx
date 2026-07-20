@@ -83,15 +83,20 @@ export default function Index() {
       }
       
       const data = await response.json();
-      
-      const processedStories = Array.isArray(data)
-        ? data.map(item => ({
-            ...item,
-            snippet: item.content ? item.content.slice(0, 120) + '...' : 'No content available.',
-          }))
-        : [];
-      
+
+      const list = Array.isArray(data)
+        ? data
+        : Array.isArray(data.stories)
+          ? data.stories
+          : [];
+
+      const processedStories = list.map(item => ({
+        ...item,
+        snippet: item.content ? item.content.slice(0, 120) + '...' : 'No content available.',
+      }));
+
       setStories(processedStories);
+
 
     } catch (error) {
       clearTimeout(timeoutId);
@@ -110,7 +115,6 @@ export default function Index() {
     }
   }, [token]);
 
-    // FIXED: Wrapped state updates inside setTimeout to prevent React 19 cascading re-renders
   useEffect(() => {
     const timer = setTimeout(() => {
       if (_hasHydrated && token) {
@@ -190,7 +194,7 @@ export default function Index() {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, Platform.OS === 'android' ]}>
+    <SafeAreaView style={[styles.safeArea, Platform.OS === 'android' && { paddingTop: StatusBar.currentHeight }]} edges={['top', 'left', 'right']}>
       <View style={styles.container}>
         <View style={styles.motango_container}>
           <Text style={styles.motango}>Motango</Text>

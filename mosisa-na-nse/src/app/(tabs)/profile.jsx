@@ -27,7 +27,7 @@ import {
 import { useStoryStore } from "../../library/storyStore";
 import { RatedStoryList, selectUserRating } from "../../components/RatedStory";
 import { syncUserToStoryStore } from "../../library/useSyncAuthToStoryStore";
-import { API_URL } from "../../constants/api";
+//import { API_URL } from "../../constants/api";
 
 const MAX_BASE64_SIZE_KB = 5000;
 const MIN_RATING_SCORE = 1;
@@ -196,7 +196,7 @@ export const ProfileScreen = () => {
     const { token } = useAuthUserStore.getState();
 
     try {
-      const res = await fetch(`${API_URL}/api/auth/upload`, {
+      const res = await fetch(`https://nzete.onrender.com/api/auth/upload`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

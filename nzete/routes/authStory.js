@@ -247,7 +247,6 @@ router.get("/stories", async (req, res) => {
   }
 });
 
-
 router.get("/story/:storyId", async (req, res) => {
   try {
     const { storyId } = req.params;

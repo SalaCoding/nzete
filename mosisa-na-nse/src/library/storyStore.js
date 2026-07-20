@@ -90,7 +90,6 @@ export const useStoryStore = create((set, get) => ({
       set({ ratingStatsError: err.message, ratingStatsLoading: false });
     }
   },
-
   createStory: async (title, content, image, audioUrl) => {
     set({ isLoading: true, error: null });
     try {
@@ -116,7 +115,6 @@ export const useStoryStore = create((set, get) => ({
       return { success: false, error: err.message };
     }
   },
-
   mapInteractionsToRatings: (story) => {
     return (story.interactions || []). map(i => ({
       user: i.userId,
@@ -124,7 +122,6 @@ export const useStoryStore = create((set, get) => ({
       createdAt: i. updatedAt
     }));
   },
-
   getMyRatedAbove: (min = 2) => {
     const { stories, userId } = get();
     return stories.filter(story =>

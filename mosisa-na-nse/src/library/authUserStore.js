@@ -354,30 +354,30 @@ export const refreshUser = async () => {
 };
 export const checkUser = async () => {
   useAuthUserStore.setState({ isLoading: true, error: null });
+
   try {
     const { token, user } = useAuthUserStore.getState();
 
-    // 1. Check for token presence
+    // 1. Token presence
     if (!token) {
       useAuthUserStore.setState({ isLoading: false });
       return { success: false, error: 'No token' };
     }
 
-    // 2. Check for token expiration
+    // 2. Token expiration
     if (isTokenExpired(token)) {
       useAuthUserStore.getState().clearAuth();
       useAuthUserStore.setState({ isLoading: false });
       return { success: false, error: 'Token expired' };
     }
 
-    // 3. MANDATORY VERIFICATION CHECK (from Local Store)
+    // 3. Local store verification check (NO MORE clearing auth)
     if (user && !user.verified) {
-      useAuthUserStore.getState().clearAuth();
       useAuthUserStore.setState({ isLoading: false });
       return { success: false, error: 'Email not verified', isUnverified: true };
     }
 
-    // 4. Fetch fresh user data securely
+    // 4. Fetch fresh user data
     const response = await fetchWithTimeout(`https://nzete.onrender.com/api/auth/me`, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -385,48 +385,58 @@ export const checkUser = async () => {
       },
     });
 
-    // Extract raw stream to insulate store logic from non-JSON server crash components
     const rawText = await response.text();
     let data;
+
     try {
       data = JSON.parse(rawText);
     } catch {
-      // Throw standard message to protect local store authentication data from cleaning out on network timeouts
       throw new Error(`Server configuration mismatch. Error snippet: ${rawText.substring(0, 20)}...`);
     }
 
+    // 5. Response not OK
     if (!response.ok) {
-      // Handle the case where the backend says user is unverified (403)
       if (response.status === 403 && data.isUnverified) {
-        useAuthUserStore.getState().clearAuth();
         useAuthUserStore.setState({ isLoading: false });
         return { success: false, error: 'Email not verified', isUnverified: true };
       }
       throw new Error(data.message || 'Failed to verify user session context');
     }
 
-    // 5. FINAL SERVER-SIDE VERIFICATION CHECK
-    if (!data.user || !data.user.verified) {
+    // 6. Server-side verification check (NO MORE clearing auth)
+    if (!data.user) {
       useAuthUserStore.getState().clearAuth();
+      useAuthUserStore.setState({ isLoading: false });
+      return { success: false, error: 'Invalid user session' };
+    }
+
+    if (!data.user.verified) {
       useAuthUserStore.setState({ isLoading: false });
       return { success: false, error: 'Email not verified', isUnverified: true };
     }
 
+    // 7. Update user safely
     useAuthUserStore.setState({ user: data.user, isLoading: false });
     return { success: true, user: data.user };
 
   } catch (error) {
-    // Intercept network/parsing anomalies safely without destroying persistent device state structures
-    if (error.message.includes('Server configuration') || error.message.includes('timeout') || error.message.includes('Network')) {
+    // Network / timeout / server mismatch → DO NOT clear auth
+    if (
+      error.message.includes('Server configuration') ||
+      error.message.includes('timeout') ||
+      error.message.includes('Network')
+    ) {
       useAuthUserStore.setState({ isLoading: false });
       return { success: false, error: error.message };
     }
-    
+
+    // Real auth failure → clear
     useAuthUserStore.getState().clearAuth();
     useAuthUserStore.setState({ isLoading: false });
     return { success: false, error: error.message };
   }
 };
+
 export const checkUserWithRetry = async (retries = 3) => {
   for (let i = 0; i < retries; i++) {
     try {
