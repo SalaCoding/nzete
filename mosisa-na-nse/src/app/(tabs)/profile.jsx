@@ -18,6 +18,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from 'expo-image-manipulator';
 import { Ionicons } from "@expo/vector-icons";
 import Svg, { Defs, RadialGradient, LinearGradient, Stop, G, Ellipse, Path, Circle } from 'react-native-svg';
+import { useRouter } from "expo-router";
 
 import {
   useAuthUserStore,
@@ -27,7 +28,6 @@ import {
 import { useStoryStore } from "../../library/storyStore";
 import { RatedStoryList, selectUserRating } from "../../components/RatedStory";
 import { syncUserToStoryStore } from "../../library/useSyncAuthToStoryStore";
-//import { API_URL } from "../../constants/api";
 
 const MAX_BASE64_SIZE_KB = 5000;
 const MIN_RATING_SCORE = 1;
@@ -104,6 +104,8 @@ export const ProfileScreen = () => {
   const avatarSize = isTablet ? 100 : 80;
 
   const user = useAuthUserStore((s) => s.user);
+  const router = useRouter();
+
   const {
     ratedStories,
     fetchRatedStories,
@@ -134,6 +136,12 @@ export const ProfileScreen = () => {
     checkUser();
     syncUserToStoryStore();
   }, []);
+
+  useEffect(() => {
+  if (!user) {
+    router.replace("/(auth)");   // or your login route
+  }
+}, [user, router]);
 
   useEffect(() => {
     if (userId) {

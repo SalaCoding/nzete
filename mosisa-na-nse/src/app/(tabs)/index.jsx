@@ -65,7 +65,6 @@ export default function Index() {
         abortControllerRef.current.abort();
       }
     }, 30000);
-
     try {
       const response = await fetch(`${Api_Url}?page=1&limit=20`, {
         method: 'GET',
@@ -83,7 +82,6 @@ export default function Index() {
       }
       
       const data = await response.json();
-
       const list = Array.isArray(data)
         ? data
         : Array.isArray(data.stories)
@@ -96,8 +94,6 @@ export default function Index() {
       }));
 
       setStories(processedStories);
-
-
     } catch (error) {
       clearTimeout(timeoutId);
       
@@ -223,7 +219,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    marginBottom: -70,
+    marginBottom: -69,
   },
   loadingContainer: {
     flex: 1,
@@ -250,14 +246,14 @@ const styles = StyleSheet.create({
   },
   emptyListText: {
     textAlign: 'center',
-    marginTop: 15,
+    marginTop: 14,
     fontSize: Platform.OS === 'ios' ? 18 : 16,
     color: '#888',
   },
   motango_container: {
     padding: 10,
     borderRadius: 10,
-    marginBottom: 4,
+    marginBottom: 3,
     marginHorizontal: 10,
   },
   motango: {
@@ -265,7 +261,7 @@ const styles = StyleSheet.create({
     fontSize: Platform.OS === 'ios' ? 18 : 16,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 12,
+    marginBottom: 11,
     padding: 6,
     textTransform: 'uppercase',
     borderRadius: 8,
@@ -284,14 +280,14 @@ const styles = StyleSheet.create({
   },
   yekola: {
     color: '#000',
-    fontSize: Platform.OS === 'ios' ? 20 : 18,
+    fontSize: Platform.OS === 'ios' ? 19 : 18,
     textAlign: 'center',
     marginBottom: 5,
-    marginTop: 8,
+    marginTop: 7,
     fontFamily: 'Palatino',
   },
   yekola__moko: {
-    fontSize: Platform.OS === 'ios' ? 20 : 19,
+    fontSize: Platform.OS === 'ios' ? 19 : 19,
     fontWeight: 'bold',
     textAlign: 'center',
     color: 'rgb(255, 255, 255)',
@@ -307,11 +303,11 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   title__top: {
-    fontSize: Platform.OS === 'ios' ? 16 : 15,
+    fontSize: Platform.OS === 'ios' ? 15 : 15,
     color: '#000',
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: 9,
     textTransform: 'uppercase',
     borderRadius: 8,
     borderWidth: 2,
@@ -346,11 +342,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgb(38, 154, 155)',
     padding:  Platform.OS === 'ios' ? 2 : 2,
     borderRadius: 10,
-    marginTop:  Platform.OS === 'ios' ? 11 : 11,
+    marginTop:  Platform.OS === 'ios' ? 10 : 10,
     marginHorizontal: 12,
   },
   lisolo: {
-    fontSize: Platform.OS === 'ios' ? 20 : 17,
+    fontSize: Platform.OS === 'ios' ? 19 : 17,
     color: '#1e1e1e',
     padding: 16,
     textAlign: 'justify',
@@ -358,7 +354,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Times New Roman',
   },
   lisapo__title: {
-    fontSize: Platform.OS === 'ios' ? 20 : 18,
+    fontSize: Platform.OS === 'ios' ? 19 : 18,
     color: '#260e26',
     fontWeight: 'bold',
     textAlign: 'center',
@@ -374,7 +370,7 @@ const styles = StyleSheet.create({
     elevation: 18,
 
     marginHorizontal: 12,
-    marginBottom:  Platform.OS === 'ios' ? 36 : 22,
+    marginBottom:  Platform.OS === 'ios' ? 64 : 22,
     padding: Platform.OS === 'ios' ? 8 : 7,
     backgroundColor: '#4a487d',
     borderRadius: 12,

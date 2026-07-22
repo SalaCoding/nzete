@@ -14,7 +14,7 @@ const TabLayout = () => {
         tabBarStyle: {
           backgroundColor: '#fff',
           borderTopColor: 'rgb(38, 154, 155)',
-          paddingTop: Platform.OS === 'android' ? 12 : 8,
+          paddingTop: Platform.OS === 'android' ? 10 : 8,
         }
       }}
     >

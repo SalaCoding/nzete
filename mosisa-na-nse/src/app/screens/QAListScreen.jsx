@@ -275,12 +275,13 @@ const QAListScreen = () => {
     return shuffledQAs;
 }, [mode, shuffledQAs, results]);
 
-const setCurrentQuestionSetFinal = useState([]);
+const [currentQuestionSetFinal, setCurrentQuestionSetFinal] = useState([]);
 
 useEffect(() => {
-    const shuffled = shuffleArray(currentQuestionSet, lastQuestionIdRef.current);
-    setCurrentQuestionSetFinal(shuffled);
-}, [currentQuestionSet, shuffleArray, setCurrentQuestionSetFinal]);
+  if (!currentQuestionSet || currentQuestionSet.length === 0) return;
+  const shuffled = shuffleArray(currentQuestionSet, lastQuestionIdRef.current);
+  setCurrentQuestionSetFinal(shuffled);
+}, [currentQuestionSet, shuffleArray]);
 
 
   const handleSubmit = async () => {

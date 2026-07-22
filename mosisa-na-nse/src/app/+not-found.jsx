@@ -5,7 +5,7 @@ import { Link, Stack } from 'expo-router';
 export default function NotFoundScreen() {
   return (
     <>
-      <Stack.Screen options={{ title: 'Oops! Not Found' }} />
+      < Stack.Screen options={{ title: 'Oops! Not Found' }} />
       <View style={styles.container}>
         <Text style={styles.title}>This screen doesn&apos;t exist.</Text>
         <Text style={styles.title}>Lokasa oyo ezali te.</Text>

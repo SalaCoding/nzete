@@ -51,7 +51,7 @@ const qaData = [
   },
   { 
     question: 'Muasi kitoko kasi makolo milayi? ', 
-    answer: 'Mbula',
+    answer: 'Mbula|Mvula',
     suggestions: ['Mbula', 'Mokili', 'Likolo'],
     category: 'lisano', 
     difficulty: 'medium' 
@@ -163,7 +163,7 @@ const qaData = [
   },
   {
     question: 'Lindanda ya mama?',
-    answer: 'Nzeta ya fufu',
+    answer: 'Nzete ya fufu',
     suggestions: ['Lidame', 'Mbila', 'Nzete ya fufu'],
     category: 'lisano', 
     difficulty: 'medium'
