@@ -179,6 +179,7 @@ export const register = async (username, email, password) => {
     const response = await fetchWithRetries(`https://nzete.onrender.com/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ username: sanitizedUsername, email: sanitizedEmail, password }),
     });
     const data = await response.json();
@@ -213,6 +214,7 @@ export const login = async (email, password) => {
     const response = await fetchWithRetries(`https://nzete.onrender.com/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ email: sanitizedEmail, password }),
     });
 
@@ -436,7 +438,6 @@ export const checkUser = async () => {
     return { success: false, error: error.message };
   }
 };
-
 export const checkUserWithRetry = async (retries = 3) => {
   for (let i = 0; i < retries; i++) {
     try {

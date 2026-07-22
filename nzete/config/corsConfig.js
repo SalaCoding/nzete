@@ -2,6 +2,8 @@ export const corsOptions = {
   origin: [
     "http://localhost:8081",              // Expo local web
     /\.expo\.app$/,                       // ANY Expo Web preview URL
+    /^https:\/\/.*\.expo\.app$/,   // ← more explicit regex with protocol
+    "https://mosisa-ya-nse--1xcfp473wu.expo.app",
     "https://nzete.onrender.com",         // Your backend domain
     "https://mosisa-ya-nzete.onrender.com"
   ],

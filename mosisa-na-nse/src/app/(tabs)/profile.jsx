@@ -151,57 +151,67 @@ export const ProfileScreen = () => {
   }, [userId, lastRatingUpdate, fetchRatedStories, fetchRatingStats]);
 
   async function pickImage() {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert("Permission Required", "We need access to your photo library.");
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      quality: 1,
-    });
-
-    if (result.canceled || ! result.assets?.length) return;
-
-    const asset = result.assets[0];
-    let manipResult;
-
-    try {
-      manipResult = await ImageManipulator.manipulateAsync(
-        asset.uri,
-        [{ resize: { width: 600 } }],
-        {
-          compress: 0.7,
-          format: ImageManipulator.SaveFormat.JPEG,
-          base64: true
-        }
-      );
-    } catch (error) {
-      console.error('Error manipulating image:', error);
-      Alert.alert("Image Error", "Could not process the selected image.");
-      return;
-    }
-    
-    if (!manipResult?.base64) {
-      Alert.alert("Image Error", "Could not retrieve image data.");
-      return;
-    }
-    
-    const base64SizeKB = (manipResult.base64.length * 3) / 4 / 1024;
-    if (base64SizeKB > MAX_BASE64_SIZE_KB) {
-      Alert.alert("Image too large", "Please choose a smaller image.");
-      return;
-    }
-
-    setImage(manipResult.uri);
-    await uploadImage(manipResult.base64);
+  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (status !== 'granted') {
+    Alert.alert("Permission Required", "We need access to your photo library.");
+    return;
   }
+
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ['images'],
+    allowsEditing: true,
+    quality: 1,
+  });
+
+  if (result.canceled || !result.assets?.length) return;
+
+  const asset = result.assets[0];
+  let manipResult;
+
+  try {
+    manipResult = await ImageManipulator.manipulateAsync(
+      asset.uri,
+      [{ resize: { width: 600 } }],
+      { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG, base64: true }
+    );
+  } catch (error) {
+    console.error('Error manipulating image:', error);
+    Alert.alert("Image Error", "Could not process the selected image.");
+    return;
+  }
+
+  if (!manipResult?.base64) {
+    Alert.alert("Image Error", "Could not retrieve image data.");
+    return;
+  }
+
+  // 1. Strip the data URI prefix first
+  const cleanBase64 = manipResult.base64.replace(/^data:image\/\w+;base64,/, '');
+
+  // 2. Then calculate the size from the clean string
+  const base64SizeKB = (cleanBase64.length * 3) / 4 / 1024;
+
+  // 3. Check size before uploading
+  if (base64SizeKB > MAX_BASE64_SIZE_KB) {
+    Alert.alert("Image too large", "Please choose a smaller image.");
+    return;
+  }
+
+  setImage(manipResult.uri);
+
+  // 4. Upload only once, with the clean base64
+  await uploadImage(cleanBase64);
+}
 
   const uploadImage = async (base64) => {
     setUploading(true);
     const { token } = useAuthUserStore.getState();
+
+    if (!token) {
+    Alert.alert("Auth Error", "You are not logged in.");
+    setUploading(false);
+    return;
+  }
 
     try {
       const res = await fetch(`https://nzete.onrender.com/api/auth/upload`, {
