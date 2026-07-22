@@ -30,8 +30,8 @@ const __dirname = dirname(__filename);
 // ==========================================
 app.use(cors(corsOptions));
 
-// FIXED: Changed '*' to '(.*)' to comply with Express 5 parameter parsing rules
-app.options('(.*)', cors(corsOptions));
+// FIXED: Clean asterisk string format to prevent PathError crash
+app.options('*', cors(corsOptions));
 
 app.use(helmet({ 
   crossOriginResourcePolicy: false,
@@ -93,8 +93,8 @@ app.use((err, req, res, next) => {
 });
 
 // Single Page Application (SPA) Web Routing Fallback Handler
-// FIXED: Changed '*' to '(.*)' to resolve the PathError exception on mount
-app.get('(.*)', (req, res, next) => {
+// FIXED: Clean asterisk string format to resolve the compilation crash
+app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
     return res.status(404).json({ error: 'Not Found' });
   }
