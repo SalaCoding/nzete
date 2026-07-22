@@ -26,17 +26,17 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // ==========================================
-// 1. SECURITY MIDDLEWARE
+// 1. CRITICAL GLOBAL SECURITY MIDDLEWARE (Must run first)
 // ==========================================
 app.use(cors(corsOptions));
-app.options('/*', cors(corsOptions));   // FIXED wildcard
 
-app.use(
-  helmet({
-    crossOriginResourcePolicy: false,
-    contentSecurityPolicy: false,
-  })
-);
+// FIXED: Changed '*' to '/:any*' for Express 5 Pre-flight validation rules
+app.options('/:any*', cors(corsOptions));
+
+app.use(helmet({ 
+  crossOriginResourcePolicy: false,
+  contentSecurityPolicy: false,
+}));
 
 // ==========================================
 // 2. REQUEST PARSERS
@@ -45,7 +45,7 @@ app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ limit: '20mb', extended: true }));
 
 // ==========================================
-// 3. STATIC FILES
+// 3. STATIC FILE DELIVERY
 // ==========================================
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -54,9 +54,7 @@ app.use(express.static(distPath));
 
 dns.setServers(["1.1.1.1", "1.0.0.1"]);
 
-// ==========================================
-// 4. SOCKET.IO
-// ==========================================
+// Socket.io
 const io = new Server(server, { cors: corsOptions });
 
 app.use((req, res, next) => {
@@ -72,20 +70,16 @@ io.on('connection', (socket) => {
 });
 
 // ==========================================
-// 5. API ROUTES
+// 4. API AND ENDPOINT ROUTES
 // ==========================================
 app.set('trust proxy', 1);
-
 app.get('/', (req, res) => res.json({ status: 'ok', message: 'Server is running' }));
-
 app.use('/api/number', authNumbers);
 app.use('/api/auth', authRoutes);
 app.use('/api/blog', authStory);
 app.use('/api/qa', samboleRoute);
 
-// ==========================================
-// 6. ERROR HANDLERS
-// ==========================================
+// Error Handlers
 app.use((err, req, res, next) => {
   if (err.type === 'entity.too.large') {
     return res.status(413).json({ error: 'Payload too large.' });
@@ -98,23 +92,16 @@ app.use((err, req, res, next) => {
   res.status(500).json({ success: false, message: err.message || "Internal Server Error" });
 });
 
-// ==========================================
-// 7. SPA FALLBACK (FIXED FOR NODE 22 + EXPRESS 5)
-// ==========================================
-// ❌ app.get('*') → CRASHES on Render
-// ✔ app.get('/*') → WORKS
-// ✔ app.get('/:path(*)') → WORKS
-
-app.get('/:path(*)', (req, res) => {
+// Single Page Application (SPA) Web Routing Fallback Handler
+// FIXED: Changed '*' to '/:any*' to satisfy the Express 5 router compiler
+app.get('/:any*', (req, res, next) => {
   if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
     return res.status(404).json({ error: 'Not Found' });
   }
   res.sendFile(path.join(distPath, 'index.html'));
 });
 
-// ==========================================
-// 8. START SERVER
-// ==========================================
+// Server Start
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server listening on port ${PORT}`);
   connectDB()
