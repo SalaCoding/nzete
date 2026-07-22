@@ -1,7 +1,7 @@
 // config/corsConfig.js
 const allowedOrigins = [
   "https://nzete.onrender.com",
-  "https://mosisa-ya-nzete.onrender.com", // FIXED: Added your live web domain name
+  "https://mosisa-ya-nzete.onrender.com",
   "http://localhost:8081",
   "http://localhost:19000",
   "http://192.168.0.165:8081",
@@ -18,7 +18,7 @@ export const corsOptions = {
       !origin ||
       origin === 'null' ||
       allowedOrigins.includes(origin) ||
-      origin.startsWith("http://192.168.0.") || // FIXED: Fixed local network string matching pattern
+      origin.startsWith("http://192.168.0.") || 
       origin.startsWith("http://localhost")
     ) {
       callback(null, true);

@@ -28,7 +28,8 @@ const __dirname = dirname(__filename);
 // ==========================================
 // 1. CRITICAL GLOBAL SECURITY MIDDLEWARE (Must run first)
 // ==========================================
-app.use(cors(corsOptions)); // FIXED: CORS must load before static/routes to apply security headers
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(helmet({ 
   crossOriginResourcePolicy: false,
   contentSecurityPolicy: false,
@@ -43,8 +44,11 @@ app.use(express.urlencoded({ limit: '20mb', extended: true }));
 // ==========================================
 // 3. STATIC FILE DELIVERY
 // ==========================================
-app.use(express.static(path.join(__dirname, '../mosisa-na-nse/dist')));
+
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+const distPath = path.join(__dirname, '../mosisa-na-nse/dist');
+app.use(express.static(distPath));
 
 dns.setServers(["1.1.1.1", "1.0.0.1"]);
 
@@ -87,8 +91,17 @@ app.use((err, req, res, next) => {
 });
 
 // Single Page Application (SPA) Web Routing Fallback Handler
-app.get(/^(?!\/(api|uploads|assets)).*/, (req, res) => {
-  res.sendFile(path.join(__dirname, '../mosisa-na-nse/dist/index.html'));
+//app.get(/^(?!\/(api|uploads|assets)).*/, (req, res) => {
+//  res.sendFile(path.join(__dirname, '../mosisa-na-nse/dist/index.html'));
+//});
+
+app.get('*', (req, res, next) => {
+  // If the route starts with /api or /uploads, it's a broken resource path, let it pass to a 404
+  if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
+    return res.status(404).json({ error: 'Not Found' });
+  }
+  // Otherwise, route browser-side deep URLs down to your index.html file
+  res.sendFile(path.join(distPath, 'index.html'));
 });
 
 // Server Start
