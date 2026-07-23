@@ -469,7 +469,7 @@ router.post('/upload', authMiddleware, uploadLimiter, async (req, res) => {
     }
 
     const filename = `${userId}-${uuidv4()}.${type.ext}`;
-    const uploadDir = path.join(__dirname, '../uploads');
+    const uploadDir = path.join(process.cwd(), 'uploads');
     await fs.mkdir(uploadDir, { recursive: true });
     
     const filePath = path.join(uploadDir, filename);
