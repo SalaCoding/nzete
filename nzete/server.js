@@ -28,7 +28,7 @@ const __dirname = dirname(__filename);
 // ==========================================
 // 1. CRITICAL GLOBAL SECURITY MIDDLEWARE (Must run first)
 // ==========================================
-app.use('/:any*', cors(corsOptions));
+app.use('*', cors(corsOptions));
 app.use(helmet({ 
   crossOriginResourcePolicy: false,
   contentSecurityPolicy: false,
