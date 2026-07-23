@@ -43,7 +43,7 @@ app.use(express.urlencoded({ limit: '20mb', extended: true }));
 // ==========================================
 // 3. STATIC FILE DELIVERY
 // ==========================================
-app.use(express.static(path.join(__dirname, '../mosisa-na-nse/dist')));
+//app.use(express.static(path.join(__dirname, '../mosisa-na-nse/dist')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 dns.setServers(["1.1.1.1", "1.0.0.1"]);
@@ -67,7 +67,7 @@ io.on('connection', (socket) => {
 // 4. API AND ENDPOINT ROUTES
 // ==========================================
 app.set('trust proxy', 1);
-app.get('/', (req, res) => res.json({ status: 'ok', message: 'Server is running' }));
+app.get('/api/health', (req, res) => res.json({ status: 'ok', message: 'Server is running' }));
 app.use('/api/number', authNumbers);
 app.use('/api/auth', authRoutes);
 app.use('/api/blog', authStory);
@@ -87,9 +87,9 @@ app.use((err, req, res, next) => {
 });
 
 // Single Page Application (SPA) Web Routing Fallback Handler
-app.get(/^(?!\/(api|uploads|assets)).*/, (req, res) => {
-  res.sendFile(path.join(__dirname, '../mosisa-na-nse/dist/index.html'));
-});
+//app.get(/^(?!\/(api|uploads|assets)).*/, (req, res) => {
+//  res.sendFile(path.join(__dirname, '../mosisa-na-nse/dist/index.html'));
+//});
 
 // Server Start
 server.listen(PORT, '0.0.0.0', () => {
