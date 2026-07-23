@@ -307,14 +307,21 @@ export const updateUser = async (updatedData) => {
 export const fetchProtected = async (path, options = {}, retries = MAX_RETRIES) => {
   const { token } = useAuthUserStore.getState();
   if (!token) throw new Error('No token available');
-  
+
   if (isTokenExpired(token)) {
     await logout();
     throw new Error('Session expired. Please log in again.');
   }
-  
+
+  const base = "https://nzete.onrender.com";
+
+  // FIX: Prevent double-domain bug
+  const url = path.startsWith("http")
+    ? path
+    : `${base}${path}`;
+
   try {
-    const response = await fetchWithRetries(`https://nzete.onrender.com${path}`, {
+    const response = await fetchWithRetries(url, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
@@ -322,20 +329,24 @@ export const fetchProtected = async (path, options = {}, retries = MAX_RETRIES) 
         Authorization: `Bearer ${token}`,
       },
     }, retries);
-    
+
     const data = await response.json();
+
     if (!response.ok) {
-      // Direct session invalidation triggers
       if (response.status === 401 || response.status === 403) {
         await logout();
         throw new Error(data.message || 'Session invalidated. Please log in again.');
       }
       throw new Error(data.message || 'Request failed');
     }
+
     return data;
   } catch (error) {
-    // Structural cleanup trap to clear local store states
-    if (error.message.includes('expired') || error.message.includes('401') || error.message.includes('verified')) {
+    if (
+      error.message.includes('expired') ||
+      error.message.includes('401') ||
+      error.message.includes('verified')
+    ) {
       await logout();
     }
     throw error;

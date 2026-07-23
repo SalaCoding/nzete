@@ -28,7 +28,7 @@ const __dirname = dirname(__filename);
 // ==========================================
 // 1. CRITICAL GLOBAL SECURITY MIDDLEWARE (Must run first)
 // ==========================================
-app.use(cors(corsOptions)); // FIXED: CORS must load before static/routes to apply security headers
+app.use('*', cors(corsOptions)); // FIXED: CORS must load before static/routes to apply security headers
 app.use(helmet({ 
   crossOriginResourcePolicy: false,
   contentSecurityPolicy: false,
