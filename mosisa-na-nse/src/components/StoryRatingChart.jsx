@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 
 const Bar = ({ label, count, maxCount }) => {
   const percentage = maxCount > 0 ? (count / maxCount) * 100 : 0;
@@ -74,9 +74,21 @@ const styles = StyleSheet.create({
     width: 90,
     fontSize: 16,
     color: '#707072ff',
-    textShadowColor: 'rgba(0, 0, 0, 0. 2)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    ...Platform.select({
+      ios: {
+        textShadowColor: 'rgba(0, 0, 0, 0.2)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 2,
+      },
+      android: {
+        textShadowColor: 'rgba(0, 0, 0, 0.2)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 2,
+      },
+      web: {
+        textShadowColor: 'rgba(0, 0, 0, 0.2)',
+      }
+    }),
   },
   barTrack: {
     flex: 1,

@@ -381,6 +381,20 @@ const styles = StyleSheet.create({
     elevation: 2,
     width: "100%",
     maxWidth: 500,
+    ...Platform.select({
+      ios: {
+        boxShadow: '0px 3px 4px rgba(0, 0, 0, 0.06)',
+        //shadowOffset: { width: 0, height: 2 },
+        //shadowOpacity: 0.1,
+        //shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+      web: {
+        boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+      }
+    }),
   },
   avatar: {
     backgroundColor: "#eee",

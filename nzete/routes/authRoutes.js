@@ -469,13 +469,14 @@ router.post('/upload', authMiddleware, uploadLimiter, async (req, res) => {
     }
 
     const filename = `${userId}-${uuidv4()}.${type.ext}`;
+    
     const uploadDir = path.join(process.cwd(), 'uploads');
     await fs.mkdir(uploadDir, { recursive: true });
     
     const filePath = path.join(uploadDir, filename);
     await fs.writeFile(filePath, processedBuffer);
 
-    const url = `${req.protocol}://${req.get('host')}/uploads/${filename}`;
+    const url = `https://onrender.com{filename}`;
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       { profilePicture: url },

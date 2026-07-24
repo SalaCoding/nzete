@@ -17,6 +17,7 @@ import { API_URL } from '../../constants/api';
 import NumberList from "../../components/number";
 import { useAuthUserStore, checkUser } from '../../library/authUserStore';
 import { Ionicons } from "@expo/vector-icons";
+import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 
 // FIXED: Fallback to absolute base routing path if the global API_URL constant points to the old domain
 const BASE_HOST = API_URL || 'https://nzete.onrender.com';
@@ -29,12 +30,29 @@ export default function Index() {
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
   const [showNumbers] = useState(false);
-  const { token, _hasHydrated } = useAuthUserStore();
   
-  // Use ref to track abort controller
+  // Destructure reactive store states
+  const { token, _hasHydrated, setAuth, user } = useAuthUserStore();
   const abortControllerRef = useRef(null);
 
-  useEffect(() => { checkUser(); }, []);
+  // 1. SAFE WINDOW PARAMETER HANDLER: Guarded safely against SSR Node container crashes
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tokenFromUrl = params.get("token");
+
+      if (tokenFromUrl) {
+        // FIXED: Maps to your true store action 'setAuth' instead of the non-existent 'setToken'
+        // Preserves user profile details from previous memory if token updates independently
+        setAuth(tokenFromUrl, user || { verified: true });
+        window.history.replaceState({}, document.title, "/");
+      }
+    }
+  }, [setAuth, user]);
+
+  useEffect(() => { 
+    if (typeof checkUser === 'function') checkUser(); 
+  }, []);
 
   const handleStoryPress = (item) => {
     const path = item.slug ? `/story/${item.slug}` : `/story/${item._id || item.id}`;
@@ -50,7 +68,7 @@ export default function Index() {
       abortControllerRef.current.abort();
     }
 
-    if (! token) {
+    if (!token) {
       setIsLoading(false);
       return;
     }
@@ -58,13 +76,13 @@ export default function Index() {
     setIsLoading(true);
     setFetchError(null);
 
-    // Create new controller
-    abortControllerRef.current = new AbortController();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     const timeoutId = setTimeout(() => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
+      controller.abort();
     }, 30000);
+
     try {
       const response = await fetch(`${Api_Url}?page=1&limit=20`, {
         method: 'GET',
@@ -72,21 +90,19 @@ export default function Index() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        signal: abortControllerRef.current.signal,
+        signal: controller.signal,
       });
 
       clearTimeout(timeoutId);
+
+      if (abortControllerRef.current !== controller) return;
 
       if (!response.ok) {
         throw new Error(`Server responded with status: ${response.status}`);
       }
       
       const data = await response.json();
-      const list = Array.isArray(data)
-        ? data
-        : Array.isArray(data.stories)
-          ? data.stories
-          : [];
+      const list = Array.isArray(data) ? data : (data?.stories || data?.data || []);
 
       const processedStories = list.map(item => ({
         ...item,
@@ -97,9 +113,8 @@ export default function Index() {
     } catch (error) {
       clearTimeout(timeoutId);
       
-      // Ignore abort errors - they're expected when component unmounts or new request starts
-      if (error.name === 'AbortError') {
-        // Don't log or set error for abort - it's expected behavior
+      // FIXED: Ignore expected runtime AbortErrors from showing crash alerts
+      if (error.name === 'AbortError' || error.message?.includes('canceled')) {
         return;
       }
       
@@ -107,21 +122,30 @@ export default function Index() {
       console.error("Error fetching stories:", error.message);
       setStories([]);
     } finally {
-      setIsLoading(false);
+      if (abortControllerRef.current === controller) {
+        setIsLoading(false);
+        abortControllerRef.current = null;
+      }
     }
   }, [token]);
 
+  // 2. ISOLATED HYDRATION WATCHER: Removed fetchStories to cut off infinite structural loops
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (_hasHydrated && token) {
-        fetchStories();
-      } else if (_hasHydrated && !token) {
-        setIsLoading(false);
-      }
-    }, 0);
+    if (!_hasHydrated) return;
 
-    return () => clearTimeout(timer);
-  }, [_hasHydrated, token, fetchStories]);
+    const waitForToken = setTimeout(() => {
+      if (token) {
+        fetchStories();
+      } else {
+        setIsLoading(false);
+        if (router && typeof router.replace === 'function') {
+          router.replace('/(auth)');
+        }
+      }
+    }, 200); 
+
+    return () => clearTimeout(waitForToken);
+  }, [_hasHydrated, token, fetchStories, router]); 
 
   const renderStoryContent = () => {
     if (isLoading) {
@@ -156,7 +180,7 @@ export default function Index() {
         <View style={styles.itemHeader}>
           <FlatList
             data={stories}
-            keyExtractor={(item) => item._id || item.id}
+            keyExtractor={(item) => `horiz-${item._id || item.id}`}
             renderItem={({ item }) => (
               <TouchableOpacity onPress={() => handleStoryPress(item)} style={{ marginHorizontal: 5 }}>
                 <Text style={styles.title}>{item.title}</Text>
@@ -170,7 +194,7 @@ export default function Index() {
 
         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
           {stories.map((item) => (
-            <TouchableOpacity key={item._id || item.id} onPress={() => handleStoryPress(item)}>
+            <TouchableOpacity key={`vert-${item._id || item.id}`} onPress={() => handleStoryPress(item)}>
               <View style={styles.lisapo_container}>
                 <Text style={styles.lisapo__title}>{item.title}</Text>
                 <Text style={styles.lisolo}>{item.snippet}</Text>
@@ -179,7 +203,6 @@ export default function Index() {
           ))}
         </ScrollView>
         
-        {/* Sambole Section */}
         <View style={styles.samboleSection}>
           <TouchableOpacity style={styles.samboleButton} onPress={handleSambolePress}>
             <Text style={styles.samboleButtonText}>🎯 Sambole</Text>
@@ -207,7 +230,7 @@ export default function Index() {
         <Text style={styles.title__top}>Masapo</Text>
         {renderStoryContent()}
       </View>
-      <StatusBar style="dark" />
+      <ExpoStatusBar style="dark" />
     </SafeAreaView>
   );
 }
@@ -291,11 +314,23 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     color: 'rgb(255, 255, 255)',
-    textShadowOffset: { width: 5, height: 5 },
-    textShadowRadius: 16,
     fontFamily: 'Papyrus',
     marginTop: 1,
     marginBottom: 6,
+    ...Platform.select({
+      ios: {
+        textShadowOffset: { width: 5, height: 5 },
+        textShadowRadius: 16,
+      },
+      android: {
+        textShadowOffset: { width: 5, height: 5 },
+        textShadowRadius: 16,
+      },
+      web: {
+        textShadowOffset: { width: 5, height: 5 },
+        textShadowRadius: 16,
+      }
+    }),
   },
   linkText63: {
     flexDirection: 'column',
@@ -363,15 +398,26 @@ const styles = StyleSheet.create({
     marginBottom: 1,
   },
   samboleSection: {
-    shadowColor: '#ffffff',
-    shadowOffset: { width: 0, height: 0.10 },
-    shadowOpacity: 4.95,
-    shadowRadius: 8,
-    elevation: 18,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#ffffff',
+        shadowOffset: { width: 0, height: 0.10 },
+        shadowOpacity: 4.95,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 18,
+      },
+      web: {
+        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+      },
+    }),
+    marginBottom: Platform.OS === 'ios' ? 64 : 22,
+    padding: Platform.OS === 'ios' ? 8 : 7,
 
     marginHorizontal: 12,
-    marginBottom:  Platform.OS === 'ios' ? 64 : 22,
-    padding: Platform.OS === 'ios' ? 8 : 7,
+    //marginBottom:  Platform.OS === 'ios' ? 64 : 22,
+    //padding: Platform.OS === 'ios' ? 8 : 7,
     backgroundColor: '#4a487d',
     borderRadius: 12,
     alignItems: 'center',

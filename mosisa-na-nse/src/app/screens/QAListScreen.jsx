@@ -16,8 +16,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQAStore } from '../../library/storeQA';
 import { StatusBar } from 'expo-status-bar';
+import { useAuthUserStore } from '../../library/authUserStore';
 
-const QUIZ_STATE_KEY = 'quiz_state';
+const QUIZ_STATE_KEY = (userId) => `quiz_state_${userId}`;
 
 const QAListScreen = () => {
   const { 
@@ -51,10 +52,12 @@ const QAListScreen = () => {
   const isInitializedRef = useRef(false);
   const previousCategoryRef = useRef('');
   const lastQuestionIdRef = useRef(null);
+  
+  const { user } = useAuthUserStore();
 
   const saveQuizState = useCallback(async (state) => {
     try {
-      await AsyncStorage.setItem(QUIZ_STATE_KEY, JSON.stringify(state));
+      await AsyncStorage.setItem(QUIZ_STATE_KEY(user?.id), JSON.stringify(state));
     } catch (error) {
       console.error('Error saving quiz state:', error);
     }
@@ -62,7 +65,8 @@ const QAListScreen = () => {
 
   const loadQuizState = useCallback(async () => {
     try {
-      const savedState = await AsyncStorage.getItem(QUIZ_STATE_KEY);
+      const savedState = await AsyncStorage.getItem(QUIZ_STATE_KEY(user?.id));
+
       if (savedState) {
         return JSON.parse(savedState);
       }
@@ -74,7 +78,8 @@ const QAListScreen = () => {
 
   const clearQuizState = useCallback(async () => {
     try {
-      await AsyncStorage.removeItem(QUIZ_STATE_KEY);
+      await AsyncStorage.removeItem(QUIZ_STATE_KEY(user?.id));
+      await AsyncStorage.removeItem(QUIZ_STATE_KEY(user?.id));
     } catch (error) {
       console.error('Error clearing quiz state:', error);
     }
@@ -627,7 +632,7 @@ useEffect(() => {
                       styles.answeredStatus,
                       item.result.isCorrect ? styles.statusCorrect : styles.statusWrong,
                     ]}>
-                      {item.result.isCorrect ? 'Malamu!' : 'Elongi te'}
+                      {item.result.isCorrect ? 'Malamu!' : 'Olongi te'}
                     </Text>
                   </View>
                   
@@ -804,11 +809,20 @@ const styles = StyleSheet. create({
     marginBottom: 16,
     borderWidth: 2,
     borderColor: '#4a90e2',
-    shadowColor: '#4a90e2',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#4a90e2',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 5,
+      },
+      web: {
+        boxShadow: '0 4px 8px rgba(74, 144, 226, 0.2)',
+      },
+    }),
   },
   currentBadge: {
     backgroundColor: '#4a90e2',
@@ -896,15 +910,24 @@ const styles = StyleSheet. create({
     backgroundColor: '#6c757d',
     paddingVertical: 10,
     borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 10,
-    shadowRadius: 4,
-    elevation: 3,
     alignItems: 'center',
     marginTop: 12,
     width: '36%',
     alignSelf: 'flex-end',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 10,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 3,
+      },
+      web: {
+        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+      },
+    }),
   },
   skipButtonText: {
     color: '#fff',

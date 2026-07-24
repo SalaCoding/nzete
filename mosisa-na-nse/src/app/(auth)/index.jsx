@@ -225,11 +225,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 16,
     padding: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 5,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 5,
+      },
+      web: {
+        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+      },
+    }),
   },
   inputGroup: { marginBottom: 16 },
   text__head: { fontSize: 14, fontWeight: '600', color: '#333', marginBottom: 8 },
