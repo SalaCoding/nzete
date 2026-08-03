@@ -326,9 +326,14 @@ router.post('/login', loginLimiter, async (req, res) => {
   }
 });
 
-// ============================================================
-// GET CURRENT USER
-// ============================================================
+router.post('/logout', authMiddleware, async (req, res) => {
+  try {
+    return res.json({ message: 'Logged out successfully' });
+  } catch (error) {
+    console.error('Logout error:', error);
+    return res.status(500).json({ message: 'Server error during logout' });
+  }
+});
 router.get('/me', authMiddleware, async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select('-password');
@@ -344,9 +349,6 @@ router.get('/me', authMiddleware, async (req, res) => {
     return res.status(500).json({ message: 'Server error' });
   }
 });
-// ============================================================
-// EMAIL VERIFICATION
-// ============================================================
 router.get('/verify-email', async (req, res) => {
   try {
     const { token } = req.query;
