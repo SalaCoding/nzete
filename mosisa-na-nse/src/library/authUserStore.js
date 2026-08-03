@@ -246,7 +246,7 @@ export const logout = async () => {
   try {
     const { token } = useAuthUserStore.getState();
     if (token) {
-      fetchWithTimeout(`https://nzete.onrender.com/api/auth/logout`, {
+      fetchWithTimeout(`${process.env.BACKEND_URL || process.env.EXPO_PUBLIC_BACKEND_URL || 'https://nzete.onrender.com'}/api/auth/logout}`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,

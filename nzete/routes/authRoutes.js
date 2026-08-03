@@ -244,7 +244,7 @@ router.post('/register', authLimiter, async (req, res) => {
     await user.save();
 
     // Environment fallbacks insulate from breaking links with 'undefined' properties
-    const baseUrl = process.env.FRONTEND_URL || process.env.EXPO_PUBLIC_FRONTEND_URL || 'onrender.com';
+    const baseUrl = process.env.FRONTEND_URL || 'onrender.com';
     const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
     const verifyUrl = `${cleanBaseUrl}/verify-email?token=${verificationToken}`;
 
@@ -406,7 +406,7 @@ router.post('/resend-verification', async (req, res) => {
     await user.save();
 
     // Setup uniform fallback controls to lock path string outputs securely
-    const baseUrl = process.env.FRONTEND_URL || process.env.EXPO_PUBLIC_FRONTEND_URL || 'onrender.com';
+    const baseUrl = process.env.FRONTEND_URL || 'https://mosisa-ya-nzete.onrender.com';
     const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
     const verifyUrl = `${cleanBaseUrl}/verify-email?token=${verificationToken}`;
     
@@ -476,7 +476,7 @@ router.post('/upload', authMiddleware, uploadLimiter, async (req, res) => {
     const filePath = path.join(uploadDir, filename);
     await fs.writeFile(filePath, processedBuffer);
 
-    const BASE_URL = process.env.BACKEND_URL || `http://${req.get('host')}`;
+    const BASE_URL = process.env.BACKEND_URL || 'https://nzete.onrender.com';
     const url = `${BASE_URL}/uploads/${filename}`;
 
     const updatedUser = await User.findByIdAndUpdate(
@@ -520,7 +520,7 @@ router.patch('/user/profile', authMiddleware, async (req, res) => {
     if (profilePicture !== undefined) {
       if (!isValidString(profilePicture, 500)) return res.status(400).json({ message: 'Invalid profile picture URL' });
       
-      const host = req.get('host');
+      const host = process.env.BACKEND_URL || 'https://nzete.onrender.com';
       if (!isAllowedImageUrl(profilePicture) && !profilePicture.includes(`${host}/uploads/`)) {
         return res.status(400).json({ message: 'Invalid picture source' });
       }
@@ -569,7 +569,7 @@ router.post('/request-password-reset', async (req, res) => {
     await user.save();
 
     // Environment fallbacks to completely insulate your code from producing "undefined" URLs
-    const baseUrl = process.env.FRONTEND_URL || process.env.EXPO_PUBLIC_FRONTEND_URL || 'onrender.com';
+    const baseUrl = process.env.FRONTEND_URL || 'https://mosisa-ya-nzete.onrender.com';
     const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
     
     // Corrected target path parameter assignment string map definition
