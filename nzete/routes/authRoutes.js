@@ -476,7 +476,9 @@ router.post('/upload', authMiddleware, uploadLimiter, async (req, res) => {
     const filePath = path.join(uploadDir, filename);
     await fs.writeFile(filePath, processedBuffer);
 
-    const url = `https://onrender.com{filename}`;
+    const BASE_URL = process.env.BACKEND_URL || `http://${req.get('host')}`;
+    const url = `${BASE_URL}/uploads/${filename}`;
+
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       { profilePicture: url },
@@ -540,7 +542,6 @@ router.patch('/user/profile', authMiddleware, async (req, res) => {
     return res.status(500).json({ message: 'Server error' });
   }
 });
-
 // ============================================================
 // REQUEST PASSWORD RESET
 // ============================================================

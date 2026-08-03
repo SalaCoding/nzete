@@ -139,7 +139,7 @@ export const ProfileScreen = () => {
 
   useEffect(() => {
   if (!user) {
-    router.replace("/(auth)");   // or your login route
+    router.replace("/(auth)");
   }
 }, [user, router]);
 

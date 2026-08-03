@@ -44,7 +44,7 @@ app.use(express.urlencoded({ limit: '20mb', extended: true }));
 // 3. STATIC FILE DELIVERY
 // ==========================================
 //app.use(express.static(path.join(__dirname, '../mosisa-na-nse/dist')));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 dns.setServers(["1.1.1.1", "1.0.0.1"]);
 

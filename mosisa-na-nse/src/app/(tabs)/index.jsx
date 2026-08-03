@@ -13,15 +13,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'expo-router';
-import { API_URL } from '../../constants/api';
+//import { API_URL } from '../../constants/api';
 import NumberList from "../../components/number";
 import { useAuthUserStore, checkUser } from '../../library/authUserStore';
 import { Ionicons } from "@expo/vector-icons";
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 
-// FIXED: Fallback to absolute base routing path if the global API_URL constant points to the old domain
-const BASE_HOST = API_URL || 'https://nzete.onrender.com';
-
+// WITH THIS (Guarantees that broken bare domains are overwritten with the correct subdomain):
+const BASE_HOST = process.env.BACKEND_URL || 'https://nzete.onrender.com';
 const Api_Url = `${BASE_HOST}/api/blog/stories`;
 
 export default function Index() { 
@@ -42,7 +41,6 @@ export default function Index() {
       const tokenFromUrl = params.get("token");
 
       if (tokenFromUrl) {
-        // FIXED: Maps to your true store action 'setAuth' instead of the non-existent 'setToken'
         // Preserves user profile details from previous memory if token updates independently
         setAuth(tokenFromUrl, user || { verified: true });
         window.history.replaceState({}, document.title, "/");
@@ -113,7 +111,6 @@ export default function Index() {
     } catch (error) {
       clearTimeout(timeoutId);
       
-      // FIXED: Ignore expected runtime AbortErrors from showing crash alerts
       if (error.name === 'AbortError' || error.message?.includes('canceled')) {
         return;
       }
@@ -129,7 +126,7 @@ export default function Index() {
     }
   }, [token]);
 
-  // 2. ISOLATED HYDRATION WATCHER: Removed fetchStories to cut off infinite structural loops
+    // FIXED: Removed 'fetchStories' and 'router' from dependencies to stop the cancellation re-trigger loop
   useEffect(() => {
     if (!_hasHydrated) return;
 
@@ -145,7 +142,8 @@ export default function Index() {
     }, 200); 
 
     return () => clearTimeout(waitForToken);
-  }, [_hasHydrated, token, fetchStories, router]); 
+  }, [_hasHydrated, token, router, fetchStories]); 
+
 
   const renderStoryContent = () => {
     if (isLoading) {
@@ -416,8 +414,6 @@ const styles = StyleSheet.create({
     padding: Platform.OS === 'ios' ? 8 : 7,
 
     marginHorizontal: 12,
-    //marginBottom:  Platform.OS === 'ios' ? 64 : 22,
-    //padding: Platform.OS === 'ios' ? 8 : 7,
     backgroundColor: '#4a487d',
     borderRadius: 12,
     alignItems: 'center',
