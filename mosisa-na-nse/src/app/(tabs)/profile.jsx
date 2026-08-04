@@ -245,17 +245,23 @@ export const ProfileScreen = () => {
   };
 
   const confirmLogout = () => {
-    Alert.alert("Kobima? ", "Osili na mobembo na oyo?", [
-      { text: "Tika", style: "cancel" },
-      {
-        text: "Kobima",
-        style: "destructive",
-        onPress: async () => {
-          await logout();
-        },
+  if (Platform.OS === "web") {
+    const ok = confirm("Osili na mobembo na oyo?");
+    if (ok) logout();
+    return;
+  }
+
+  Alert.alert("Kobima? ", "Osili na mobembo na oyo?", [
+    { text: "Tika", style: "cancel" },
+    {
+      text: "Kobima",
+      style: "destructive",
+      onPress: async () => {
+        await logout();
       },
-    ]);
-  };
+    },
+  ]);
+};
 
   const storiesWithMinRating = ratedStories.filter(story => {
     const score = selectUserRating(story, userId);
