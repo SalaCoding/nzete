@@ -271,7 +271,6 @@ export const updateUser = async (updatedData) => {
   try {
     const sanitizedData = {};
     if (updatedData.username) sanitizedData.username = sanitizeInput(updatedData.username);
-    
     if (updatedData.profilePicture) sanitizedData.profilePicture = updatedData.profilePicture;
     
     if (Object.keys(sanitizedData).length === 0) throw new Error('No valid update data provided');
@@ -312,7 +311,6 @@ export const fetchProtected = async (path, options = {}, retries = MAX_RETRIES) 
     await logout();
     throw new Error('Session expired. Please log in again.');
   }
-
   const base = "https://nzete.onrender.com";
 
   // FIX: Prevent double-domain bug
@@ -339,7 +337,6 @@ export const fetchProtected = async (path, options = {}, retries = MAX_RETRIES) 
       }
       throw new Error(data.message || 'Request failed');
     }
-
     return data;
   } catch (error) {
     if (
@@ -367,37 +364,27 @@ export const refreshUser = async () => {
 };
 export const checkUser = async () => {
   useAuthUserStore.setState({ isLoading: true, error: null });
-
   try {
     const { token, user } = useAuthUserStore.getState();
-
-    // 1. Token presence
     if (!token) {
       useAuthUserStore.setState({ isLoading: false });
       return { success: false, error: 'No token' };
     }
-
-    // 2. Token expiration
     if (isTokenExpired(token)) {
       useAuthUserStore.getState().clearAuth();
       useAuthUserStore.setState({ isLoading: false });
       return { success: false, error: 'Token expired' };
     }
-
-    // 3. Local store verification check (NO MORE clearing auth)
     if (user && !user.verified) {
       useAuthUserStore.setState({ isLoading: false });
       return { success: false, error: 'Email not verified', isUnverified: true };
     }
-
-    // 4. Fetch fresh user data
     const response = await fetchWithTimeout(`https://nzete.onrender.com/api/auth/me`, {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
     });
-
     const rawText = await response.text();
     let data;
 
@@ -406,8 +393,6 @@ export const checkUser = async () => {
     } catch {
       throw new Error(`Server configuration mismatch. Error snippet: ${rawText.substring(0, 20)}...`);
     }
-
-    // 5. Response not OK
     if (!response.ok) {
       if (response.status === 403 && data.isUnverified) {
         useAuthUserStore.setState({ isLoading: false });
@@ -442,8 +427,6 @@ export const checkUser = async () => {
       useAuthUserStore.setState({ isLoading: false });
       return { success: false, error: error.message };
     }
-
-    // Real auth failure → clear
     useAuthUserStore.getState().clearAuth();
     useAuthUserStore.setState({ isLoading: false });
     return { success: false, error: error.message };

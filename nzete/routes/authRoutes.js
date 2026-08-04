@@ -274,10 +274,6 @@ router.post('/register', authLimiter, async (req, res) => {
     });
   }
 });
-
-// ============================================================
-// LOGIN
-// ============================================================
 router.post('/login', loginLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -325,7 +321,6 @@ router.post('/login', loginLimiter, async (req, res) => {
     return res.status(500).json({ message: 'Server error during login' });
   }
 });
-
 router.post('/logout', authMiddleware, async (req, res) => {
   try {
     return res.json({ message: 'Logged out successfully' });
@@ -384,9 +379,6 @@ router.get('/verify-email', async (req, res) => {
     return res.status(500).json({ message: "Internal server error during verification" });
   }
 });
-// ============================================================
-// RESEND VERIFICATION EMAIL
-// ============================================================
 router.post('/resend-verification', async (req, res) => {
   try {
     const { email } = req.body;
@@ -429,52 +421,53 @@ router.post('/resend-verification', async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 });
-// ============================================================
-// UPLOAD PROFILE PICTURE
-// ============================================================
 router.post('/upload', authMiddleware, uploadLimiter, async (req, res) => {
   const { image } = req.body;
   const userId = req.user._id;
 
   if (!image) return res.status(400).json({ error: 'No image provided' });
-  if (!isValidString(image, 10 * 1024 * 1024)) return res.status(400).json({ error: 'Invalid image data size' });
 
   try {
     let base64Data = image;
+
+    // Accept jpeg, jpg, png
     if (image.startsWith('data:image/')) {
-      const matches = image.match(/^data:image\/(jpeg|png);base64,(.+)$/);
+      const matches = image.match(/^data:image\/(jpeg|jpg|png);base64,(.+)$/);
       if (!matches) return res.status(400).json({ error: 'Invalid base64 format' });
       base64Data = matches[2];
     }
 
     const buffer = Buffer.from(base64Data, 'base64');
-    if (buffer.length > 5 * 1024 * 1024) return res.status(413).json({ error: 'Image exceeds 5MB limit' });
+
+    // Real size check
+    if (buffer.length > 5 * 1024 * 1024) {
+      return res.status(413).json({ error: 'Image exceeds 5MB limit' });
+    }
 
     const type = await fileTypeFromBuffer(buffer);
     if (!type || !['image/jpeg', 'image/png'].includes(type.mime)) {
       return res.status(400).json({ error: 'Only JPEG/PNG images allowed' });
     }
 
+    // Resize + compress
     let processedBuffer;
     try {
       const sharpInstance = sharp(buffer)
         .resize(500, 500, { fit: 'cover', withoutEnlargement: true })
-        .flatten({ background: '#ffffff' }); // Cleaner approach to transparency layer handling
+        .flatten({ background: '#ffffff' });
 
-      if (type.mime === 'image/png') {
-        processedBuffer = await sharpInstance.png({ compressionLevel: 9 }).toBuffer();
-      } else {
-        processedBuffer = await sharpInstance.jpeg({ quality: 85 }).toBuffer();
-      }
+      processedBuffer =
+        type.mime === 'image/png'
+          ? await sharpInstance.png({ compressionLevel: 9 }).toBuffer()
+          : await sharpInstance.jpeg({ quality: 85 }).toBuffer();
     } catch (err) {
       return res.status(400).json({ error: 'Failed to compress image file parameters' });
     }
 
     const filename = `${userId}-${uuidv4()}.${type.ext}`;
-    
     const uploadDir = path.join(process.cwd(), 'uploads');
     await fs.mkdir(uploadDir, { recursive: true });
-    
+
     const filePath = path.join(uploadDir, filename);
     await fs.writeFile(filePath, processedBuffer);
 
@@ -494,9 +487,6 @@ router.post('/upload', authMiddleware, uploadLimiter, async (req, res) => {
     return res.status(500).json({ error: 'Server error during upload handling' });
   }
 });
-// ============================================================
-// PATCH USER PROFILE
-// ============================================================
 router.patch('/user/profile', authMiddleware, async (req, res) => {
   try {
     const userId = req.user._id;
@@ -544,9 +534,6 @@ router.patch('/user/profile', authMiddleware, async (req, res) => {
     return res.status(500).json({ message: 'Server error' });
   }
 });
-// ============================================================
-// REQUEST PASSWORD RESET
-// ============================================================
 router.post('/request-password-reset', async (req, res) => {
   try {
     const { email } = req.body;
@@ -594,9 +581,6 @@ router.post('/request-password-reset', async (req, res) => {
     return res.status(500).json({ message: "Internal server error." });
   }
 });
-// ============================================================
-// RESET PASSWORD
-// ============================================================
 router.post('/reset-password', async (req, res) => {
   try {
     const { token, password } = req.body;
@@ -626,6 +610,5 @@ router.post('/reset-password', async (req, res) => {
     return res.status(500).json({ message: "Internal server error." });
   }
 });
-
 
 export default router;
