@@ -21,15 +21,11 @@ import { createRequire } from 'module';
 
 // Initialize Admin using Environment Variables
 const require = createRequire(import.meta.url);
-
 const rawServiceAccount = process.env.FIREBASE_SERVICE_ACCOUNT?.trim();
-
 if (!rawServiceAccount) {
   throw new Error("FIREBASE_SERVICE_ACCOUNT environment variable is missing!");
 }
-
 let serviceAccount;
-
 try {
   serviceAccount = JSON.parse(rawServiceAccount);
 } catch (e) {
@@ -82,7 +78,6 @@ const ALLOWED_IMAGE_HOSTS = [
   'localhost',
   'lh3.googleusercontent.com', // Google Profile Pictures
 ];
-
 const WEAK_PASSWORDS = [
   'password', 'password1', 'password123', '12345678', 'qwerty123',
   'letmein', 'welcome1', 'admin123', 'iloveyou1'
@@ -103,27 +98,22 @@ const loginLimiter = rateLimit({
   max: 5,
   message: { message: 'Too many login attempts, please try again later' },
 });
-
 const uploadLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
   message: { error: 'Too many uploads, please try again later' },
 });
-
 // ============================================================
 // HELPER FUNCTIONS
 // ============================================================
-
 const generateToken = (userId) => {
   const secret = process.env.JWT_SECRET;
   if (!secret) throw new Error('JWT_SECRET not configured');
   return jwt.sign(jwtOptions.signPayload(userId), secret, jwtOptions.sign);
 };
-
 const isValidString = (value, maxLength = 1000) => {
   return typeof value === 'string' && value.length <= maxLength;
 };
-
 const isAllowedImageUrl = (url) => {
   try {
     const parsed = new URL(url);
@@ -134,7 +124,6 @@ const isAllowedImageUrl = (url) => {
     return false;
   }
 };
-
 const sanitizeUser = (user) => ({
   id: user._id,
   email: user.email,
@@ -144,7 +133,6 @@ const sanitizeUser = (user) => ({
   isPremiumNumbers: user.isPremiumNumbers,
   isPremiumStories: user.isPremiumStories
 });
-
 // ============================================================
 // REGISTER (Optimized)
 // ============================================================
@@ -597,18 +585,202 @@ router.post('/reset-password', async (req, res) => {
     if (!user) {
       return res.status(400).json({ message: "Invalid or expired token." });
     }
-
     user.password = password; 
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
     
     await user.save();
-
     return res.json({ message: "Password reset successfully." });
   } catch (error) {
     console.error("Reset Finalize Error:", error);
     return res.status(500).json({ message: "Internal server error." });
   }
+});
+// routes/user.js
+router.post("/change-username", authMiddleware, async (req, res) => {
+  try {
+    const { newUsername } = req.body;
+
+    if (!newUsername || newUsername.trim().length < 3) {
+      return res.status(400).json({ message: "Username too short" });
+    }
+
+    // Check if username already exists
+    const existing = await User.findOne({ username: newUsername });
+    if (existing) {
+      return res.status(409).json({ message: "Username already taken" });
+    }
+
+    // Update user
+    const user = await User.findById(req.user.id);
+    user.username = newUsername;
+    await user.save();
+
+    res.json({ message: "Username updated successfully", username: newUsername });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+// routes/user.js
+router.delete("/delete-account", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    await User.findByIdAndDelete(userId);
+
+    // Optional: delete related data
+    await SomeModel.deleteMany({ userId });
+    await AnotherModel.deleteMany({ userId });
+
+    res.json({ message: "Account deleted successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.get("/support", (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Nzete Support</title>
+
+        <style>
+            :root {
+                --primary: #0066cc;
+                --text-dark: #222;
+                --text-light: #555;
+                --bg-light: #f5f7fa;
+                --white: #fff;
+                --radius: 12px;
+                --shadow: 0 4px 20px rgba(0,0,0,0.08);
+            }
+
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+                background: var(--bg-light);
+                margin: 0;
+                padding: 0;
+                color: var(--text-dark);
+            }
+
+            .container {
+                max-width: 900px;
+                margin: 40px auto;
+                background: var(--white);
+                padding: 40px;
+                border-radius: var(--radius);
+                box-shadow: var(--shadow);
+            }
+
+            h1 {
+                font-size: 34px;
+                margin-bottom: 20px;
+                color: var(--text-dark);
+                text-align: center;
+            }
+
+            h2 {
+                font-size: 24px;
+                margin-top: 35px;
+                margin-bottom: 10px;
+                color: var(--text-dark);
+            }
+
+            p {
+                font-size: 16px;
+                line-height: 1.7;
+                margin-bottom: 15px;
+                color: var(--text-light);
+            }
+
+            ul {
+                margin: 10px 0 20px 20px;
+                padding: 0;
+            }
+
+            ul li {
+                margin-bottom: 8px;
+                font-size: 16px;
+                color: var(--text-light);
+            }
+
+            .email {
+                font-weight: bold;
+                color: var(--primary);
+            }
+
+            .footer {
+                margin-top: 50px;
+                font-size: 14px;
+                color: #777;
+                text-align: center;
+            }
+
+            /* Responsive */
+            @media (max-width: 600px) {
+                .container {
+                    padding: 20px;
+                    margin: 20px;
+                }
+
+                h1 {
+                    font-size: 28px;
+                }
+
+                h2 {
+                    font-size: 20px;
+                }
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="container">
+            <h1>Nzete Support</h1>
+
+            <h2>Contact Email</h2>
+            <p class="email">support@nzeteapp.com</p>
+
+            <h2>FAQ</h2>
+            <p><strong>What is Nzete?</strong><br>
+            Nzete is a learning and reading companion designed to help users explore stories and improve reading skills.</p>
+
+            <p><strong>I cannot log in.</strong><br>
+            Ensure your email and password are correct. If issues continue, contact us.</p>
+
+            <p><strong>How do I delete my account?</strong><br>
+            Email <span class="email">support@nzeteapp.com</span> with the subject “Delete My Account”.</p>
+
+            <h2>Privacy Policy</h2>
+            <p>Nzete collects only essential information such as email, username, and basic usage data.</p>
+            <ul>
+                <li>We do NOT collect advertising identifiers</li>
+                <li>We do NOT collect device tracking data</li>
+                <li>We do NOT collect location data</li>
+                <li>We do NOT collect cross‑app tracking data</li>
+            </ul>
+            <p>We do not sell or share your data for advertising.</p>
+
+            <h2>Terms of Service</h2>
+            <p>By using Nzete, you agree not to misuse the app, attempt unauthorized access, or upload harmful content.</p>
+            <p>All content is protected by copyright.</p>
+            <p>For questions, email <span class="email">support@nzeteapp.com</span>.</p>
+
+            <h2>App Description</h2>
+            <p>Nzete – Learn & Read with Fun. Your interactive learning companion designed to make reading enjoyable, engaging, and accessible.</p>
+
+            <div class="footer">
+                © ${new Date().getFullYear()} Nzete App — All Rights Reserved
+            </div>
+        </div>
+    </body>
+    </html>
+  `);
 });
 
 export default router;

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef} from "react";
 import {
   View,
   Text,
@@ -11,7 +11,10 @@ import {
   StatusBar,
   RefreshControl,
   Dimensions,
-  StyleSheet
+  StyleSheet,
+  Linking,
+  Animated,
+  PanResponder,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
@@ -113,11 +116,9 @@ export const ProfileScreen = () => {
     userId,
     lastRatingUpdate,
   } = useStoryStore();
-
   const [refreshing, setRefreshing] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [image, setImage] = useState(null);
-
   const onRefresh = async () => {
     setRefreshing(true);
     try {
@@ -156,7 +157,6 @@ export const ProfileScreen = () => {
     Alert.alert("Permission Required", "We need access to your photo library.");
     return;
   }
-
   const result = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ['images'],
     allowsEditing: true,
@@ -164,7 +164,6 @@ export const ProfileScreen = () => {
   });
 
   if (result.canceled || !result.assets?.length) return;
-
   const asset = result.assets[0];
   let manipResult;
 
@@ -184,25 +183,19 @@ export const ProfileScreen = () => {
     Alert.alert("Image Error", "Could not retrieve image data.");
     return;
   }
-
   // 1. Strip the data URI prefix first
   const cleanBase64 = manipResult.base64.replace(/^data:image\/\w+;base64,/, '');
-
   // 2. Then calculate the size from the clean string
   const base64SizeKB = (cleanBase64.length * 3) / 4 / 1024;
-
   // 3. Check size before uploading
   if (base64SizeKB > MAX_BASE64_SIZE_KB) {
     Alert.alert("Image too large", "Please choose a smaller image.");
     return;
   }
-
   setImage(manipResult.uri);
-
   // 4. Upload only once, with the clean base64
   await uploadImage(cleanBase64);
 }
-
   const uploadImage = async (base64) => {
     setUploading(true);
     const { token } = useAuthUserStore.getState();
@@ -212,7 +205,6 @@ export const ProfileScreen = () => {
     setUploading(false);
     return;
   }
-
     try {
       const res = await fetch(`https://nzete.onrender.com/api/auth/upload`, {
         method: "POST",
@@ -229,7 +221,6 @@ export const ProfileScreen = () => {
       }
 
       const data = await res.json();
-      
       if (data?.user) {
         useAuthUserStore.setState({ user: data.user });
         Alert.alert("Success", "Profile picture updated!");
@@ -250,7 +241,6 @@ export const ProfileScreen = () => {
     if (ok) logout();
     return;
   }
-
   Alert.alert("Kobima? ", "Osili na mobembo na oyo?", [
     { text: "Tika", style: "cancel" },
     {
@@ -273,31 +263,147 @@ export const ProfileScreen = () => {
     : user?.profilePicture
     ? { uri: user.profilePicture }
     : require('../../../assets/images/icon_nzete.png');
+   
+// 0 = closed, 1 = open
+const [menuOpen, setMenuOpen] = useState(false);
+const slideAnim = useState(new Animated.Value(0))[0];
+
+useEffect(() => {
+  Animated.timing(slideAnim, {
+    toValue: menuOpen ? 1 : 0,
+    duration: 250,
+    useNativeDriver: true,
+  }).start();
+}, [menuOpen, slideAnim]);
+
+const translateX = slideAnim.interpolate({
+  inputRange: [0, 1],
+  outputRange: [width, 0],
+});
+
+const panResponder = useRef(
+  PanResponder.create({
+    onMoveShouldSetPanResponder: (_, gesture) => {
+      return gesture.dx > 10;
+    },
+    onPanResponderMove: (_, gesture) => {
+      if (gesture.dx > 0) {
+        slideAnim.setValue(gesture.dx / width);
+      }
+    },
+    onPanResponderRelease: (_, gesture) => {
+      if (gesture.dx > width * 0.25) {
+        setMenuOpen(false);
+      } else {
+        Animated.timing(slideAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }).start();
+      }
+    },
+  })
+).current;
 
   return (
     <KeyboardAvoidingView
       style={styles.flex}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <SafeAreaView style={styles.flexGrow}>
-        <ScrollView
-          style={styles.flex}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        >
-          <View style={styles.container}>
-            <View style={styles.profile}>
-              <TouchableOpacity onPress={confirmLogout} style={styles.logoutButton}>
-                <Ionicons 
-                  name="log-out-outline" 
-                  size={22} 
-                  color="#0f0f4a" 
-                  style={styles.logoutIcon} 
-                />
-                <Text style={styles.logoutText}>Log Out</Text>
-              </TouchableOpacity>
+    <View style={styles.headerContainer}>
+  <View style={styles.header}>
+    <Text style={styles.headerTitle}>Profile</Text>
 
+    <TouchableOpacity
+      style={styles.menuIconContainer}
+      onPress={() => setMenuOpen(!menuOpen)}
+    >
+      <Ionicons name="menu" size={30} color="#0f0f4a" />
+    </TouchableOpacity>
+  </View>
+    </View>
+    {menuOpen && (
+  <View style={styles.overlay}>
+    {/* Tap outside to close */}
+    <TouchableOpacity
+      style={StyleSheet.absoluteFill}
+      onPress={() => setMenuOpen(false)}
+      activeOpacity={1}
+    />
+
+    <Animated.View
+  style={[
+    styles.menuPanel,
+    { transform: [{ translateX }] }
+  ]}
+  onStartShouldSetResponder={() => true}
+  onResponderMove={(evt) => {
+    const x = evt.nativeEvent.pageX;
+
+    // If user drags finger to the right side of the screen → close
+    if (x > width * 0.7) {
+      setMenuOpen(false);
+    }
+  }}
+  onResponderRelease={() => {
+    // If user releases without crossing threshold → snap back open
+    Animated.timing(slideAnim, {
+      toValue: 1,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }}
+>
+      <Text style={styles.menuTitle}>Settings</Text>
+
+      <TouchableOpacity
+        style={styles.menuItem}
+        onPress={() => {
+          setMenuOpen(false);
+          router.push("/(auth)/change-username");
+        }}
+      >
+        <Ionicons name="person-circle-outline" size={22} color="#0f0f4a" />
+        <Text style={styles.menuItemText}>Change Username</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.menuItem}
+        onPress={() => {
+          setMenuOpen(false);
+          Linking.openURL("https://nzete.onrender.com/api/auth/support");
+        }}
+      >
+        <Ionicons name="help-circle-outline" size={22} color="#0066cc" />
+        <Text style={[styles.menuItemText, { color: "#0066cc" }]}>
+          Visit Support Page
+        </Text>
+      </TouchableOpacity>
+        <TouchableOpacity onPress={confirmLogout} style={styles.logoutButton}>
+          <Ionicons 
+            name="log-out-outline" 
+            size={22} 
+            color="#0f0f4a" 
+            style={styles.logoutIcon} 
+          />
+          <Text style={styles.logoutText}>Log Out</Text>
+        </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.menuItem, styles.deleteItem]}
+        onPress={() => {
+          setMenuOpen(false);
+          router.push("./(auth)/delete-account");
+        }}
+      >
+        <Ionicons name="trash-outline" size={22} color="#cc0000" />
+        <Text style={[styles.menuItemText, styles.deleteText]}>
+          Delete Account
+        </Text>
+      </TouchableOpacity>
+    </Animated.View>
+  </View>
+    )}
+    <View style={styles.profile}>
               <View style={styles.profileCard}>
                 <Image
                   source={imageSource}
@@ -325,7 +431,6 @@ export const ProfileScreen = () => {
                       {uploading ? "Uploading..." : "Pona elilingi"}
                     </Text>
                   </TouchableOpacity>
-
                   <Text style={styles.joined}>
                     {user?.createdAt
                       ? `Joined: ${new Date(user.createdAt).toLocaleDateString()}`
@@ -334,7 +439,14 @@ export const ProfileScreen = () => {
                 </View>
               </View>
             </View>
-
+      <SafeAreaView style={styles.flexGrow}>
+        <ScrollView
+          style={styles.flex}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
+          <View style={styles.container}>
             <View style={styles.section}>
               <RatedStoryList
                 userId={userId}
@@ -342,11 +454,8 @@ export const ProfileScreen = () => {
                 header={`Masolo oyo osepeli na yango (${storiesWithMinRating.length})`}
               />
             </View>
-
             <View style={styles.section}>
-              {/* Header / Image -> REDUCED SIZE HERE */}
               <View style={styles.imageContainer}>
-                {/* 👇 CHANGE WIDTH AND HEIGHT HERE TO REDUCE SIZE 👇 */}
                 <TreeSvg width={150} height={120} />
               </View>
             </View>
@@ -357,12 +466,12 @@ export const ProfileScreen = () => {
     </KeyboardAvoidingView>
   );
 };
-
 export default ProfileScreen;
 
 const styles = StyleSheet.create({
   flex: {
     flex: 1,
+    Top: 0,
   },
   flexGrow: {
     flexGrow: 1,
@@ -442,8 +551,8 @@ const styles = StyleSheet.create({
   logoutButton: {
     flexDirection: "row",
     alignItems: "center",
-    alignSelf: "flex-end",
-    paddingVertical: 6,
+    alignSelf: "flex",
+    paddingVertical: 14,
     paddingHorizontal: 12,
     borderRadius: 8,
     backgroundColor: "#ffecec",
@@ -485,4 +594,77 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 30,
   },
+  headerContainer: {
+  paddingTop: Platform.OS === "ios" ? 50 : 20,
+  backgroundColor: "#fff",
+  zIndex: 1000,
+  },
+  header: {
+    height: 60,
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#0f0f4a",
+  },
+ overlay: {
+  position: "absolute",
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  backgroundColor: "rgba(0,0,0,0.4)",
+  justifyContent: "flex-start",
+  alignItems: "flex-end",
+  zIndex: 99999,
+  elevation: 99999,
+  pointerEvents: "auto",
+},
+menuPanel: {
+  width: "70%",
+  height: "100%",
+  backgroundColor: "#fff",
+  padding: 20,
+  top: 90,
+  borderTopLeftRadius: 20,
+  borderBottomLeftRadius: 20,
+  //zIndex: 1000,
+},
+menuTitle: {
+  fontSize: 22,
+  fontWeight: "bold",
+  marginBottom: 20,
+  color: "#0f0f4a",
+},
+menuItem: {
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 12,
+  paddingVertical: 15,
+  borderBottomWidth: 1,
+  borderBottomColor: "#e5e5e5",
+},
+menuItemText: {
+  fontSize: 18,
+  color: "#333",
+},
+deleteItem: {
+  borderBottomWidth: 0,
+  marginTop: 10,
+},
+deleteText: {
+  color: "#cc0000",
+  fontWeight: "600",
+},
+menuIconContainer: {
+  position: "absolute",
+  top: 10,
+  right: 20,
+  zIndex: 3000,
+},
+
 });
