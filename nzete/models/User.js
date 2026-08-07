@@ -59,6 +59,21 @@ userSchema.set("toJSON", {
     return ret;
   }
 });
+userSchema.set("toJSON", {
+  transform(doc, ret) {
+    if (ret.username) {
+      ret.username = ret.username.charAt(0).toUpperCase() + ret.username.slice(1);
+    }
+    delete ret.password;
+    delete ret.__v;
+    delete ret.verificationToken;
+    delete ret.verificationExpires;
+    delete ret.resetPasswordToken;
+    delete ret.resetPasswordExpires;
+    return ret;
+  }
+});
+
 userSchema.methods.comparePassword = async function (candidate) {
   if (!this.password) throw new Error("Password not set for this user");
   return bcryptjs.compare(candidate, this.password);

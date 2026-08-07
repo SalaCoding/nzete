@@ -24,9 +24,6 @@ const RootLayout = () => {
 
   return (
     <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
-      {/* Reset password is declared at the top so it matches first, bypassing auth filters */}
-      <Stack.Screen name="reset-password" options={{ headerShown: false }} />
-
       {/* Standard routing split for signed-in vs guest users */}
       {isSignedIn ? (
         <Stack.Screen name="(tabs)" />

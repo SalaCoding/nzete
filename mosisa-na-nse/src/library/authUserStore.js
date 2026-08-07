@@ -229,10 +229,11 @@ export const login = async (email, password) => {
 
     if (!data.token || !data.user) throw new Error('Invalid server response');
 
-    // Commit authentication payload upon true verification validation
     useAuthUserStore.getState().setAuth(data.token, data.user);
     useAuthUserStore.setState({ isLoading: false, loadingType: null });
-    return { success: true };
+
+    // ⭐ Return token so Login screen can save it
+    return { success: true, token: data.token, user: data.user };
 
   } catch (error) {
     const errorMessage = getGenericError(error);
@@ -275,7 +276,7 @@ export const updateUser = async (updatedData) => {
     
     if (Object.keys(sanitizedData).length === 0) throw new Error('No valid update data provided');
 
-    const response = await fetchWithRetries(`https://nzete.onrender.com/api/auth/user/profile`, {
+    const response = await fetchWithRetries(`https://nzete.onrender.com/api/auth/auth/profile`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',

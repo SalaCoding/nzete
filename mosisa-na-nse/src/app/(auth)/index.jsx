@@ -10,6 +10,7 @@ import {
   ScrollView,
   Alert,
 } from 'react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import React, { useState, useEffect } from 'react'
 import { Image } from 'expo-image'
@@ -56,7 +57,7 @@ const Login = () => {
   useEffect(() => {
   if (error) {
     queueMicrotask(() => setIsEmailLoading(false));
-    Alert.alert('Login Failed', error);
+    //Alert.alert('Login Failed', error);
   }
 }, [error]);
 
@@ -68,40 +69,33 @@ const Login = () => {
       </View>
     )
   }
+const handleLogin = async () => {
+  if (isEmailLoading) return;
 
-  const handleLogin = async () => {
-    if (isEmailLoading) return;
+  if (!email.trim() || !password) {
+    Alert.alert('Missing Input', 'Please enter both email and password.');
+    return;
+  }
 
-    if (!email.trim() || !password) {
-      Alert.alert('Missing Input', 'Please enter both email and password.');
+  setIsEmailLoading(true);
+
+  try {
+    const result = await login(email.trim().toLowerCase(), password);
+
+    if (result?.token) {
+      await AsyncStorage.setItem("token", result.token);
+      console.log("⚡ [STORAGE] Token saved:", result.token);
+    } else {
+      Alert.alert("Login Failed", "Do you have an account? Invalid email or password.");
+      setIsEmailLoading(false);
       return;
     }
 
-    setIsEmailLoading(true);
-
-    try {
-      const result = await login(email.trim().toLowerCase(), password);
-      
-      // 1. Safe Intercept: Sync route structure targets cleanly with SignUp file outputs
-      if (result?.isUnverified) {
-        setIsEmailLoading(false); // Clean up layout locks prior to route shifts
-        router.push({
-          pathname: '/verify-info', 
-          params: { email: email.trim().toLowerCase() }
-        });
-        return;
-      }
-
-      // 2. Clear state if validation failed for alternate reasons
-      if (!result?.success) {
-        setIsEmailLoading(false);
-      }
-
-    } catch (_err) {
-      setIsEmailLoading(false);
-      Alert.alert('Error', 'An unexpected error occurred.');
-    }
-  };
+  } catch (_err) {
+    setIsEmailLoading(false);
+    Alert.alert('Error', 'An unexpected error occurred.');
+  }
+};
 
   return (
     <KeyboardAvoidingView

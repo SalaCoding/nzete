@@ -305,105 +305,98 @@ const panResponder = useRef(
   })
 ).current;
 
+//const user = useAuthUserStore(state => state.user); // subscribe correctly
+
+const displayUsername = user?.username
+  ? user.username.charAt(0).toUpperCase() + user.username.slice(1)
+  : "Guest";
+
+
   return (
     <KeyboardAvoidingView
       style={styles.flex}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
     <View style={styles.headerContainer}>
-  <View style={styles.header}>
-    <Text style={styles.headerTitle}>Profile</Text>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Profile</Text>
 
-    <TouchableOpacity
-      style={styles.menuIconContainer}
-      onPress={() => setMenuOpen(!menuOpen)}
-    >
-      <Ionicons name="menu" size={30} color="#0f0f4a" />
-    </TouchableOpacity>
-  </View>
+        <TouchableOpacity
+          style={styles.menuIconContainer}
+          onPress={() => setMenuOpen(!menuOpen)}
+        >
+          <Ionicons name="menu" size={30} color="#0f0f4a" />
+        </TouchableOpacity>
+      </View>
     </View>
     {menuOpen && (
-  <View style={styles.overlay}>
-    {/* Tap outside to close */}
-    <TouchableOpacity
-      style={StyleSheet.absoluteFill}
-      onPress={() => setMenuOpen(false)}
-      activeOpacity={1}
-    />
-
-    <Animated.View
+      <View style={styles.overlay}>
+      {/* Tap outside to close */}
+        <TouchableOpacity
+          style={StyleSheet.absoluteFill}
+          onPress={() => setMenuOpen(false)}
+          activeOpacity={1}
+        />
+        <Animated.View
   style={[
     styles.menuPanel,
     { transform: [{ translateX }] }
   ]}
-  onStartShouldSetResponder={() => true}
-  onResponderMove={(evt) => {
-    const x = evt.nativeEvent.pageX;
-
-    // If user drags finger to the right side of the screen → close
-    if (x > width * 0.7) {
-      setMenuOpen(false);
-    }
-  }}
-  onResponderRelease={() => {
-    // If user releases without crossing threshold → snap back open
-    Animated.timing(slideAnim, {
-      toValue: 1,
-      duration: 200,
-      useNativeDriver: true,
-    }).start();
-  }}
 >
-      <Text style={styles.menuTitle}>Settings</Text>
+  {/* TOP SECTION */}
+  <View style={styles.menuTop}>
+    <Text style={styles.menuTitle}>Settings</Text>
 
-      <TouchableOpacity
-        style={styles.menuItem}
-        onPress={() => {
-          setMenuOpen(false);
-          router.push("/(auth)/change-username");
-        }}
-      >
-        <Ionicons name="person-circle-outline" size={22} color="#0f0f4a" />
-        <Text style={styles.menuItemText}>Change Username</Text>
-      </TouchableOpacity>
+    <TouchableOpacity
+      style={styles.menuItem}
+      onPress={() => {
+        setMenuOpen(false);
+        router.push("/(auth)/changeUsername");
+      }}
+    >
+      <Ionicons name="person-circle-outline" size={22} color="#0f0f4a" />
+      <Text style={styles.menuItemText}>Change Username</Text>
+    </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.menuItem}
-        onPress={() => {
-          setMenuOpen(false);
-          Linking.openURL("https://nzete.onrender.com/api/auth/support");
-        }}
-      >
-        <Ionicons name="help-circle-outline" size={22} color="#0066cc" />
-        <Text style={[styles.menuItemText, { color: "#0066cc" }]}>
-          Visit Support Page
-        </Text>
-      </TouchableOpacity>
-        <TouchableOpacity onPress={confirmLogout} style={styles.logoutButton}>
-          <Ionicons 
-            name="log-out-outline" 
-            size={22} 
-            color="#0f0f4a" 
-            style={styles.logoutIcon} 
-          />
-          <Text style={styles.logoutText}>Log Out</Text>
-        </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.menuItem, styles.deleteItem]}
-        onPress={() => {
-          setMenuOpen(false);
-          router.push("./(auth)/delete-account");
-        }}
-      >
-        <Ionicons name="trash-outline" size={22} color="#cc0000" />
-        <Text style={[styles.menuItemText, styles.deleteText]}>
-          Delete Account
-        </Text>
-      </TouchableOpacity>
-    </Animated.View>
+    <TouchableOpacity
+      style={styles.menuItem}
+      onPress={() => {
+        setMenuOpen(false);
+        Linking.openURL("https://nzete.onrender.com/api/auth/support");
+      }}
+    >
+      <Ionicons name="help-circle-outline" size={22} color="#0066cc" />
+      <Text style={[styles.menuItemText, { color: "#0066cc" }]}>
+        Visit Support Page
+      </Text>
+    </TouchableOpacity>
+
+    <TouchableOpacity onPress={confirmLogout} style={styles.logoutButton}>
+      <Ionicons name="log-out-outline" size={22} color="#0f0f4a" />
+      <Text style={styles.logoutText}>Log Out</Text>
+    </TouchableOpacity>
   </View>
+
+  {/* BOTTOM SECTION */}
+  <View style={styles.menuBottom}>
+    <TouchableOpacity
+      style={[styles.menuItem, styles.deleteItem]}
+      onPress={() => {
+        setMenuOpen(false);
+        router.push("/(auth)/deleteAccount");
+      }}
+    >
+      <Ionicons name="trash-outline" size={22} color="#cc0000" />
+      <Text style={[styles.menuItemText, styles.deleteText]}>
+        Delete Account
+      </Text>
+    </TouchableOpacity>
+  </View>
+        </Animated.View>
+
+      </View>
     )}
-    <View style={styles.profile}>
+      <View style={styles.profile}>
               <View style={styles.profileCard}>
                 <Image
                   source={imageSource}
@@ -419,7 +412,7 @@ const panResponder = useRef(
                 />
                 <View style={styles.profileInfo}>
                   <Text style={styles.greeting}>👋 Mbote</Text>
-                  <Text style={styles.username}>{user?.username || "Guest"}</Text>
+                  <Text style={styles.username}>{displayUsername}</Text>
                   <Text style={styles.email}>{user?.email || "Not logged in"}</Text>
 
                   <TouchableOpacity 
@@ -478,10 +471,9 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    paddingBottom: 40,
   },
   profile: {
-    marginBottom: 16,
+    //marginBottom: 30,
     paddingHorizontal: 16,
     alignItems: "center",
   },
@@ -492,6 +484,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginTop: 12,
+    marginBottom: -42,
     boxShadow: '0px 3px 4px rgba(0, 0, 0, 0.06)',
     elevation: 2,
     width: "100%",
@@ -578,7 +571,7 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
     borderWidth: 1,
     marginHorizontal: 16,
-    marginTop: 16,
+    marginTop: 0,
     borderRadius: 8,
     backgroundColor: '#fff',
   },
@@ -625,14 +618,17 @@ const styles = StyleSheet.create({
   pointerEvents: "auto",
 },
 menuPanel: {
-  width: "70%",
-  height: "100%",
+  width: "60%",
+  height: "97%",
   backgroundColor: "#fff",
   padding: 20,
-  top: 90,
+  top: 50,
   borderTopLeftRadius: 20,
   borderBottomLeftRadius: 20,
-  //zIndex: 1000,
+
+  // ⭐ This makes top + bottom layout work
+  flexDirection: "column",
+  justifyContent: "space-between",
 },
 menuTitle: {
   fontSize: 22,
@@ -652,9 +648,19 @@ menuItemText: {
   fontSize: 18,
   color: "#333",
 },
+menuTop: {
+  flexDirection: "column",
+},
+menuBottom: {
+  paddingTop: 20,
+  borderTopWidth: 1,
+  borderTopColor: "#e5e5e5",
+},
 deleteItem: {
-  borderBottomWidth: 0,
-  marginTop: 10,
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 12,
+  paddingVertical: 15,
 },
 deleteText: {
   color: "#cc0000",
@@ -666,5 +672,4 @@ menuIconContainer: {
   right: 20,
   zIndex: 3000,
 },
-
 });

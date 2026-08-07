@@ -596,47 +596,69 @@ router.post('/reset-password', async (req, res) => {
     return res.status(500).json({ message: "Internal server error." });
   }
 });
-// routes/user.js
 router.post("/change-username", authMiddleware, async (req, res) => {
   try {
-    const { newUsername } = req.body;
+    let { newUsername } = req.body;
 
+    // Validate
     if (!newUsername || newUsername.trim().length < 3) {
       return res.status(400).json({ message: "Username too short" });
     }
 
-    // Check if username already exists
-    const existing = await User.findOne({ username: newUsername });
+    // Trim
+    newUsername = newUsername.trim();
+
+    // Enforce capital first letter for display
+    const displayUsername = 
+      newUsername.charAt(0).toUpperCase() + newUsername.slice(1).toLowerCase();
+
+    // Normalize for DB (schema stores lowercase)
+    const normalized = displayUsername.toLowerCase();
+
+    // Check if username already exists (case-insensitive)
+    const existing = await User.findOne({ username: normalized });
     if (existing) {
       return res.status(409).json({ message: "Username already taken" });
     }
 
-    // Update user
-    const user = await User.findById(req.user.id);
-    user.username = newUsername;
-    await user.save();
+    // Update using normalized value
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.id,
+      { username: normalized },
+      { new: true }
+    );
 
-    res.json({ message: "Username updated successfully", username: newUsername });
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Return capitalized version for UI
+    return res.json({
+      message: "Username updated successfully",
+      username: displayUsername
+    });
+
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
+    console.error("CHANGE USERNAME ERROR:", err);
+
+    if (err.code === 11000) {
+      return res.status(409).json({ message: "Username already taken" });
+    }
+
+    return res.status(500).json({ message: "Server error" });
   }
 });
-// routes/user.js
 router.delete("/delete-account", authMiddleware, async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.id || req.user._id;
 
     await User.findByIdAndDelete(userId);
 
-    // Optional: delete related data
-    await SomeModel.deleteMany({ userId });
-    await AnotherModel.deleteMany({ userId });
+    return res.status(200).json({ message: "Account deleted successfully" });
 
-    res.json({ message: "Account deleted successfully" });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
+    console.error("DELETE ACCOUNT ERROR:", err);
+    return res.status(500).json({ message: "Server error" });
   }
 });
 
@@ -744,7 +766,7 @@ router.get("/support", (req, res) => {
             <h1>Nzete Support</h1>
 
             <h2>Contact Email</h2>
-            <p class="email">support@nzeteapp.com</p>
+            <p class="email">salaarnold14@gmail.com</p>
 
             <h2>FAQ</h2>
             <p><strong>What is Nzete?</strong><br>
@@ -754,7 +776,7 @@ router.get("/support", (req, res) => {
             Ensure your email and password are correct. If issues continue, contact us.</p>
 
             <p><strong>How do I delete my account?</strong><br>
-            Email <span class="email">support@nzeteapp.com</span> with the subject “Delete My Account”.</p>
+            Email <span class="email">salaarnold14@gmail.com</span> with the subject “Delete My Account”.</p>
 
             <h2>Privacy Policy</h2>
             <p>Nzete collects only essential information such as email, username, and basic usage data.</p>
@@ -769,7 +791,7 @@ router.get("/support", (req, res) => {
             <h2>Terms of Service</h2>
             <p>By using Nzete, you agree not to misuse the app, attempt unauthorized access, or upload harmful content.</p>
             <p>All content is protected by copyright.</p>
-            <p>For questions, email <span class="email">support@nzeteapp.com</span>.</p>
+            <p>For questions, email <span class="email">salaarnold14@gmail.com</span>.</p>
 
             <h2>App Description</h2>
             <p>Nzete – Learn & Read with Fun. Your interactive learning companion designed to make reading enjoyable, engaging, and accessible.</p>

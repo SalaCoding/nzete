@@ -31,8 +31,8 @@ export const VerificationInfoScreen = ({ email }) => {
       const result = await checkUserWithRetry(2);
       if (result.success) {
         Alert.alert('Success', 'Your email has been verified! Welcome to Nzete.', [
-          { text: 'Continue', onPress: () => router.replace('/(tabs)') }
-        ]);
+          { text: 'Continue', onPress: () => router.replace('./(tabs)/index') }
+        ]); 
       } else {
         Alert.alert('Pending Verification', 'We cannot verify your status yet. Please check your inbox and click the link.');
       }
@@ -49,12 +49,11 @@ export const VerificationInfoScreen = ({ email }) => {
     setIsResending(true);
 
     try {
-      // Clean, robust connection utilizing your auth store's fetch configurations
       const result = await resendVerification(normalizedEmail);
       
       if (result.success) {
         Alert.alert('Email Sent', result.message || 'A new validation link has been sent.');
-        setCountdown(60); // Impose a 60-second anti-spam execution guard
+        setCountdown(60);
       } else {
         Alert.alert('Error', result.error || 'Failed to send new email. Please try again.');
       }
@@ -118,7 +117,7 @@ export const VerificationInfoScreen = ({ email }) => {
       {/* Return back to the login interface block anchor */}
       <TouchableOpacity
         style={styles.backBtn}
-        onPress={() => router.replace('/(auth)/login')}
+        onPress={() => router.replace('/(auth)/index')}
         disabled={isChecking || isResending}
         accessibilityLabel="Go to login"
       >

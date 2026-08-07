@@ -2,6 +2,7 @@ import { View, Text, Pressable, TextInput, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useState } from "react";
+import { useAuthUserStore } from "../../library/authUserStore";
 
 export default function ChangeUsername() {
   const router = useRouter();
@@ -10,6 +11,12 @@ export default function ChangeUsername() {
   const handleChangeUsername = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
+
+      if (!token) {
+        Alert.alert("Session Expired", "Please log in again.");
+        router.replace("/(auth)");
+        return;
+      }
 
       const res = await fetch("https://nzete.onrender.com/api/auth/change-username", {
         method: "POST",
@@ -23,13 +30,20 @@ export default function ChangeUsername() {
       const data = await res.json();
 
       if (!res.ok) {
-        Alert.alert("Error", data.message || "Could not change username");
+        Alert.alert("Error", data.error || data.message || "Could not change username");
         return;
       }
 
-      Alert.alert("Success", "Your username has been updated.");
+      // ⭐ Update global store instantly
+      const { user, token: storedToken } = useAuthUserStore.getState();
+      useAuthUserStore.getState().setAuth(storedToken, {
+        ...user,
+        username: data.username,
+      });
 
-      router.replace("/profile");
+      Alert.alert("Success", "Your username has been updated.");
+      router.replace("/(tabs)/profile");
+
     } catch (error) {
       Alert.alert("Error", "Something went wrong. Try again.");
       console.error("Error changing username:", error);
@@ -37,7 +51,7 @@ export default function ChangeUsername() {
   };
 
   return (
-    <View style={{flex: 1, padding: 20, justifyContent: "center"}}>
+    <View style={{ flex: 1, padding: 20, justifyContent: "center" }}>
       <Text style={{ fontSize: 20, fontWeight: "bold" }}>Change Username</Text>
 
       <TextInput
@@ -67,3 +81,4 @@ export default function ChangeUsername() {
     </View>
   );
 }
+

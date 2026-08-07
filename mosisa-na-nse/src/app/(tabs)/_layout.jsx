@@ -42,22 +42,6 @@ const TabLayout = () => {
           />)
         }}
       />
-      <Tabs.Screen name="change-username"
-        options={{
-          title: "Change Username",
-          tabBarIcon: ({color, size}) => (<Ionicons
-            name='cog-outline' size={26} color={color}
-          />)
-        }}
-      />
-      <Tabs.Screen name="delete-account"
-        options={{
-          title: "Delete Account",
-          tabBarIcon: ({color, size}) => (<Ionicons
-            name='trash-outline' size={26} color={color}
-          />)
-        }}
-      />
     </Tabs>
   )
 }
