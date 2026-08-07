@@ -31,7 +31,7 @@ export const VerificationInfoScreen = ({ email }) => {
       const result = await checkUserWithRetry(2);
       if (result.success) {
         Alert.alert('Success', 'Your email has been verified! Welcome to Nzete.', [
-          { text: 'Continue', onPress: () => router.replace('./(tabs)/index') }
+          { text: 'Continue', onPress: () => router.replace('./(tabs)') }
         ]); 
       } else {
         Alert.alert('Pending Verification', 'We cannot verify your status yet. Please check your inbox and click the link.');
@@ -117,7 +117,7 @@ export const VerificationInfoScreen = ({ email }) => {
       {/* Return back to the login interface block anchor */}
       <TouchableOpacity
         style={styles.backBtn}
-        onPress={() => router.replace('/(auth)/index')}
+        onPress={() => router.replace('/(auth)')}
         disabled={isChecking || isResending}
         accessibilityLabel="Go to login"
       >

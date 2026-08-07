@@ -33,9 +33,7 @@ const SignUp = () => {
     }
 
     const result = await register(username.trim(), email.trim().toLowerCase(), password);
-    
     if (result.success) {
-      // Safe dialog hook that triggers redirection only after user confirms via button press
       Alert.alert(
         "Verify your email",
         "Registration successful! Please check your inbox and click the verification link before logging in.",
