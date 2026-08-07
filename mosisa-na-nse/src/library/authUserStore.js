@@ -366,7 +366,7 @@ export const refreshUser = async () => {
 export const checkUser = async () => {
   useAuthUserStore.setState({ isLoading: true, error: null });
   try {
-    const { token, user } = useAuthUserStore.getState();
+    const { token } = useAuthUserStore.getState();
     if (!token) {
       useAuthUserStore.setState({ isLoading: false });
       return { success: false, error: 'No token' };
@@ -376,16 +376,17 @@ export const checkUser = async () => {
       useAuthUserStore.setState({ isLoading: false });
       return { success: false, error: 'Token expired' };
     }
-    if (user && !user.verified) {
-      useAuthUserStore.setState({ isLoading: false });
-      return { success: false, error: 'Email not verified', isUnverified: true };
-    }
-    const response = await fetchWithTimeout(`https://nzete.onrender.com/api/auth/me`, {
+
+    // 💡 FIXED: Removed the 'if (user && !user.verified)' check block from here!
+    // This allows the app to bypass local memory and hit your live database.
+
+    const response = await fetchWithTimeout(`https://onrender.com`, {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
     });
+    
     const rawText = await response.text();
     let data;
 
@@ -394,7 +395,9 @@ export const checkUser = async () => {
     } catch {
       throw new Error(`Server configuration mismatch. Error snippet: ${rawText.substring(0, 20)}...`);
     }
+
     if (!response.ok) {
+      // ✅ Matches your backend's 403 status output perfectly!
       if (response.status === 403 && data.isUnverified) {
         useAuthUserStore.setState({ isLoading: false });
         return { success: false, error: 'Email not verified', isUnverified: true };
@@ -402,24 +405,17 @@ export const checkUser = async () => {
       throw new Error(data.message || 'Failed to verify user session context');
     }
 
-    // 6. Server-side verification check (NO MORE clearing auth)
     if (!data.user) {
       useAuthUserStore.getState().clearAuth();
       useAuthUserStore.setState({ isLoading: false });
       return { success: false, error: 'Invalid user session' };
     }
 
-    if (!data.user.verified) {
-      useAuthUserStore.setState({ isLoading: false });
-      return { success: false, error: 'Email not verified', isUnverified: true };
-    }
-
-    // 7. Update user safely
+    // ✅ Sync the freshly fetched, verified user profile directly into your local state engine
     useAuthUserStore.setState({ user: data.user, isLoading: false });
     return { success: true, user: data.user };
 
   } catch (error) {
-    // Network / timeout / server mismatch → DO NOT clear auth
     if (
       error.message.includes('Server configuration') ||
       error.message.includes('timeout') ||

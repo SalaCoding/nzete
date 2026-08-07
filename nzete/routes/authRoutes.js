@@ -282,13 +282,6 @@ router.post('/login', loginLimiter, async (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    //if (!user.verified) {
-    //  return res.status(403).json({ 
-    //    message: 'Please verify your email before logging in.',
-    //    isUnverified: true 
-    //  });
-    //}
-
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid email or password' });
@@ -365,6 +358,26 @@ router.get('/verify-email', async (req, res) => {
   } catch (error) {
     console.error('[GET /verify-email] Error:', error);
     return res.status(500).json({ message: "Internal server error during verification" });
+  }
+});
+router.get("/check-status", authMiddleware, async (req, res) => {
+  try {
+    // 💡 Always fetch cleanly from the database to bypass stale token payloads
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Return the fresh data value matching your schema property name
+    return res.status(200).json({ 
+      success: true, 
+      verified: user.verified 
+    });
+
+  } catch (err) {
+    console.error("STATUS CHECK ENGINE ERROR:", err);
+    return res.status(500).json({ error: "Server error checking status" });
   }
 });
 router.post('/resend-verification', async (req, res) => {

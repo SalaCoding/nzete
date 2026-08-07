@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-// Import the centralized action to handle networking safely
 import { checkUserWithRetry, resendVerification } from '../library/authUserStore';
 
 export const VerificationInfoScreen = ({ email }) => {
@@ -14,7 +13,6 @@ export const VerificationInfoScreen = ({ email }) => {
   const [countdown, setCountdown] = useState(0);
   const timerRef = useRef(null);
 
-  // Throttling timer sequence execution
   useEffect(() => {
     if (countdown > 0) {
       timerRef.current = setTimeout(() => setCountdown(countdown - 1), 1000);
@@ -22,7 +20,6 @@ export const VerificationInfoScreen = ({ email }) => {
     return () => clearTimeout(timerRef.current);
   }, [countdown]);
 
-  // Action: Trigger status poll using your store action validation function
   const handleCheckStatus = async () => {
     if (isChecking) return;
     setIsChecking(true);
@@ -31,7 +28,8 @@ export const VerificationInfoScreen = ({ email }) => {
       const result = await checkUserWithRetry(2);
       if (result.success) {
         Alert.alert('Success', 'Your email has been verified! Welcome to Nzete.', [
-          { text: 'Continue', onPress: () => router.replace('./(tabs)') }
+          // ✅ FIX: Using absolute route configuration directly targeting your layout group mapping
+          { text: 'Continue', onPress: () => router.replace('/(tabs)') }
         ]); 
       } else {
         Alert.alert('Pending Verification', 'We cannot verify your status yet. Please check your inbox and click the link.');
@@ -43,14 +41,12 @@ export const VerificationInfoScreen = ({ email }) => {
     }
   };
 
-  // Action: Securely request a new link through your core state action store wrapper
   const handleResendLink = async () => {
     if (countdown > 0 || isResending || !normalizedEmail) return;
     setIsResending(true);
 
     try {
       const result = await resendVerification(normalizedEmail);
-      
       if (result.success) {
         Alert.alert('Email Sent', result.message || 'A new validation link has been sent.');
         setCountdown(60);
@@ -58,7 +54,7 @@ export const VerificationInfoScreen = ({ email }) => {
         Alert.alert('Error', result.error || 'Failed to send new email. Please try again.');
       }
     } catch (_error) {
-      Alert.alert('Network Error', 'An unexpected transport connection exception occurred. Please verify your internet connection.');
+      Alert.alert('Network Error', 'An unexpected transport connection exception occurred.');
     } finally {
       setIsResending(false);
     }
@@ -78,7 +74,6 @@ export const VerificationInfoScreen = ({ email }) => {
         Please check your inbox and click the link to continue.
       </Text>
 
-      {/* Action button to pull latest user status from server */}
       <TouchableOpacity
         style={[styles.actionBtn, { backgroundColor: '#007AFF', marginBottom: 12 }]}
         onPress={handleCheckStatus}
@@ -91,7 +86,6 @@ export const VerificationInfoScreen = ({ email }) => {
         )}
       </TouchableOpacity>
 
-      {/* Anti-Spam Resend Action button */}
       <TouchableOpacity
         style={[
           styles.actionBtn, 
@@ -114,10 +108,10 @@ export const VerificationInfoScreen = ({ email }) => {
         )}
       </TouchableOpacity>
 
-      {/* Return back to the login interface block anchor */}
       <TouchableOpacity
         style={styles.backBtn}
-        onPress={() => router.replace('/(auth)')}
+        // ✅ FIX: Dropped the parent (auth) string container out of the directory address target path configuration mapping parameter string
+        onPress={() => router.replace('/')}
         disabled={isChecking || isResending}
         accessibilityLabel="Go to login"
       >
@@ -134,14 +128,7 @@ const styles = StyleSheet.create({
   desc: { fontSize: 16, textAlign: 'center', marginBottom: 20 },
   email: { fontWeight: 'bold', color: '#007AFF' },
   helpText: { fontSize: 15, color: '#666', textAlign: 'center', marginBottom: 32 },
-  actionBtn: { 
-    width: '100%', 
-    maxWidth: 300, 
-    height: 48, 
-    borderRadius: 12, 
-    justifyContent: 'center', 
-    alignItems: 'center' 
-  },
+  actionBtn: { width: '100%', maxWidth: 300, height: 48, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   actionText: { fontSize: 16, fontWeight: '600' },
   backBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F0F6FF', borderRadius: 18, paddingVertical: 8, paddingHorizontal: 24 },
   backText: { color: '#007AFF', fontWeight: '600', marginLeft: 8, fontSize: 16 }
