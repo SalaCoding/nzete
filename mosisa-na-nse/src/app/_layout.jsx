@@ -30,6 +30,7 @@ const RootLayout = () => {
       ) : (
         <Stack.Screen name="(auth)" />
       )}
+      <Stack.Screen name="verify-info" />
     </Stack>
   );
 };

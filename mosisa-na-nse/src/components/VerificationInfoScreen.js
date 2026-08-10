@@ -28,7 +28,6 @@ export const VerificationInfoScreen = ({ email }) => {
       const result = await checkUserWithRetry(2);
       if (result.success) {
         Alert.alert('Success', 'Your email has been verified! Welcome to Nzete.', [
-          // ✅ FIX: Using absolute route configuration directly targeting your layout group mapping
           { text: 'Continue', onPress: () => router.replace('/(tabs)') }
         ]); 
       } else {
@@ -110,7 +109,6 @@ export const VerificationInfoScreen = ({ email }) => {
 
       <TouchableOpacity
         style={styles.backBtn}
-        // ✅ FIX: Dropped the parent (auth) string container out of the directory address target path configuration mapping parameter string
         onPress={() => router.replace('/')}
         disabled={isChecking || isResending}
         accessibilityLabel="Go to login"

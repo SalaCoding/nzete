@@ -338,10 +338,9 @@ router.get('/verify-email', async (req, res) => {
       verificationExpires: { $gt: Date.now() }
     });
 
-    // CRITICAL FIX: Fall back to your app's explicit scheme if verification expires
     if (!user) {
       console.log("[Verification] Token expired or invalid.");
-      return res.redirect(`mosisananse://login?verified=false&reason=expired`);
+      return res.redirect(`mosisananse://index?verified=false&reason=expired`);
     }
 
     user.verified = true;
@@ -353,7 +352,7 @@ router.get('/verify-email', async (req, res) => {
 
     // CRITICAL FIX: Redirect using your custom app scheme prefix!
     // This tells the phone's browser to instantly minimize and hand execution back to your Expo mobile app.
-    return res.redirect(`mosisananse://login?verified=true`);
+    return res.redirect(`mosisananse://index?verified=true`);
 
   } catch (error) {
     console.error('[GET /verify-email] Error:', error);

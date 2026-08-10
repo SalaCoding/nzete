@@ -17,7 +17,7 @@ import { Image } from 'expo-image'
 import { StatusBar } from 'expo-status-bar'
 import { Link, useRouter, useLocalSearchParams } from 'expo-router' // Added useLocalSearchParams
 import { Ionicons } from '@expo/vector-icons'
-import { useAuthUserStore, login } from '../../library/authUserStore';
+import { useAuthUserStore, login, checkUser } from '../../library/authUserStore';
 
 const Login = () => {
   const router = useRouter()
@@ -32,19 +32,41 @@ const Login = () => {
   const { user, error, _hasHydrated } = useAuthUserStore();
 
   // Watch for returning deep-linked verified users
-  useEffect(() => {
+  // ✅ Fix: Automatically authenticate and transition deep-linked verified users
+useEffect(() => {
+  const syncVerifiedUser = async () => {
     if (verified === 'true') {
-      Alert.alert(
-        'Account Verified!',
-        'Your Nzete account is active. You can now log in with your email and password.'
-      );
+      try {
+        console.log("🔄 [DEEP LINK] Intercepted verified user hook. Syncing fresh state...");
+        
+        // 1. Trigger your core checkUser script to pull live data from /api/auth/me
+        const result = await checkUser(); 
+        
+        if (result.success) {
+          // 2. If the server says they are verified, redirect them straight to the tabs!
+          Alert.alert('Welcome!', 'Your email is verified. Redirecting you to your dashboard...');
+          router.replace('/(tabs)');
+        } else {
+          // If the session token is missing or dead, alert them to log in manually
+          Alert.alert(
+            'Account Verified!',
+            'Your account is active. Please log in with your credentials to get started.'
+          );
+        }
+      } catch (err) {
+        console.error("Deep link state synchronization failure:", err);
+      }
     } else if (verified === 'false' && reason === 'expired') {
       Alert.alert(
         'Link Expired',
         'This verification link is invalid or older than 24 hours. Please log in to resend a new link.'
       );
     }
-  }, [verified, reason]);
+  };
+
+  syncVerifiedUser();
+}, [verified, reason, router]);
+
 
   // Redirect on successful login verification
   useEffect(() => {
@@ -57,11 +79,9 @@ const Login = () => {
   useEffect(() => {
   if (error) {
     queueMicrotask(() => setIsEmailLoading(false));
-    //Alert.alert('Login Failed', error);
   }
 }, [error]);
 
-  // Wait for auth state to hydration check
   if (!_hasHydrated) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
