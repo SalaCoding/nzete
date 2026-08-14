@@ -9,119 +9,121 @@ import {
   Platform,
   ScrollView,
   Alert,
-} from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import React, { useState, useEffect } from 'react';
-import { Image } from 'expo-image';
-import { StatusBar } from 'expo-status-bar';
-import { Link, useRouter, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+} from 'react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import React, { useState, useEffect } from 'react'
+import { Image } from 'expo-image'
+import { StatusBar } from 'expo-status-bar'
+import { Link, useRouter, useLocalSearchParams } from 'expo-router' // Added useLocalSearchParams
+import { Ionicons } from '@expo/vector-icons'
 import { useAuthUserStore, login, checkUser } from '../../library/authUserStore';
 
 const Login = () => {
-  const router = useRouter();
+  const router = useRouter()
+  // Intercept inbound url parameters from your custom app scheme (mosisananse://login?verified=true)
   const { verified, reason } = useLocalSearchParams();
-
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [isEmailLoading, setIsEmailLoading] = useState(false);
+  
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [isEmailLoading, setIsEmailLoading] = useState(false)
 
   const { user, error, _hasHydrated } = useAuthUserStore();
 
-  // 1. Deep Link Verification Interceptor
-  useEffect(() => {
-    const syncVerificationDeepLink = async () => {
-      if (verified === 'true') {
-        try {
-          console.log('🔄 Deep link captured: Verified true. Checking user status...');
-          const result = await checkUser();
-
-          if (result.success) {
-            Alert.alert('Welcome!', 'Your email is verified. Loading your profile...');
-            router.replace('/(tabs)');
-          } else {
-            Alert.alert('Account Active', 'Your email is verified. Please log in with your credentials.');
-          }
-        } catch (err) {
-          console.error('Deep link handshake exception:', err);
+useEffect(() => {
+  const syncVerificationDeepLink = async () => {
+    if (verified === 'true') {
+      try {
+        console.log("🔄 Deep link captured: Verified true. Updating local state variables...");
+        
+        // Triggers your clean frontend checkUser which hits your updated backend routes!
+        const result = await checkUser();
+        
+        if (result.success) {
+          Alert.alert('Welcome!', 'Your email is verified. Loading your profile...');
+          router.replace('/(tabs)');
+        } else {
+          Alert.alert('Account Active', 'Your email is verified. Please log in with your credentials.');
         }
-      } else if (verified === 'false' && reason === 'expired') {
-        Alert.alert('Link Expired', 'Your verification link has expired. Please log in to request a new link.');
+      } catch (err) {
+        console.error("Deep link handshake exception:", err);
       }
-    };
+    } else if (verified === 'false' && reason === 'expired') {
+      Alert.alert('Link Expired', 'Your verification link has expired. Please log in to request a new link.');
+    }
+  };
 
-    syncVerificationDeepLink();
-  }, [verified, reason, router]);
+  syncVerificationDeepLink();
+}, [verified, reason, router]);
 
-  // 2. Redirect ONLY if user exists AND is verified
+  // Redirect on successful login verification
   useEffect(() => {
-    if (user && user.verified) {
+    if (user) {
       router.replace('/(tabs)');
     }
   }, [user, router]);
 
-  // 3. Clear loading state on store error
+  // Show generic error alerts safely
   useEffect(() => {
-    if (error) {
-      queueMicrotask(() => setIsEmailLoading(false));
-    }
-  }, [error]);
+  if (error) {
+    queueMicrotask(() => setIsEmailLoading(false));
+  }
+}, [error]);
 
   if (!_hasHydrated) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
         <ActivityIndicator size="large" color="#007AFF" />
       </View>
-    );
+    )
+  }
+const handleLogin = async () => {
+  if (isEmailLoading) return;
+
+  if (!email.trim() || !password) {
+    Alert.alert('Missing Input', 'Please enter both email and password.');
+    return;
   }
 
-  const handleLogin = async () => {
-    if (isEmailLoading) return;
+  setIsEmailLoading(true);
 
-    if (!email.trim() || !password) {
-      Alert.alert('Missing Input', 'Please enter both email and password.');
+  try {
+    const result = await login(email.trim().toLowerCase(), password);
+
+    // ⚠️ Unverified account intercept
+    if (result?.isUnverified) {
+      setIsEmailLoading(false);
+      router.push({
+        pathname: '/verify-info',
+        params: { email: email.trim().toLowerCase() }
+      });
       return;
     }
 
-    setIsEmailLoading(true);
-
-    try {
-      const normalizedEmail = email.trim().toLowerCase();
-      const result = await login(normalizedEmail, password);
-
-      // Intercept unverified status
-      if (result?.isUnverified) {
-        setIsEmailLoading(false);
-        router.push({
-          pathname: '/verify-info', // Standardized route name
-          params: { email: normalizedEmail },
-        });
-        return;
-      }
-
-      if (result?.token) {
-        await AsyncStorage.setItem('token', result.token);
-        console.log('⚡ [STORAGE] Token saved:', result.token);
-      } else {
-        Alert.alert('Login Failed', result?.error || result?.message || 'Invalid email or password.');
-        setIsEmailLoading(false);
-        return;
-      }
-    } catch (err) {
+    if (result?.token) {
+      await AsyncStorage.setItem("token", result.token);
+      console.log("⚡ [STORAGE] Token saved:", result.token);
+    } else {
+      Alert.alert("Login Failed", result?.message || "Invalid email or password.");
       setIsEmailLoading(false);
-
-      if (err?.isUnverified) {
-        router.push({
-          pathname: '/verify-info',
-          params: { email: email.trim().toLowerCase() },
-        });
-        return;
-      }
-      Alert.alert('Error', err.message || 'An unexpected error occurred.');
+      return;
     }
-  };
+
+  } catch (err) {
+    setIsEmailLoading(false);
+    
+    // Fallback if your store action throws an error object directly
+    if (err?.isUnverified) {
+      router.push({
+        pathname: '/verify-info',
+        params: { email: email.trim().toLowerCase() }
+      });
+      return;
+    }
+    Alert.alert('Error', err.message || 'An unexpected error occurred.');
+  }
+};
 
   return (
     <KeyboardAvoidingView
@@ -131,6 +133,8 @@ const Login = () => {
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.container}>
+            
+            {/* Header Logo Visual Anchor */}
             <View style={styles.imageContainer}>
               <Image
                 source={require('../../../assets/images/icon_nzete.png')}
@@ -139,7 +143,10 @@ const Login = () => {
               />
             </View>
 
+            {/* Login Form Box Card */}
             <View style={styles.caseBox}>
+              
+              {/* Email Input Field */}
               <View style={styles.inputGroup}>
                 <Text style={styles.text__head}>Email</Text>
                 <TextInput
@@ -155,6 +162,7 @@ const Login = () => {
                 />
               </View>
 
+              {/* Password Input Field */}
               <View style={styles.inputGroup}>
                 <Text style={styles.text__head}>Password</Text>
                 <View style={styles.passwordContainer}>
@@ -164,7 +172,7 @@ const Login = () => {
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry={!showPassword}
-                    autoCapitalize="none"
+                    autoCapitalize='none'
                     autoCorrect={false}
                     style={[styles.input, { flex: 1, marginVertical: 0, borderWidth: 0 }]}
                     editable={!isEmailLoading}
@@ -183,12 +191,13 @@ const Login = () => {
                 </View>
               </View>
 
+              {/* Action Button Submission Element */}
               <TouchableOpacity
                 onPress={handleLogin}
                 disabled={isEmailLoading}
                 style={[
                   styles.loginButton,
-                  { backgroundColor: isEmailLoading ? '#ccc' : '#007AFF' },
+                  { backgroundColor: isEmailLoading ? '#ccc' : '#007AFF' }
                 ]}
               >
                 {isEmailLoading ? (
@@ -198,6 +207,7 @@ const Login = () => {
                 )}
               </TouchableOpacity>
 
+              {/* Recovery Options Link Wrapper */}
               <Link href="/forgotPassword" asChild>
                 <TouchableOpacity
                   style={styles.passForgotContainer}
@@ -207,6 +217,7 @@ const Login = () => {
                 </TouchableOpacity>
               </Link>
 
+              {/* Screen Split Navigation Footer Element */}
               <View style={styles.footer}>
                 <Text style={styles.footerText}>Don’t have an account?</Text>
                 <Link href="/signup" asChild disabled={isEmailLoading}>
@@ -215,14 +226,15 @@ const Login = () => {
                   </TouchableOpacity>
                 </Link>
               </View>
+
             </View>
           </View>
         </SafeAreaView>
       </ScrollView>
       <StatusBar style="dark" />
     </KeyboardAvoidingView>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
@@ -286,6 +298,6 @@ const styles = StyleSheet.create({
   footer: { marginTop: 24, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
   footerText: { fontSize: 15, color: '#666' },
   linkText: { fontSize: 15, color: '#007AFF', fontWeight: '600', marginLeft: 6 },
-});
+})
 
 export default Login;
