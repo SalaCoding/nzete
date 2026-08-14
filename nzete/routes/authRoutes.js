@@ -262,6 +262,45 @@ router.post('/register', authLimiter, async (req, res) => {
     });
   }
 });
+// ==========================================
+// 1. CHECK STATUS ROUTE
+// ==========================================
+router.get("/check-status", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+
+    if (!userId) {
+      return res.status(401).json({ message: "User identity tracking lost" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // ⚠️ Explicitly flag unverified accounts
+    if (!user.verified) {
+      return res.status(403).json({ 
+        message: "Email not verified", 
+        isUnverified: true,
+        user: sanitizeUser(user)
+      });
+    }
+
+    // ✅ Verified user response
+    return res.status(200).json({ 
+      success: true, 
+      user: sanitizeUser(user) 
+    });
+  } catch (err) {
+    console.error("STATUS CHECK ENGINE ERROR:", err);
+    return res.status(500).json({ message: "Server error checking status" });
+  }
+});
+
+// ==========================================
+// 2. LOGIN ROUTE
+// ==========================================
 router.post('/login', loginLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -287,10 +326,21 @@ router.post('/login', loginLimiter, async (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
+    // ⚡ Always generate token so the client can authorize /check-status requests
+    const token = generateToken(user._id);
+
+    // ⚠️ GUARD: Return token with 403 if unverified so state can hydrate
+    if (!user.verified) {
+      return res.status(403).json({ 
+        message: "Email not verified", 
+        isUnverified: true,
+        token,
+        user: sanitizeUser(user)
+      });
+    }
+
     user.lastLogin = new Date();
     await user.save(); 
-
-    const token = generateToken(user._id);
 
     return res.status(200).json({
       token,
@@ -312,17 +362,33 @@ router.post('/logout', authMiddleware, async (req, res) => {
 });
 router.get('/me', authMiddleware, async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select('-password');
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    const userId = req.user?.id || req.user?._id;
+
+    if (!userId) {
+      return res.status(401).json({ message: 'User reference missing from auth context' });
     }
+
+    const user = await User.findById(userId).select('-password');
+    if (!user) {
+      return res.status(404).json({ message: 'User profile not found' });
+    }
+
     if (!user.verified) {
       return res.status(403).json({ message: "Email not verified", isUnverified: true });
     }
-    return res.json({ user: sanitizeUser(user) });
+
+    // ⚠️ SAFE GUARD: Check if sanitizeUser exists before executing it!
+    if (typeof sanitizeUser === 'function') {
+      return res.json({ user: sanitizeUser(user) });
+    }
+
+    // Fallback if your custom sanitizer function is missing or broken
+    return res.json({ user });
+
   } catch (err) {
-    console.error('[GET /me]', err);
-    return res.status(500).json({ message: 'Server error' });
+    // 📊 Check your Render Web Console logs to see exactly what failed here!
+    console.error('[GET /me] CRITICAL BACKEND CRASH:', err);
+    return res.status(500).json({ message: 'Internal server error processing user profile' });
   }
 });
 router.get('/verify-email', async (req, res) => {
@@ -357,26 +423,6 @@ router.get('/verify-email', async (req, res) => {
   } catch (error) {
     console.error('[GET /verify-email] Error:', error);
     return res.status(500).json({ message: "Internal server error during verification" });
-  }
-});
-router.get("/check-status", authMiddleware, async (req, res) => {
-  try {
-    // 💡 Always fetch cleanly from the database to bypass stale token payloads
-    const user = await User.findById(req.user.id);
-
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    // Return the fresh data value matching your schema property name
-    return res.status(200).json({ 
-      success: true, 
-      verified: user.verified 
-    });
-
-  } catch (err) {
-    console.error("STATUS CHECK ENGINE ERROR:", err);
-    return res.status(500).json({ error: "Server error checking status" });
   }
 });
 router.post('/resend-verification', async (req, res) => {

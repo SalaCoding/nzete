@@ -367,20 +367,15 @@ export const checkUser = async () => {
   useAuthUserStore.setState({ isLoading: true, error: null });
   try {
     const { token } = useAuthUserStore.getState();
+    
     if (!token) {
       useAuthUserStore.setState({ isLoading: false });
-      return { success: false, error: 'No token' };
-    }
-    if (isTokenExpired(token)) {
-      useAuthUserStore.getState().clearAuth();
-      useAuthUserStore.setState({ isLoading: false });
-      return { success: false, error: 'Token expired' };
+      return { success: false, error: 'No token found in store state' };
     }
 
-    // 💡 FIXED: Removed the 'if (user && !user.verified)' check block from here!
-    // This allows the app to bypass local memory and hit your live database.
-
-    const response = await fetchWithTimeout(`https://onrender.com`, {
+    // ⚠️ Point to your actual API route, not just the root domain
+    const response = await fetchWithTimeout(`https://nzete.onrender.com/api/auth/check-status`, {
+      method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -393,38 +388,37 @@ export const checkUser = async () => {
     try {
       data = JSON.parse(rawText);
     } catch {
-      throw new Error(`Server configuration mismatch. Error snippet: ${rawText.substring(0, 20)}...`);
+      console.error("❌ [SERVER ERROR INFRASTRUCTURE]: Expected JSON, got:", rawText);
+      useAuthUserStore.setState({ isLoading: false });
+      return { success: false, error: 'Server returned non-JSON data' };
     }
 
     if (!response.ok) {
-      // ✅ Matches your backend's 403 status output perfectly!
+      // ✅ Matches the 403 response from both /login and /check-status
       if (response.status === 403 && data.isUnverified) {
         useAuthUserStore.setState({ isLoading: false });
         return { success: false, error: 'Email not verified', isUnverified: true };
       }
-      throw new Error(data.message || 'Failed to verify user session context');
+      useAuthUserStore.setState({ isLoading: false });
+      return { success: false, error: data.message || 'Verification endpoint rejected request' };
     }
 
     if (!data.user) {
-      useAuthUserStore.getState().clearAuth();
       useAuthUserStore.setState({ isLoading: false });
-      return { success: false, error: 'Invalid user session' };
+      return { success: false, error: 'Invalid user session schema structure' };
     }
 
-    // ✅ Sync the freshly fetched, verified user profile directly into your local state engine
+    if (!data.user.verified) {
+      useAuthUserStore.setState({ isLoading: false });
+      return { success: false, error: 'Email not verified', isUnverified: true };
+    }
+
+    // ✅ SUCCESS: Sync database user object to Zustand store state
     useAuthUserStore.setState({ user: data.user, isLoading: false });
     return { success: true, user: data.user };
 
   } catch (error) {
-    if (
-      error.message.includes('Server configuration') ||
-      error.message.includes('timeout') ||
-      error.message.includes('Network')
-    ) {
-      useAuthUserStore.setState({ isLoading: false });
-      return { success: false, error: error.message };
-    }
-    useAuthUserStore.getState().clearAuth();
+    console.error("🚨 [CHECKUSER CATCH CRASH ERROR]:", error.message);
     useAuthUserStore.setState({ isLoading: false });
     return { success: false, error: error.message };
   }
@@ -435,7 +429,6 @@ export const checkUserWithRetry = async (retries = 3) => {
       const result = await checkUser();
       if (result.success) return result;
       
-      // Stop unverified or unauthenticated requests immediately from generating unnecessary request traffic
       if (result.error === 'No token' || result.error === 'Token expired' || result.isUnverified) {
         return result;
       }

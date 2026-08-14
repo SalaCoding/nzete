@@ -187,7 +187,6 @@ export const ProfileScreen = () => {
   const cleanBase64 = manipResult.base64.replace(/^data:image\/\w+;base64,/, '');
   // 2. Then calculate the size from the clean string
   const base64SizeKB = (cleanBase64.length * 3) / 4 / 1024;
-  // 3. Check size before uploading
   if (base64SizeKB > MAX_BASE64_SIZE_KB) {
     Alert.alert("Image too large", "Please choose a smaller image.");
     return;
@@ -304,8 +303,6 @@ const panResponder = useRef(
     },
   })
 ).current;
-
-//const user = useAuthUserStore(state => state.user); // subscribe correctly
 
 const displayUsername = user?.username
   ? user.username.charAt(0).toUpperCase() + user.username.slice(1)

@@ -125,11 +125,9 @@ export default function Index() {
       }
     }
   }, [token]);
-
-    // FIXED: Removed 'fetchStories' and 'router' from dependencies to stop the cancellation re-trigger loop
+  
   useEffect(() => {
     if (!_hasHydrated) return;
-
     const waitForToken = setTimeout(() => {
       if (token) {
         fetchStories();
@@ -143,7 +141,6 @@ export default function Index() {
 
     return () => clearTimeout(waitForToken);
   }, [_hasHydrated, token, router, fetchStories]); 
-
 
   const renderStoryContent = () => {
     if (isLoading) {

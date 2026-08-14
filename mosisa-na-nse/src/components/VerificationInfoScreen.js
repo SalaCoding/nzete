@@ -1,12 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { checkUserWithRetry, resendVerification } from '../library/authUserStore';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { checkUserWithRetry, resendVerification, useAuthUserStore } from '../library/authUserStore';
 
-export const VerificationInfoScreen = ({ email }) => {
+export const VerificationInfoScreen = ({ email: propEmail }) => {
   const router = useRouter();
-  const normalizedEmail = email ? email.trim().toLowerCase() : '';
+  const searchParams = useLocalSearchParams();
+
+  // Extract email safely from props or route params
+  const rawEmail = propEmail || searchParams?.email || '';
+  const normalizedEmail = rawEmail ? String(rawEmail).trim().toLowerCase() : '';
 
   const [isChecking, setIsChecking] = useState(false);
   const [isResending, setIsResending] = useState(false);
@@ -28,8 +32,8 @@ export const VerificationInfoScreen = ({ email }) => {
       const result = await checkUserWithRetry(2);
       if (result.success) {
         Alert.alert('Success', 'Your email has been verified! Welcome to Nzete.', [
-          { text: 'Continue', onPress: () => router.replace('/(tabs)') }
-        ]); 
+          { text: 'Continue', onPress: () => router.replace('/(tabs)') },
+        ]);
       } else {
         Alert.alert('Pending Verification', 'We cannot verify your status yet. Please check your inbox and click the link.');
       }
@@ -59,16 +63,21 @@ export const VerificationInfoScreen = ({ email }) => {
     }
   };
 
+  const handleBackToLogin = () => {
+    useAuthUserStore.setState({ user: null, token: null, isLoading: false, error: null });
+    router.replace('/');
+  };
+
   return (
     <View style={styles.container}>
       <Ionicons name="mail-outline" size={64} color="#007AFF" style={{ marginBottom: 24 }} />
       <Text style={styles.title}>Verify Your Email</Text>
-      
+
       <Text style={styles.desc}>
         We&apos;ve sent a verification link to{'\n'}
-        <Text style={styles.email}>{email || 'your email address'}</Text>
+        <Text style={styles.email}>{normalizedEmail || 'your email address'}</Text>
       </Text>
-      
+
       <Text style={styles.helpText}>
         Please check your inbox and click the link to continue.
       </Text>
@@ -87,13 +96,13 @@ export const VerificationInfoScreen = ({ email }) => {
 
       <TouchableOpacity
         style={[
-          styles.actionBtn, 
-          { 
-            backgroundColor: 'transparent', 
-            borderWidth: 1, 
-            borderColor: countdown > 0 || isResending || isChecking ? '#ccc' : '#007AFF', 
-            marginBottom: 24 
-          }
+          styles.actionBtn,
+          {
+            backgroundColor: 'transparent',
+            borderWidth: 1,
+            borderColor: countdown > 0 || isResending || isChecking ? '#ccc' : '#007AFF',
+            marginBottom: 24,
+          },
         ]}
         onPress={handleResendLink}
         disabled={countdown > 0 || isResending || isChecking || !normalizedEmail}
@@ -109,7 +118,7 @@ export const VerificationInfoScreen = ({ email }) => {
 
       <TouchableOpacity
         style={styles.backBtn}
-        onPress={() => router.replace('/')}
+        onPress={handleBackToLogin}
         disabled={isChecking || isResending}
         accessibilityLabel="Go to login"
       >
@@ -129,7 +138,7 @@ const styles = StyleSheet.create({
   actionBtn: { width: '100%', maxWidth: 300, height: 48, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   actionText: { fontSize: 16, fontWeight: '600' },
   backBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F0F6FF', borderRadius: 18, paddingVertical: 8, paddingHorizontal: 24 },
-  backText: { color: '#007AFF', fontWeight: '600', marginLeft: 8, fontSize: 16 }
+  backText: { color: '#007AFF', fontWeight: '600', marginLeft: 8, fontSize: 16 },
 });
 
 export default VerificationInfoScreen;
