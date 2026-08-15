@@ -48,7 +48,7 @@ export default function NumberBrowser() {
     ) {
       const initialGroups = allGroups.slice(0, GROUPS_PER_LOAD);
       fetchGroups(initialGroups);
-      setGroupPage(1);
+      Promise.resolve().then(() => setGroupPage(1));
     }
   }, [allGroups, fetchGroups, groupPage]);
 
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: {
     position: 'absolute',
-    top: 0,
+    marginTop: 0,
     left: 0,
     right: 0,
     backgroundColor: '#eee',

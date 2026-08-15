@@ -5,7 +5,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { jwtDecode } from 'jwt-decode';
-//import { API_URL } from '../constants/api';
+import { getAuth } from 'firebase/auth';
 
 // =============
 // Platform-aware storage
@@ -423,23 +423,71 @@ export const checkUser = async () => {
     return { success: false, error: error.message };
   }
 };
-export const checkUserWithRetry = async (retries = 3) => {
-  for (let i = 0; i < retries; i++) {
+export const checkUserWithRetry = async (retries = 2) => {
+  try {
+    let token = useAuthUserStore.getState().token;
+    
+    // 1. Refresh Firebase Token if Firebase Auth is active
+    let firebaseUser = null;
     try {
-      const result = await checkUser();
-      if (result.success) return result;
-      
-      if (result.error === 'No token' || result.error === 'Token expired' || result.isUnverified) {
-        return result;
+      const auth = getAuth();
+      firebaseUser = auth.currentUser;
+      if (firebaseUser) {
+        await firebaseUser.reload(); // Force Firebase to refresh user status
+        token = await firebaseUser.getIdToken(true);
       }
-      
-      if (i < retries - 1) await new Promise((resolve) => setTimeout(resolve, 500 * (i + 1)));
-    } catch (err) {
-      if (i === retries - 1) return { success: false, error: err.message };
-      await new Promise((resolve) => setTimeout(resolve, 500 * (i + 1)));
+    } catch (_firebaseErr) {
+      // Ignore if Firebase isn't initialized or used
     }
+
+    // 2. Poll backend endpoint
+    for (let i = 0; i < retries; i++) {
+      const res = await fetch(`https://nzete.onrender.com/api/auth/me?t=${Date.now()}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Cache-Control': 'no-cache',
+        },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        
+        // Extract user object safely (handles { user: {...} } or direct user object)
+        const userObj = data?.user || data;
+        
+        // Check all common naming variations for email verification
+        const isBackendVerified = Boolean(
+          userObj?.isVerified ?? 
+          userObj?.is_verified ?? 
+          userObj?.emailVerified ?? 
+          userObj?.isEmailVerified
+        );
+
+        const isFirebaseVerified = Boolean(firebaseUser?.emailVerified);
+
+        if (isBackendVerified || isFirebaseVerified) {
+          // Construct fresh user object ensuring isVerified is explicitly true
+          const updatedUser = {
+            ...userObj,
+            isVerified: true,
+          };
+
+          // Save fresh state to Zustand
+          useAuthUserStore.setState({ user: updatedUser, token });
+          return { success: true, user: updatedUser };
+        }
+      }
+
+      // Delay between retries
+      if (i < retries - 1) {
+        await new Promise((r) => setTimeout(r, 600));
+      }
+    }
+  } catch (e) {
+    console.error('Verification check error:', e);
   }
-  return { success: false, error: 'Max retries reached' };
+
+  return { success: false };
 };
 export const requestPasswordReset = async (email) => {
   useAuthUserStore.setState({ isLoading: true, loadingType: 'reset', error: null });

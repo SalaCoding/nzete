@@ -25,24 +25,29 @@ export const VerificationInfoScreen = ({ email: propEmail }) => {
   }, [countdown]);
 
   const handleCheckStatus = async () => {
-    if (isChecking) return;
-    setIsChecking(true);
+  if (isChecking) return;
+  setIsChecking(true);
 
-    try {
-      const result = await checkUserWithRetry(2);
-      if (result.success) {
-        Alert.alert('Success', 'Your email has been verified! Welcome to Nzete.', [
-          { text: 'Continue', onPress: () => router.replace('/(tabs)') },
-        ]);
-      } else {
-        Alert.alert('Pending Verification', 'We cannot verify your status yet. Please check your inbox and click the link.');
-      }
-    } catch (_err) {
-      Alert.alert('Network Error', 'Could not sync status with the server. Please try again.');
-    } finally {
-      setIsChecking(false);
+  try {
+    // Let checkUserWithRetry handle fresh token retrieval and status checks
+    const result = await checkUserWithRetry(2);
+
+    if (result.success) {
+      Alert.alert('Success', 'Your email has been verified! Welcome to Nzete.', [
+        { text: 'Continue', onPress: () => router.replace('/(tabs)') },
+      ]);
+    } else {
+      Alert.alert(
+        'Pending Verification',
+        'We cannot verify your status yet. Please check your inbox and click the link.'
+      );
     }
-  };
+  } catch (_err) {
+    Alert.alert('Network Error', 'Could not sync status with the server. Please try again.');
+  } finally {
+    setIsChecking(false);
+  }
+};
 
   const handleResendLink = async () => {
     if (countdown > 0 || isResending || !normalizedEmail) return;
