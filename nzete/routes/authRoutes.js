@@ -597,7 +597,7 @@ router.post('/request-password-reset', async (req, res) => {
     const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
     
     // Corrected target path parameter assignment string map definition
-    const resetUrl = `${cleanBaseUrl}/(auth)/reset-password?token=${rawResetToken}`;
+    const resetUrl = `${cleanBaseUrl}/api/(auth)/reset-password?token=${rawResetToken}`;
 
     // PERFORMANCE OPTIMIZATION: Dispatched in background without using 'await' to boost speed
     sendEmail(
