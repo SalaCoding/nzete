@@ -412,8 +412,7 @@ export const checkUser = async () => {
       useAuthUserStore.setState({ isLoading: false });
       return { success: false, error: 'Email not verified', isUnverified: true };
     }
-
-    // ✅ SUCCESS: Sync database user object to Zustand store state
+ 
     useAuthUserStore.setState({ user: data.user, isLoading: false });
     return { success: true, user: data.user };
 
@@ -423,6 +422,7 @@ export const checkUser = async () => {
     return { success: false, error: error.message };
   }
 };
+
 export const checkUserWithRetry = async (retries = 2) => {
   try {
     let token = useAuthUserStore.getState().token;
@@ -433,7 +433,7 @@ export const checkUserWithRetry = async (retries = 2) => {
       const auth = getAuth();
       firebaseUser = auth.currentUser;
       if (firebaseUser) {
-        await firebaseUser.reload(); // Force Firebase to refresh user status
+        await firebaseUser.reload();
         token = await firebaseUser.getIdToken(true);
       }
     } catch (_firebaseErr) {

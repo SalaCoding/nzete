@@ -262,45 +262,6 @@ router.post('/register', authLimiter, async (req, res) => {
     });
   }
 });
-// ==========================================
-// 1. CHECK STATUS ROUTE
-// ==========================================
-router.get("/check-status", authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user?.id || req.user?._id;
-
-    if (!userId) {
-      return res.status(401).json({ message: "User identity tracking lost" });
-    }
-
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // ⚠️ Explicitly flag unverified accounts
-    if (!user.verified) {
-      return res.status(403).json({ 
-        message: "Email not verified", 
-        isUnverified: true,
-        user: sanitizeUser(user)
-      });
-    }
-
-    // ✅ Verified user response
-    return res.status(200).json({ 
-      success: true, 
-      user: sanitizeUser(user) 
-    });
-  } catch (err) {
-    console.error("STATUS CHECK ENGINE ERROR:", err);
-    return res.status(500).json({ message: "Server error checking status" });
-  }
-});
-
-// ==========================================
-// 2. LOGIN ROUTE
-// ==========================================
 router.post('/login', loginLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -350,6 +311,34 @@ router.post('/login', loginLimiter, async (req, res) => {
   } catch (error) {
     console.error('[LOGIN] Error:', error);
     return res.status(500).json({ message: 'Server error during login' });
+  }
+});
+router.get("/check-status", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+
+    if (!userId) {
+      return res.status(401).json({ message: "User identity tracking lost" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Check schema field name (e.g., user.isVerified or user.verified)
+    const isVerified = Boolean(user.isVerified ?? user.verified);
+
+    // ✅ Always return 200 OK so the frontend fetch succeeds and reads status
+    return res.status(200).json({ 
+      success: true, 
+      isVerified: isVerified,
+      user: sanitizeUser(user) 
+    });
+
+  } catch (err) {
+    console.error("STATUS CHECK ENGINE ERROR:", err);
+    return res.status(500).json({ message: "Server error checking status" });
   }
 });
 router.post('/logout', authMiddleware, async (req, res) => {
@@ -608,7 +597,7 @@ router.post('/request-password-reset', async (req, res) => {
     const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
     
     // Corrected target path parameter assignment string map definition
-    const resetUrl = `${cleanBaseUrl}/reset-password?token=${rawResetToken}`;
+    const resetUrl = `${cleanBaseUrl}(auth)/reset-password?token=${rawResetToken}`;
 
     // PERFORMANCE OPTIMIZATION: Dispatched in background without using 'await' to boost speed
     sendEmail(

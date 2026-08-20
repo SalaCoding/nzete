@@ -470,7 +470,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   profile: {
-    //marginBottom: 30,
+    marginBottom: 20,
     paddingHorizontal: 16,
     alignItems: "center",
   },
