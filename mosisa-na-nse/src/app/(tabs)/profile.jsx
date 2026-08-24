@@ -32,7 +32,7 @@ import { useStoryStore } from "../../library/storyStore";
 import { RatedStoryList, selectUserRating } from "../../components/RatedStory";
 import { syncUserToStoryStore } from "../../library/useSyncAuthToStoryStore";
 
-//const MAX_BASE64_SIZE_KB = 5000;
+const MAX_BASE64_SIZE_KB = 5000;
 const MIN_RATING_SCORE = 1;
 
 // Tree SVG Component (Defaults are here, but we override them below)
@@ -151,8 +151,12 @@ export const ProfileScreen = () => {
     }
   }, [userId, lastRatingUpdate, fetchRatedStories, fetchRatingStats]);
 
-async function pickImage() {
-  // Launch the system picker UI directly
+  async function pickImage() {
+  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (status !== 'granted') {
+    Alert.alert("Permission Required", "We need access to your photo library.");
+    return;
+  }
   const result = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ['images'],
     allowsEditing: true,
@@ -160,73 +164,75 @@ async function pickImage() {
   });
 
   if (result.canceled || !result.assets?.length) return;
-
   const asset = result.assets[0];
+  let manipResult;
 
   try {
-    // Compress and resize the image locally
-    const manipResult = await ImageManipulator.manipulateAsync(
+    manipResult = await ImageManipulator.manipulateAsync(
       asset.uri,
       [{ resize: { width: 600 } }],
-      { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
+      { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG, base64: true }
     );
-
-    setImage(manipResult.uri);
-
-    // Send the file using multipart/form-data
-    await uploadImage(manipResult.uri);
   } catch (error) {
-    console.error('Error processing image:', error);
-    Alert.alert('Image Error', 'Could not process the selected image.');
-  }
-}
-
-const uploadImage = async (fileUri) => {
-  setUploading(true);
-  const { token } = useAuthUserStore.getState();
-
-  if (!token) {
-    Alert.alert('Auth Error', 'You are not logged in.');
-    setUploading(false);
+    console.error('Error manipulating image:', error);
+    Alert.alert("Image Error", "Could not process the selected image.");
     return;
   }
 
-  const formData = new FormData();
-  formData.append('image', {
-    uri: fileUri,
-    name: 'profile.jpg',
-    type: 'image/jpeg',
-  });
-
-  try {
-    const res = await fetch('https://nzete.onrender.com/api/auth/upload', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        // Note: Do not set Content-Type header manually here; fetch sets the multipart boundary automatically.
-      },
-      body: formData,
-    });
-
-    if (!res.ok) {
-      const errText = await res.text();
-      throw new Error(`Upload failed: ${res.status} - ${errText}`);
-    }
-
-    const data = await res.json();
-    if (data?.user) {
-      useAuthUserStore.setState({ user: data.user });
-      Alert.alert('Success', 'Profile picture updated!');
-    } else {
-      throw new Error('Server did not return user object.');
-    }
-  } catch (err) {
-    console.error('Upload error:', err);
-    Alert.alert('Upload Failed', err.message);
-  } finally {
-    setUploading(false);
+  if (!manipResult?.base64) {
+    Alert.alert("Image Error", "Could not retrieve image data.");
+    return;
   }
-};
+  // 1. Strip the data URI prefix first
+  const cleanBase64 = manipResult.base64.replace(/^data:image\/\w+;base64,/, '');
+  // 2. Then calculate the size from the clean string
+  const base64SizeKB = (cleanBase64.length * 3) / 4 / 1024;
+  if (base64SizeKB > MAX_BASE64_SIZE_KB) {
+    Alert.alert("Image too large", "Please choose a smaller image.");
+    return;
+  }
+  setImage(manipResult.uri);
+  // 4. Upload only once, with the clean base64
+  await uploadImage(cleanBase64);
+}
+  const uploadImage = async (base64) => {
+    setUploading(true);
+    const { token } = useAuthUserStore.getState();
+
+    if (!token) {
+    Alert.alert("Auth Error", "You are not logged in.");
+    setUploading(false);
+    return;
+  }
+    try {
+      const res = await fetch(`https://nzete.onrender.com/api/auth/upload`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({ image: base64 }),
+      });
+
+      if (! res.ok) {
+        const errText = await res.text();
+        throw new Error(`Upload failed: ${res.status} - ${errText}`);
+      }
+
+      const data = await res.json();
+      if (data?.user) {
+        useAuthUserStore.setState({ user: data.user });
+        Alert.alert("Success", "Profile picture updated!");
+      } else {
+        throw new Error("Server did not return user object.");
+      }
+    } catch (err) {
+      console.error("Upload error:", err);
+      Alert.alert("Upload Failed", err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const confirmLogout = () => {
   if (Platform.OS === "web") {

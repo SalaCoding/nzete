@@ -121,7 +121,7 @@ async function seedStory() {
   }
 }
 
-seedStory();
+//seedStory(); //I need to run this to add the story to the database, but I don't want to run it every time the server starts.
 
 
 // ============================================================

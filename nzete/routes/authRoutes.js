@@ -375,7 +375,6 @@ router.get('/me', authMiddleware, async (req, res) => {
     return res.json({ user });
 
   } catch (err) {
-    // 📊 Check your Render Web Console logs to see exactly what failed here!
     console.error('[GET /me] CRITICAL BACKEND CRASH:', err);
     return res.status(500).json({ message: 'Internal server error processing user profile' });
   }
