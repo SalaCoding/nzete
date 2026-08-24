@@ -43,7 +43,7 @@ export default ({ config }) => ({
             {
               "scheme": "https",
               "host": "mosisa-ya-nzete.onrender.com",
-              "pathPrefix": "/resetPassword"
+              "pathPrefix": "/reset-password"
             }
           ],
           "category": ["BROWSABLE", "DEFAULT"]
