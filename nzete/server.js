@@ -18,8 +18,6 @@ import authRoutes from './routes/authRoutes.js';
 import authNumbers from './routes/authNumbers.js';
 import samboleRoute from './routes/samboleRoute.js';
 
-import { saveStory } from "./seed/seedDemukalinga.js"; // Import the saveStory function
-
 const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 3001;

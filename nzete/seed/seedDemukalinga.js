@@ -85,12 +85,3 @@ Nazali na kati ya libumu na yo.
 Ndoki abangi pe akimi.`,
 imagePath: "public/images/demukalinga.png"
 };
-
-export const saveStory = async () => {
-  try {
-    const newStory = await story.create(story);
-    console.log("Story saved:", newStory._id);
-  } catch (err) {
-    console.error("Error saving story:", err);
-  }
-};

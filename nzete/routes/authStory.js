@@ -22,7 +22,7 @@ import {
   dislikeComment
 } from '../controllers/commentController.js';
 
-import { story as fololo } from "../seed/seedFololo.js";
+import { story as Demukalinga } from "../seed/seedDemukalinga.js";
 
 // Helper: find story by ObjectId or slug
 async function findStoryByIdOrSlug(idOrSlug) {
@@ -57,7 +57,7 @@ const answerLimiter = rateLimit({
 });
 
 // --- CONFIGURE THE SEED STORY AND IMAGE ---
-const storyData = fololo;
+const storyData = Demukalinga;
 const imagePath = path.resolve(storyData.imagePath);
 const storyTitle = storyData. title;
 const storySlug = slugify(storyTitle, { lower: true, strict: true });
