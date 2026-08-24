@@ -522,6 +522,30 @@ export const requestPasswordReset = async (email) => {
     return { success: false, error: errorMessage };
   }
 };
+export const resetPassword = async (token, password) => {
+  try {
+    if (!token || !password) throw new Error('Missing reset token or password.');
+    const response = await fetch("https://nzete.onrender.com/api/auth/reset-password", {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, password }),
+    });
+    const text = await response.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      console.log("Reset password API raw response:", text);
+      throw new Error("Server sent invalid response. Check API URL and backend logs.");
+    }
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to reset password.');
+    }
+    return { success: true, message: data.message };
+  } catch (error) {
+    return { success: false, error: error.message || "Unknown error" };
+  }
+};
 export const resendVerification = async (email) => {
   if (!email) return { success: false, error: 'Email address parameter is required' };
   
@@ -559,29 +583,5 @@ export const resendVerification = async (email) => {
     const errorMessage = getGenericError ? getGenericError(error) : error.message;
     useAuthUserStore.setState({ error: errorMessage, isLoading: false, loadingType: null });
     return { success: false, error: errorMessage };
-  }
-};
-export const resetPassword = async (token, password) => {
-  try {
-    if (!token || !password) throw new Error('Missing reset token or password.');
-    const response = await fetch("https://nzete.onrender.com/api/auth/reset-password", {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, password }),
-    });
-    const text = await response.text();
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      console.log("Reset password API raw response:", text);
-      throw new Error("Server sent invalid response. Check API URL and backend logs.");
-    }
-    if (!response.ok) {
-      throw new Error(data.message || 'Failed to reset password.');
-    }
-    return { success: true, message: data.message };
-  } catch (error) {
-    return { success: false, error: error.message || "Unknown error" };
   }
 };
