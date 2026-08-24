@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useState } from "react";
 import { useAuthUserStore } from "../../library/authUserStore";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function ChangeUsername() {
   const router = useRouter();
@@ -51,6 +52,16 @@ export default function ChangeUsername() {
   };
 
   return (
+    <>
+      <View>
+      <Ionicons
+              name="arrow-back"
+              size={28}
+              color="black"
+              onPress={() => router.back()}
+              style={{ position: 'absolute', top: 90, left: 16, zIndex: 1 }}
+            />
+      </View>
     <View style={{ flex: 1, padding: 20, justifyContent: "center" }}>
       <Text style={{ fontSize: 20, fontWeight: "bold" }}>Change Username</Text>
 
@@ -79,6 +90,7 @@ export default function ChangeUsername() {
         <Text style={{ color: "white", fontWeight: "bold" }}>Save</Text>
       </Pressable>
     </View>
+    </>
   );
 }
 

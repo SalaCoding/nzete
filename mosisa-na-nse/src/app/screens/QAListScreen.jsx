@@ -17,6 +17,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQAStore } from '../../library/storeQA';
 import { StatusBar } from 'expo-status-bar';
 import { useAuthUserStore } from '../../library/authUserStore';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 const QUIZ_STATE_KEY = (userId) => `quiz_state_${userId}`;
 
@@ -54,6 +56,7 @@ const QAListScreen = () => {
   const lastQuestionIdRef = useRef(null);
   
   const { user } = useAuthUserStore();
+  const router = useRouter();
 
   const saveQuizState = useCallback(async (state) => {
     try {
@@ -417,6 +420,13 @@ useEffect(() => {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <SafeAreaView style={styles.container}>
+        <Ionicons
+                name="arrow-back"
+                size={28}
+                color="black"
+                onPress={() => router.back()}
+                style={{ position: 'absolute', top: 90, left: 16, zIndex: 1 }}
+              />
         <View style={styles.header}>
           <Text style={styles.title}>Lisano</Text>
           <View style={styles.scoreRow}>

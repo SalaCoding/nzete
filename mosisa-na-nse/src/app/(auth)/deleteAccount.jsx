@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity, Alert } from "react-native";
 import { useRouter } from "expo-router";
-// 1. ✅ Import your existing Zustand store hook
+import { Ionicons } from "@expo/vector-icons";
 import { useAuthUserStore } from "../../library/authUserStore"; // ⚠️ Adjust this path to your exact file location
 
 export default function DeleteAccount() {
@@ -62,36 +62,47 @@ export default function DeleteAccount() {
   };
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-      <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 20 }}>Delete Account</Text>
-      <Text style={{ marginBottom: 20, textAlign: 'center' }}>
-        Deleting your account is permanent and cannot be undone. All your data will be lost.
-      </Text>
+    <>
+      <View>
+      <Ionicons
+        name="arrow-back"
+        size={28}
+        color="black"
+        onPress={() => router.back()}
+        style={{ position: 'absolute', top: 90, left: 16, zIndex: 1 }}
+      />
+      </View>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+        <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 20 }}>Delete Account</Text>
+        <Text style={{ marginBottom: 20, textAlign: 'center' }}>
+          Deleting your account is permanent and cannot be undone. All your data will be lost.
+        </Text>
 
-      <TouchableOpacity
-        style={{
-          backgroundColor: 'red',
-          paddingVertical: 10,
-          paddingHorizontal: 20,
-          borderRadius: 5,
-        }}
-        onPress={() => {
-          Alert.alert(
-            'Confirm Deletion',
-            'Are you sure you want to delete your account? This action cannot be undone.',
-            [
-              { text: 'Cancel', style: 'cancel' },
-              {
-                text: 'Delete',
-                style: 'destructive',
-                onPress: deleteAccount,
-              }
-            ]
-          );
-        }}
-      >
-        <Text style={{ color: 'white', fontWeight: 'bold' }}>Delete Account</Text>
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity
+          style={{
+            backgroundColor: 'red',
+            paddingVertical: 10,
+            paddingHorizontal: 20,
+            borderRadius: 5,
+          }}
+          onPress={() => {
+            Alert.alert(
+              'Confirm Deletion',
+              'Are you sure you want to delete your account? This action cannot be undone.',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Delete',
+                  style: 'destructive',
+                  onPress: deleteAccount,
+                }
+              ]
+            );
+          }}
+        >
+          <Text style={{ color: 'white', fontWeight: 'bold' }}>Delete Account</Text>
+        </TouchableOpacity>
+      </View>
+    </>
   );
 }
