@@ -439,8 +439,6 @@ export const checkUserWithRetry = async (retries = 2) => {
     } catch (_firebaseErr) {
       // Ignore if Firebase isn't initialized or used
     }
-
-    // 2. Poll backend endpoint
     for (let i = 0; i < retries; i++) {
       const res = await fetch(`https://nzete.onrender.com/api/auth/me?t=${Date.now()}`, {
         headers: {

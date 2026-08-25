@@ -18,6 +18,7 @@ import sendEmail from '../utils/sendEmail.js';
 import admin from 'firebase-admin';
 import { getAuth } from 'firebase-admin/auth';
 import { createRequire } from 'module';
+import { profile } from 'console';
 
 // Initialize Admin using Environment Variables
 const require = createRequire(import.meta.url);
@@ -275,7 +276,8 @@ router.post('/login', loginLimiter, async (req, res) => {
     }
 
     const normalizedEmail = email.toLowerCase().trim();
-    const user = await User.findOne({ email: normalizedEmail }).select('+password');
+    const user = await User.findOne({ email: normalizedEmail })
+  .select('+password profilePicture createdAt isPremiumNumbers isPremiumStories');
     
     if (!user) {
       await bcryptjs.compare(password, '$2b$12$invalidhashtopreventtimingattacks');
