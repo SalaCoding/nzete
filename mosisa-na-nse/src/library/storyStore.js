@@ -1,13 +1,9 @@
 import { create } from 'zustand';
 import { fetchProtected } from '../lib/api';
-//import { API_URL } from '../constants/api';
-
 const gt = (score, min) => Number(score) > Number(min);
-
 export const useStoryStore = create((set, get) => ({
   token: null,
   userId: null,
-
   stories: [],
   ratedStories: [],
   allRatedStories: [],
@@ -16,7 +12,6 @@ export const useStoryStore = create((set, get) => ({
   currentStory: null,
   isLoading: false,
   error: null,
-
   ratingStats: null,
   ratingStatsLoading: false,
   ratingStatsError: null,
@@ -24,7 +19,6 @@ export const useStoryStore = create((set, get) => ({
   setToken: (token) => set({ token }),
   setUserId: (userId) => set({ userId }),
   setCurrentStory: (story) => set({ currentStory: story }),
-
   fetchAllStories: async (page = 1, limit = 20) => {
     set({ isLoading: true, error: null });
     try {

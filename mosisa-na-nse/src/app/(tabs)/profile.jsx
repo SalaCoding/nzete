@@ -308,7 +308,6 @@ const displayUsername = user?.username
   ? user.username.charAt(0).toUpperCase() + user.username.slice(1)
   : "Guest";
 
-
   return (
     <KeyboardAvoidingView
       style={styles.flex}
@@ -317,7 +316,6 @@ const displayUsername = user?.username
     <View style={styles.headerContainer}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Profile</Text>
-
         <TouchableOpacity
           style={styles.menuIconContainer}
           onPress={() => setMenuOpen(!menuOpen)}
@@ -328,7 +326,6 @@ const displayUsername = user?.username
     </View>
     {menuOpen && (
       <View style={styles.overlay}>
-      {/* Tap outside to close */}
         <TouchableOpacity
           style={StyleSheet.absoluteFill}
           onPress={() => setMenuOpen(false)}
@@ -340,10 +337,8 @@ const displayUsername = user?.username
     { transform: [{ translateX }] }
   ]}
 >
-  {/* TOP SECTION */}
   <View style={styles.menuTop}>
     <Text style={styles.menuTitle}>Settings</Text>
-
     <TouchableOpacity
       style={styles.menuItem}
       onPress={() => {
@@ -354,7 +349,6 @@ const displayUsername = user?.username
       <Ionicons name="person-circle-outline" size={22} color="#0f0f4a" />
       <Text style={styles.menuItemText}>Change Username</Text>
     </TouchableOpacity>
-
     <TouchableOpacity
       style={styles.menuItem}
       onPress={() => {
@@ -367,14 +361,11 @@ const displayUsername = user?.username
         Visit Support Page
       </Text>
     </TouchableOpacity>
-
     <TouchableOpacity onPress={confirmLogout} style={styles.logoutButton}>
       <Ionicons name="log-out-outline" size={22} color="#0f0f4a" />
       <Text style={styles.logoutText}>Log Out</Text>
     </TouchableOpacity>
   </View>
-
-  {/* BOTTOM SECTION */}
   <View style={styles.menuBottom}>
     <TouchableOpacity
       style={[styles.menuItem, styles.deleteItem]}
@@ -390,7 +381,6 @@ const displayUsername = user?.username
     </TouchableOpacity>
   </View>
         </Animated.View>
-
       </View>
     )}
       <View style={styles.profile}>
@@ -411,7 +401,6 @@ const displayUsername = user?.username
                   <Text style={styles.greeting}>👋 Mbote</Text>
                   <Text style={styles.username}>{displayUsername}</Text>
                   <Text style={styles.email}>{user?.email || "Not logged in"}</Text>
-
                   <TouchableOpacity 
                     onPress={pickImage} 
                     style={styles.avatarButton} 

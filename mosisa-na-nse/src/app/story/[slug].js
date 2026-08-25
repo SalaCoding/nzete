@@ -140,7 +140,6 @@ export default function StoryPage() {
     });
   }
 }, [story?._id, fetchRating]);
-
   useEffect(() => {
     const subscription = addNetworkStateListener(({ isInternetReachable }) => {
       if (isInternetReachable) {
@@ -150,11 +149,9 @@ export default function StoryPage() {
     });
     return () => subscription.remove();
   }, [fetchStoryData, fetchRating, story?._id]);
-
   const onRefresh = useCallback(() => {
     fetchStoryData();
   }, [fetchStoryData]);
-
   const renderRatingStar = () => (
     <View style={{ marginBottom: 20 }}>
       {isLoading ? (
@@ -194,7 +191,6 @@ export default function StoryPage() {
       )}
     </View>
   );
-
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
       <KeyboardAvoidingView
@@ -225,8 +221,6 @@ export default function StoryPage() {
               </Text>
             </View>
           )}
-          
-          {/* Header Actions */}
           <Ionicons
             name="arrow-back"
             size={28}
@@ -252,13 +246,9 @@ export default function StoryPage() {
             <Text style={{ fontSize: Platform.OS === 'ios' ? 16 : 15, fontWeight: '600', color: '#68696aff' }}>Kabola</Text>
             <Ionicons name="share-social-outline" size={25} color="#333" />
           </TouchableOpacity>
-
-          {/* Title */}
           <Text style={{ fontSize: Platform.OS === 'ios' ? 24 : 22, fontWeight: 'bold', marginBottom: 18, textAlign: 'center', marginTop: 40 }}>
             {story?.title}
           </Text>
-
-          {/* Image */}
           {story?.image && (
             <StoryImage
               uri={
@@ -268,13 +258,9 @@ export default function StoryPage() {
               }
             />
           )}
-
-          {/* Content */}
           <Text style={{ fontSize: Platform.OS === 'ios' ? 18 : 17, marginTop: 18, lineHeight: 28, marginBottom: 20, fontFamily: 'Palatino'}}>
             {story?.content}
           </Text>
-
-          {/* Rating Section */}
           <View style={{ marginBottom: 4, marginTop: 2 }}>
             <Text style={{ fontSize: Platform.OS === 'ios' ? 18 : 17, fontWeight: 'bold' }}>Monzoto:</Text>
             {renderRatingStar()}
