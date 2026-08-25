@@ -56,7 +56,6 @@ export default function StoryPage() {
     setIsLoading(true);
     try {
       const url = `/api/blog/story/${encodeURIComponent(apiSlug)}`;
-      // This uses the robust fetchProtected with timeout/retry
       const data = await fetchProtected(url);
 
       if (data?.title) {
