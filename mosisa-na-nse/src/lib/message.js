@@ -1,0 +1,25 @@
+export default function getRatingMessage(
+  score,
+  options = {}
+) {
+  const lang = (options.lang || 'en').toLowerCase();
+  const tense = options.tense || 'present';
+
+  if (score === null || score <= 0) {
+    return options.fallback || (
+      lang === 'ln'
+        ? 'Tozelaki eyano, kasi eloko moko etamboli malamu te.'
+        : 'We expected feedback, but something went wrong.'
+    );
+  }
+
+  const noun = score === 1
+    ? (lang === 'ln' ? 'monzoto' : 'star')
+    : (lang === 'ln' ? 'minzoto' : 'stars');
+
+  const verb = lang === 'ln'
+    ? (tense === 'past' ? 'Opesaki' : 'Opesi')
+    : (tense === 'past' ? 'You gave' : 'You’re giving');
+
+  return `✅ ${verb} ${score} ${noun}`;
+}

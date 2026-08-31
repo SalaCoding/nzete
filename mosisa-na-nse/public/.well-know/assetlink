@@ -1,0 +1,12 @@
+{
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+        "namespace": "android_app",
+        "package_name": "com.salacoding.mosisananse",
+        "sha256_cert_fingerprints": [
+            "5B:45:FD:48:E1:6C:1C:5D:B3:98:9E:D7:0D:25:56:EF:53:95:00:B0:2D:C6:6D:72:77:D4:0E:B2:97:97:EA:B1",
+            "C2:F9:5D:D3:8E:D8:CA:33:F8:66:81:A9:E5:8A:B0:90:57:71:AA:1F",
+            "09:DC:33:6E:75:BB:AE:E4:86:D0:BC:C3:67:F7:11:2F"
+        ]
+    }
+}

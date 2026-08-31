@@ -1,0 +1,102 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
+import express from 'express';
+import { corsOptions } from './config/corsConfig.js';
+import http from 'http';
+import { Server } from 'socket.io';
+import cors from 'cors';
+import dns from "node:dns/promises";
+import helmet from 'helmet';
+import path, { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+// Config & Routes
+import { connectDB } from './config/db.js';
+import authStory from './routes/authStory.js';
+import authRoutes from './routes/authRoutes.js';
+import authNumbers from './routes/authNumbers.js';
+import samboleRoute from './routes/samboleRoute.js';
+
+const app = express();
+const server = http.createServer(app);
+const PORT = process.env.PORT || 3001;
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// ==========================================
+// 1. CRITICAL GLOBAL SECURITY MIDDLEWARE (Must run first)
+// ==========================================
+app.use(/(.*)/, cors(corsOptions));
+app.use(helmet({ 
+  crossOriginResourcePolicy: false,
+  contentSecurityPolicy: false,
+}));
+
+// ==========================================
+// 2. REQUEST PARSERS
+// ==========================================
+app.use(express.json({ limit: '20mb' }));
+app.use(express.urlencoded({ limit: '20mb', extended: true }));
+
+// ==========================================
+// 3. STATIC FILE DELIVERY
+// ==========================================
+//app.use(express.static(path.join(__dirname, '../mosisa-na-nse/dist')));
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
+dns.setServers(["1.1.1.1", "1.0.0.1"]);
+
+// Socket.io
+const io = new Server(server, { cors: corsOptions });
+
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
+
+io.on('connection', (socket) => {
+  console.log('🔌 Client connected:', socket.id);
+  socket.on('join', (storyId) => socket.join(`story:${storyId}`));
+  socket.on('leave', (storyId) => socket.leave(`story:${storyId}`));
+  socket.on('disconnect', () => console.log('❌ Client disconnected:', socket.id));
+});
+
+// ==========================================
+// 4. API AND ENDPOINT ROUTES
+// ==========================================
+app.set('trust proxy', 1);
+app.get('/api/health', (req, res) => res.json({ status: 'ok', message: 'Server is running' }));
+app.use('/api/number', authNumbers);
+app.use('/api/auth', authRoutes);
+app.use('/api/blog', authStory);
+app.use('/api/qa', samboleRoute);
+
+// Error Handlers
+app.use((err, req, res, next) => {
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({ error: 'Payload too large.' });
+  }
+  next(err);
+});
+
+app.use((err, req, res, next) => {
+  console.error('🔥 Server Error:', err.stack);
+  res.status(500).json({ success: false, message: err.message || "Internal Server Error" });
+});
+
+// Single Page Application (SPA) Web Routing Fallback Handler
+//app.get(/^(?!\/(api|uploads|assets)).*/, (req, res) => {
+//  res.sendFile(path.join(__dirname, '../mosisa-na-nse/dist/index.html'));
+//});
+
+// Server Start
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server listening on port ${PORT}`);
+  connectDB()
+    .then(() => console.log("✅ Database Connected"))
+    .catch(err => console.error("❌ DB Connection Error:", err));
+});
+
+export { io };

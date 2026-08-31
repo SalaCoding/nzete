@@ -1,0 +1,15 @@
+# Ignore sensitive backend service account key
+serviceAccountKey.json
+
+AppData/
+
+.env
+.env.local
+.env.*.local
+service-account-key.json
+*.key
+*.pem
+
+serviceAccountKey.json
+google-services.json
+GoogleService-Info.plist

@@ -1,0 +1,437 @@
+import { 
+  Text, 
+  View, 
+  StyleSheet, 
+  TouchableOpacity, 
+  ScrollView, 
+  FlatList, 
+  ActivityIndicator, 
+  Button, 
+  StatusBar,
+  Platform
+} from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { useRouter } from 'expo-router';
+//import { API_URL } from '../../constants/api';
+import NumberList from "../../components/number";
+import { useAuthUserStore, checkUser } from '../../library/authUserStore';
+import { Ionicons } from "@expo/vector-icons";
+import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
+
+// WITH THIS (Guarantees that broken bare domains are overwritten with the correct subdomain):
+const BASE_HOST = process.env.BACKEND_URL || 'https://nzete.onrender.com';
+const Api_Url = `${BASE_HOST}/api/blog/stories`;
+
+export default function Index() { 
+  const router = useRouter();
+  const [stories, setStories] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
+  const [showNumbers] = useState(false);
+  
+  // Destructure reactive store states
+  const { token, _hasHydrated, setAuth, user } = useAuthUserStore();
+  const abortControllerRef = useRef(null);
+
+  // 1. SAFE WINDOW PARAMETER HANDLER: Guarded safely against SSR Node container crashes
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tokenFromUrl = params.get("token");
+
+      if (tokenFromUrl) {
+        // Preserves user profile details from previous memory if token updates independently
+        setAuth(tokenFromUrl, user || { verified: true });
+        window.history.replaceState({}, document.title, "/");
+      }
+    }
+  }, [setAuth, user]);
+
+  useEffect(() => { 
+    if (typeof checkUser === 'function') checkUser(); 
+  }, []);
+
+  const handleStoryPress = (item) => {
+    const path = item.slug ? `/story/${item.slug}` : `/story/${item._id || item.id}`;
+    router.push(path);
+  };
+
+  const handleSambolePress = () => {
+    router.push('/screens/QAListScreen');
+  };
+
+  const fetchStories = useCallback(async () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    if (!token) {
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    setFetchError(null);
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, 30000);
+
+    try {
+      const response = await fetch(`${Api_Url}?page=1&limit=20`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (abortControllerRef.current !== controller) return;
+
+      if (!response.ok) {
+        throw new Error(`Server responded with status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      const list = Array.isArray(data) ? data : (data?.stories || data?.data || []);
+
+      const processedStories = list.map(item => ({
+        ...item,
+        snippet: item.content ? item.content.slice(0, 120) + '...' : 'No content available.',
+      }));
+
+      setStories(processedStories);
+    } catch (error) {
+      clearTimeout(timeoutId);
+      
+      if (error.name === 'AbortError' || error.message?.includes('canceled')) {
+        return;
+      }
+      
+      setFetchError("Likambo ezali. Meka lisusu.");
+      console.error("Error fetching stories:", error.message);
+      setStories([]);
+    } finally {
+      if (abortControllerRef.current === controller) {
+        setIsLoading(false);
+        abortControllerRef.current = null;
+      }
+    }
+  }, [token]);
+  
+  useEffect(() => {
+    if (!_hasHydrated) return;
+    const waitForToken = setTimeout(() => {
+      if (token) {
+        fetchStories();
+      } else {
+        setIsLoading(false);
+        if (router && typeof router.replace === 'function') {
+          router.replace('/(auth)');
+        }
+      }
+    }, 200); 
+
+    return () => clearTimeout(waitForToken);
+  }, [_hasHydrated, token, router, fetchStories]); 
+
+  const renderStoryContent = () => {
+    if (isLoading) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="rgb(38, 154, 155)" />
+          <Text style={styles.loadingText}>Tozali koluka masolo...</Text>
+        </View>
+      );
+    }
+
+    if (fetchError) {
+      return (
+        <View style={styles.errorContainer}>
+          <Ionicons name="cloud-offline-outline" size={48} color="#d9534f" />
+          <Text style={styles.errorText}>{fetchError}</Text>
+          <Button title="Meka lisusu" onPress={fetchStories} color="rgb(38, 154, 155)" />
+        </View>
+      );
+    }
+
+    if (stories.length === 0) {
+      return (
+        <View style={styles.errorContainer}>
+          <Text style={styles.emptyListText}>Masolo ezali te mpo na sikoyo.</Text>
+        </View>
+      );
+    }
+
+    return (
+      <>
+        <View style={styles.itemHeader}>
+          <FlatList
+            data={stories}
+            keyExtractor={(item) => `horiz-${item._id || item.id}`}
+            renderItem={({ item }) => (
+              <TouchableOpacity onPress={() => handleStoryPress(item)} style={{ marginHorizontal: 5 }}>
+                <Text style={styles.title}>{item.title}</Text>
+              </TouchableOpacity>
+            )}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 10 }}
+          />
+        </View>
+
+        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+          {stories.map((item) => (
+            <TouchableOpacity key={`vert-${item._id || item.id}`} onPress={() => handleStoryPress(item)}>
+              <View style={styles.lisapo_container}>
+                <Text style={styles.lisapo__title}>{item.title}</Text>
+                <Text style={styles.lisolo}>{item.snippet}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+        
+        <View style={styles.samboleSection}>
+          <TouchableOpacity style={styles.samboleButton} onPress={handleSambolePress}>
+            <Text style={styles.samboleButtonText}>🎯 Sambole</Text>
+          </TouchableOpacity>
+        </View>
+      </>
+    );
+  };
+
+  return (
+    <SafeAreaView style={[styles.safeArea, Platform.OS === 'android' && { paddingTop: StatusBar.currentHeight }]} edges={['top', 'left', 'right']}>
+      <View style={styles.container}>
+        <View style={styles.motango_container}>
+          <Text style={styles.motango}>Motango</Text>
+          <View style={styles.yekola_mitango}>
+            <Text style={styles.yekola}>Yekola kotanga na biso</Text>
+            <Ionicons name="book" size={55} color="rgb(0, 251, 255)" />
+            <TouchableOpacity onPress={() => router.navigate('/number/numberlistScreen')} style={styles.linkText63}>
+              <Text style={styles.yekola__moko}>1 2 3 4 5 6 7 8 9 . . .</Text>
+              <Ionicons name="arrow-up-outline" size={18} color="rgb(0, 251, 255)" />
+            </TouchableOpacity>
+            {showNumbers && <NumberList />}
+          </View>
+        </View>
+        <Text style={styles.title__top}>Masapo</Text>
+        {renderStoryContent()}
+      </View>
+      <ExpoStatusBar style="dark" />
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: 'rgb(255, 255, 255)',
+  },
+  container: {
+    flex: 1,
+    marginBottom: -69,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: Platform.OS === 'ios' ? 20 : 16,
+    color: '#666',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    color: '#d9534f',
+    fontSize: Platform.OS === 'ios' ? 18 : 16,
+    textAlign: 'center',
+    marginVertical: 15,
+  },
+  emptyListText: {
+    textAlign: 'center',
+    marginTop: 14,
+    fontSize: Platform.OS === 'ios' ? 18 : 16,
+    color: '#888',
+  },
+  motango_container: {
+    padding: 10,
+    borderRadius: 10,
+    marginBottom: 3,
+    marginHorizontal: 10,
+  },
+  motango: {
+    color: '#000',
+    fontSize: Platform.OS === 'ios' ? 18 : 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 11,
+    padding: 6,
+    textTransform: 'uppercase',
+    borderRadius: 8,
+    borderColor: 'rgb(78, 89, 175)',
+    borderWidth: 2,
+    borderBottomColor: 'rgb(0, 0, 0)',
+    borderLeftColor: 'rgb(0, 208, 255)',
+    borderRightColor: 'rgb(251, 0, 255)',
+  },
+  yekola_mitango: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: 'rgb(38, 154, 155)',
+  },
+  yekola: {
+    color: '#000',
+    fontSize: Platform.OS === 'ios' ? 19 : 18,
+    textAlign: 'center',
+    marginBottom: 5,
+    marginTop: 7,
+    fontFamily: 'Palatino',
+  },
+  yekola__moko: {
+    fontSize: Platform.OS === 'ios' ? 19 : 19,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: 'rgb(255, 255, 255)',
+    fontFamily: 'Papyrus',
+    marginTop: 1,
+    marginBottom: 6,
+    ...Platform.select({
+      ios: {
+        textShadowOffset: { width: 5, height: 5 },
+        textShadowRadius: 16,
+      },
+      android: {
+        textShadowOffset: { width: 5, height: 5 },
+        textShadowRadius: 16,
+      },
+      web: {
+        textShadowOffset: { width: 5, height: 5 },
+        textShadowRadius: 16,
+      }
+    }),
+  },
+  linkText63: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    marginTop: 5,
+  },
+  title__top: {
+    fontSize: Platform.OS === 'ios' ? 15 : 15,
+    color: '#000',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 9,
+    textTransform: 'uppercase',
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: 'rgb(78, 89, 175)',
+    marginHorizontal: 10,
+    padding: 6,
+    borderBottomColor: 'rgb(0, 0, 0)',
+    borderLeftColor: 'rgb(0, 255, 34)',
+    borderRightColor: 'rgb(251, 0, 255)',
+  },
+  itemHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    padding: Platform.OS === 'ios' ? 10 : 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  title: {
+    backgroundColor: 'rgb(155, 154, 155)',
+    padding: 9,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 10,
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#232323',
+    textTransform: 'uppercase',
+    textAlign: 'center',
+  },
+  lisapo_container: {
+    backgroundColor: 'rgb(38, 154, 155)',
+    padding:  Platform.OS === 'ios' ? 2 : 2,
+    borderRadius: 10,
+    marginTop:  Platform.OS === 'ios' ? 10 : 10,
+    marginHorizontal: 12,
+  },
+  lisolo: {
+    fontSize: Platform.OS === 'ios' ? 19 : 17,
+    color: '#1e1e1e',
+    padding: 16,
+    textAlign: 'justify',
+    lineHeight: 26,
+    fontFamily: 'Times New Roman',
+  },
+  lisapo__title: {
+    fontSize: Platform.OS === 'ios' ? 19 : 18,
+    color: '#260e26',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginVertical: 10,
+    fontFamily: 'Times New Roman',
+    marginBottom: 1,
+  },
+  samboleSection: {
+    ...Platform.select({
+      ios: {
+        shadowColor: '#ffffff',
+        shadowOffset: { width: 0, height: 0.10 },
+        shadowOpacity: 4.95,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 18,
+      },
+      web: {
+        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+      },
+    }),
+    marginBottom: Platform.OS === 'ios' ? 64 : 22,
+    padding: Platform.OS === 'ios' ? 8 : 7,
+
+    marginHorizontal: 12,
+    backgroundColor: '#4a487d',
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  samboleTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 4,
+  },
+  samboleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFB800',
+    paddingVertical: Platform.OS === 'ios' ? 9 : 8,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    gap: 6,
+  },
+  samboleButtonText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+});
