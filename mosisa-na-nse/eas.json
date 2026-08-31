@@ -1,0 +1,54 @@
+{
+  "cli": {
+    "version": ">= 16.18.1",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "EAS_BUILD_DISABLE_COCOAPODS_CACHE": "1"
+      },
+      "ios": {
+        "simulator": true
+      },
+      "channel": "development"
+    },
+    "preview": {
+      "distribution": "internal",
+      "channel": "preview"
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "GOOGLE_SERVICES_JSON": "@GOOGLE_SERVICES_JSON"
+      },
+      "channel": "production"
+    },
+    "test": {
+      "config": "test.yml",
+      "channel": "test"
+    },
+    "development-simulator": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      },
+      "environment": "development",
+      "channel": "development-simulator"
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "ascApiKeyPath": "/Users/Sala/Downloads/AuthKey_RZK46M3J4Q.p8",
+        "appleId": "salaarnold14@gmail.com",
+        "ascAppId": "6757685562",
+        "ascApiKeyId": "RZK46M3J4Q",
+        "ascApiKeyIssuerId": "ede2cc67-d937-43d5-899c-26a8bca98a5a"
+      }
+    }
+  }
+}
