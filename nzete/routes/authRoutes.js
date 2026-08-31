@@ -132,11 +132,9 @@ const sanitizeUser = (user) => ({
   profilePicture: user.profilePicture,
   createdAt: user.createdAt,
   isPremiumNumbers: user.isPremiumNumbers,
-  isPremiumStories: user.isPremiumStories
+  isPremiumStories: user.isPremiumStories,
+  verified: user.verified
 });
-// ============================================================
-// REGISTER (Optimized)
-// ============================================================
 router.post('/register', authLimiter, async (req, res) => {
   try {
     const extraFields = Object.keys(req.body).filter(
@@ -277,7 +275,7 @@ router.post('/login', loginLimiter, async (req, res) => {
 
     const normalizedEmail = email.toLowerCase().trim();
     const user = await User.findOne({ email: normalizedEmail })
-  .select('+password profilePicture createdAt isPremiumNumbers isPremiumStories');
+  .select('+password');
     
     if (!user) {
       await bcryptjs.compare(password, '$2b$12$invalidhashtopreventtimingattacks');
@@ -327,11 +325,8 @@ router.get("/check-status", authMiddleware, async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+    const isVerified = Boolean(user.verified);
 
-    // Check schema field name (e.g., user.isVerified or user.verified)
-    const isVerified = Boolean(user.isVerified ?? user.verified);
-
-    // ✅ Always return 200 OK so the frontend fetch succeeds and reads status
     return res.status(200).json({ 
       success: true, 
       isVerified: isVerified,
