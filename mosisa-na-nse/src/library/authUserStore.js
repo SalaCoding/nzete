@@ -7,10 +7,6 @@ import * as SecureStore from 'expo-secure-store';
 import { jwtDecode } from 'jwt-decode';
 import { getAuth } from 'firebase/auth';
 
-// =============
-// Platform-aware storage
-// =============
-
 const zustandStorage = {
   getItem: async (key) => {
     if (Platform.OS === 'web') {

@@ -275,7 +275,7 @@ router.post('/login', loginLimiter, async (req, res) => {
 
     const normalizedEmail = email.toLowerCase().trim();
     const user = await User.findOne({ email: normalizedEmail })
-  .select('+password');
+    .select('+password +profilePicture +createdAt +isPremiumNumbers +isPremiumStories +verified');
     
     if (!user) {
       await bcryptjs.compare(password, '$2b$12$invalidhashtopreventtimingattacks');
@@ -321,7 +321,8 @@ router.get("/check-status", authMiddleware, async (req, res) => {
       return res.status(401).json({ message: "User identity tracking lost" });
     }
 
-    const user = await User.findById(userId);
+    const user = await User.findById(userId)
+  .select('email username profilePicture createdAt isPremiumNumbers isPremiumStories verified');
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
