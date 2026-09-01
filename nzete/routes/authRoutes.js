@@ -402,8 +402,6 @@ router.get('/verify-email', async (req, res) => {
 
     console.log(`[Verification] User ${user.email} successfully verified.`);
 
-    // CRITICAL FIX: Redirect using your custom app scheme prefix!
-    // This tells the phone's browser to instantly minimize and hand execution back to your Expo mobile app.
     return res.redirect(`mosisananse://index?verified=true`);
 
   } catch (error) {
