@@ -322,7 +322,7 @@ router.get("/check-status", authMiddleware, async (req, res) => {
     }
 
     const user = await User.findById(userId)
-  .select('email username profilePicture createdAt isPremiumNumbers isPremiumStories verified');
+    .select('email username profilePicture createdAt isPremiumNumbers isPremiumStories verified');
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }

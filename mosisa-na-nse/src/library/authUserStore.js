@@ -10,7 +10,6 @@ import { getAuth } from 'firebase/auth';
 const zustandStorage = {
   getItem: async (key) => {
     if (Platform.OS === 'web') {
-      // Check if we are running in a browser environment
       if (typeof window !== 'undefined' && window.localStorage) {
         return localStorage.getItem(key);
       }
@@ -418,7 +417,6 @@ export const checkUser = async () => {
     return { success: false, error: error.message };
   }
 };
-
 export const checkUserWithRetry = async (retries = 2) => {
   try {
     let token = useAuthUserStore.getState().token;
