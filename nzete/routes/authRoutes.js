@@ -1,11 +1,8 @@
 import express from 'express';
 import crypto from 'crypto';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
 import { jwtOptions } from '../authConfig.js';
-import fs from 'fs/promises';
 import { v4 as uuidv4 } from 'uuid';
 import { fileTypeFromBuffer } from 'file-type';
 import authMiddleware from '../middleware/auth.middleware.js';
@@ -17,6 +14,7 @@ import sendEmail from '../utils/sendEmail.js';
 
 import admin from 'firebase-admin';
 import { getAuth } from 'firebase-admin/auth';
+import { getStorage } from 'firebase-admin/storage';
 import { createRequire } from 'module';
 import { profile } from 'console';
 
@@ -55,13 +53,13 @@ if (missing.length > 0) {
 
 if (!admin.apps.length) {
   admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
+    credential: admin.credential.cert(serviceAccount),
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET || `${serviceAccount.project_id}.firebasestorage.app`
   });
   console.log("✅ Firebase Admin Initialized Successfully");
 }
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const storageBucket = getStorage().bucket();
 
 const router = express.Router();
 
@@ -78,6 +76,7 @@ const ALLOWED_IMAGE_HOSTS = [
   'api.dicebear.com',
   'localhost',
   'lh3.googleusercontent.com', // Google Profile Pictures
+  'firebasestorage.googleapis.com',
 ];
 const WEAK_PASSWORDS = [
   'password', 'password1', 'password123', '12345678', 'qwerty123',
@@ -495,14 +494,16 @@ router.post('/upload', authMiddleware, uploadLimiter, async (req, res) => {
     }
 
     const filename = `${userId}-${uuidv4()}.${type.ext}`;
-    const uploadDir = path.join(process.cwd(), 'uploads');
-    await fs.mkdir(uploadDir, { recursive: true });
+    const downloadToken = uuidv4();
+    const file = storageBucket.file(`profile-pictures/${filename}`);
+    await file.save(processedBuffer, {
+      metadata: {
+        contentType: type.mime,
+        metadata: { firebaseStorageDownloadTokens: downloadToken }
+      }
+    });
 
-    const filePath = path.join(uploadDir, filename);
-    await fs.writeFile(filePath, processedBuffer);
-
-    const BASE_URL = process.env.BACKEND_URL || 'https://nzete.onrender.com';
-    const url = `${BASE_URL}/uploads/${filename}`;
+    const url = `https://firebasestorage.googleapis.com/v0/b/${storageBucket.name}/o/${encodeURIComponent(file.name)}?alt=media&token=${downloadToken}`;
 
     const updatedUser = await User.findByIdAndUpdate(
       userId,

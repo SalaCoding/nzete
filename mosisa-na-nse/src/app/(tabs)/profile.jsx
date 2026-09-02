@@ -119,6 +119,7 @@ export const ProfileScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [image, setImage] = useState(null);
+  const [imageFailed, setImageFailed] = useState(false);
   const onRefresh = async () => {
     setRefreshing(true);
     try {
@@ -191,6 +192,7 @@ export const ProfileScreen = () => {
     Alert.alert("Image too large", "Please choose a smaller image.");
     return;
   }
+  setImageFailed(false);
   setImage(manipResult.uri);
   // 4. Upload only once, with the clean base64
   await uploadImage(cleanBase64);
@@ -259,7 +261,7 @@ export const ProfileScreen = () => {
 
   const imageSource = image
     ? { uri: image }
-    : user?.profilePicture
+    : user?.profilePicture && !imageFailed
     ? { uri: user.profilePicture }
     : require('../../../assets/images/icon_nzete.png');
    
@@ -395,7 +397,10 @@ const displayUsername = user?.username
                       borderRadius: avatarSize / 2,
                     }
                   ]}
-                  onError={e => console.log('[Image] Load error:', e.nativeEvent)}
+                  onError={e => {
+                    console.log('[Image] Load error:', e.nativeEvent);
+                    setImageFailed(true);
+                  }}
                 />
                 <View style={styles.profileInfo}>
                   <Text style={styles.greeting}>👋 Mbote</Text>
