@@ -1,7 +1,8 @@
 {
   "cli": {
     "version": ">= 16.18.1",
-    "appVersionSource": "remote"
+    "appVersionSource": "remote",
+    "appDir": "mosisa-na-nse"
   },
   "build": {
     "development": {
