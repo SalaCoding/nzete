@@ -1,23 +1,18 @@
 // components/ProfileAvatar.js
-import React, { useState } from 'react'
+import React from 'react'
 import { View, Image, Button, StyleSheet } from 'react-native'
 import { useProfilePicture } from '../hooks/useProfilePicture'
 //import { useAuthUserStore } from '../library/authUserStore'
 
 export default function ProfileAvatar() {
   const { changeProfilePicture, uploading, profilePicture } = useProfilePicture();
-  const [imageFailed, setImageFailed] = useState(false);
-  const source = profilePicture && !imageFailed
+  const source = profilePicture
     ? { uri: profilePicture }
     : require('../../assets/images/icon.png');
 
   return (
     <View style={styles.container}>
-      <Image
-        source={source}
-        style={{ width: 120, height: 120, borderRadius: 60 }}
-        onError={() => setImageFailed(true)}
-      />
+      <Image source={source} style={{ width: 120, height: 120, borderRadius: 60 }} />
       <Button
         title={uploading ? 'Uploading...' : 'Change Picture'}
         onPress={changeProfilePicture}

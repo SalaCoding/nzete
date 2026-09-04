@@ -1,8 +1,11 @@
 import express from 'express';
 import crypto from 'crypto';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
 import { jwtOptions } from '../authConfig.js';
+import fs from 'fs/promises';
 import { v4 as uuidv4 } from 'uuid';
 import { fileTypeFromBuffer } from 'file-type';
 import authMiddleware from '../middleware/auth.middleware.js';
@@ -14,9 +17,10 @@ import sendEmail from '../utils/sendEmail.js';
 
 import admin from 'firebase-admin';
 import { getAuth } from 'firebase-admin/auth';
-import { getStorage } from 'firebase-admin/storage';
 import { createRequire } from 'module';
 import { profile } from 'console';
+
+import cloudinary from 'cloudinary';
 
 // Initialize Admin using Environment Variables
 const require = createRequire(import.meta.url);
@@ -53,13 +57,13 @@ if (missing.length > 0) {
 
 if (!admin.apps.length) {
   admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    storageBucket: process.env.FIREBASE_STORAGE_BUCKET || `${serviceAccount.project_id}.firebasestorage.app`
+    credential: admin.credential.cert(serviceAccount)
   });
   console.log("✅ Firebase Admin Initialized Successfully");
 }
 
-const storageBucket = getStorage().bucket();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 
@@ -76,7 +80,6 @@ const ALLOWED_IMAGE_HOSTS = [
   'api.dicebear.com',
   'localhost',
   'lh3.googleusercontent.com', // Google Profile Pictures
-  'firebasestorage.googleapis.com',
 ];
 const WEAK_PASSWORDS = [
   'password', 'password1', 'password123', '12345678', 'qwerty123',
@@ -493,25 +496,35 @@ router.post('/upload', authMiddleware, uploadLimiter, async (req, res) => {
       return res.status(400).json({ error: 'Failed to compress image file parameters' });
     }
 
-    const filename = `${userId}-${uuidv4()}.${type.ext}`;
-    const downloadToken = uuidv4();
-    const file = storageBucket.file(`profile-pictures/${filename}`);
-    await file.save(processedBuffer, {
-      metadata: {
-        contentType: type.mime,
-        metadata: { firebaseStorageDownloadTokens: downloadToken }
+    // Upload to Cloudinary
+    const uploadResult = await cloudinary.uploader.upload_stream(
+      {
+        folder: 'nzete/profilePictures',
+        public_id: `${userId}-${uuidv4()}`,
+        resource_type: 'image'
+      },
+      async (error, result) => {
+        if (error) {
+          console.error('Cloudinary upload error:', error);
+          return res.status(500).json({ error: 'Cloudinary upload failed' });
+        }
+
+        // Save Cloudinary URL in DB
+        const updatedUser = await User.findByIdAndUpdate(
+          userId,
+          { profilePicture: result.secure_url },
+          { new: true, runValidators: true, select: '-password' }
+        );
+
+        return res.json({
+          message: 'Profile picture updated',
+          user: sanitizeUser(updatedUser)
+        });
       }
-    });
-
-    const url = `https://firebasestorage.googleapis.com/v0/b/${storageBucket.name}/o/${encodeURIComponent(file.name)}?alt=media&token=${downloadToken}`;
-
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { profilePicture: url },
-      { new: true, runValidators: true, select: '-password' }
     );
 
-    return res.json({ message: 'Profile picture updated', user: sanitizeUser(updatedUser) });
+    // Pipe buffer to Cloudinary stream
+    uploadResult.end(processedBuffer);
 
   } catch (err) {
     console.error('[POST /upload]', err);
@@ -544,7 +557,7 @@ router.patch('/user/profile', authMiddleware, async (req, res) => {
       if (!isValidString(profilePicture, 500)) return res.status(400).json({ message: 'Invalid profile picture URL' });
       
       const host = process.env.BACKEND_URL || 'https://nzete.onrender.com';
-      if (!isAllowedImageUrl(profilePicture) && !profilePicture.includes(`${host}/uploads/`)) {
+      if (!profilePicture.startsWith('https://res.cloudinary.com')) {
         return res.status(400).json({ message: 'Invalid picture source' });
       }
       updateData.profilePicture = profilePicture;
