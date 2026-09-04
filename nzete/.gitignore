@@ -13,3 +13,5 @@ service-account-key.json
 serviceAccountKey.json
 google-services.json
 GoogleService-Info.plist
+
+node_modules/
