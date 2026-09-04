@@ -20,7 +20,7 @@ import { getAuth } from 'firebase-admin/auth';
 import { createRequire } from 'module';
 import { profile } from 'console';
 
-import cloudinary from 'cloudinary';
+import cloudinary from '../config/cloudinary.js';
 
 // Initialize Admin using Environment Variables
 const require = createRequire(import.meta.url);
@@ -462,7 +462,6 @@ router.post('/upload', authMiddleware, uploadLimiter, async (req, res) => {
   try {
     let base64Data = image;
 
-    // Accept jpeg, jpg, png
     if (image.startsWith('data:image/')) {
       const matches = image.match(/^data:image\/(jpeg|jpg|png);base64,(.+)$/);
       if (!matches) return res.status(400).json({ error: 'Invalid base64 format' });
@@ -471,7 +470,6 @@ router.post('/upload', authMiddleware, uploadLimiter, async (req, res) => {
 
     const buffer = Buffer.from(base64Data, 'base64');
 
-    // Real size check
     if (buffer.length > 5 * 1024 * 1024) {
       return res.status(413).json({ error: 'Image exceeds 5MB limit' });
     }
@@ -481,7 +479,6 @@ router.post('/upload', authMiddleware, uploadLimiter, async (req, res) => {
       return res.status(400).json({ error: 'Only JPEG/PNG images allowed' });
     }
 
-    // Resize + compress
     let processedBuffer;
     try {
       const sharpInstance = sharp(buffer)
@@ -496,35 +493,36 @@ router.post('/upload', authMiddleware, uploadLimiter, async (req, res) => {
       return res.status(400).json({ error: 'Failed to compress image file parameters' });
     }
 
-    // Upload to Cloudinary
-    const uploadResult = await cloudinary.uploader.upload_stream(
-      {
-        folder: 'nzete/profilePictures',
-        public_id: `${userId}-${uuidv4()}`,
-        resource_type: 'image'
-      },
-      async (error, result) => {
-        if (error) {
-          console.error('Cloudinary upload error:', error);
-          return res.status(500).json({ error: 'Cloudinary upload failed' });
-        }
-
-        // Save Cloudinary URL in DB
-        const updatedUser = await User.findByIdAndUpdate(
-          userId,
-          { profilePicture: result.secure_url },
-          { new: true, runValidators: true, select: '-password' }
+    // Cloudinary upload (correct promise wrapper)
+    const uploadToCloudinary = () =>
+      new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          {
+            folder: "nzete/profilePictures",
+            public_id: `${userId}-${uuidv4()}`,
+            resource_type: "image",
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
         );
 
-        return res.json({
-          message: 'Profile picture updated',
-          user: sanitizeUser(updatedUser)
-        });
-      }
+        stream.end(processedBuffer);
+      });
+
+    const result = await uploadToCloudinary();
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { profilePicture: result.secure_url },
+      { new: true, runValidators: true, select: '-password' }
     );
 
-    // Pipe buffer to Cloudinary stream
-    uploadResult.end(processedBuffer);
+    return res.json({
+      message: 'Profile picture updated',
+      user: sanitizeUser(updatedUser),
+    });
 
   } catch (err) {
     console.error('[POST /upload]', err);
