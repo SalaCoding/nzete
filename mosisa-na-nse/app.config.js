@@ -77,7 +77,7 @@ export default ({ config }) => ({
         "buildReactNativeFromSource": true
       },
       ios: {
-        deploymentTarget: "16.4",
+        deploymentTarget: "15.1",
         "buildReactNativeFromSource": true
       }
     }],
