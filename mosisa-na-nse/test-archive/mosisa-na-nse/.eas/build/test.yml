@@ -1,5 +1,0 @@
-build:
-  name: Hello World!
-  steps:
-    - run: echo "Hello, world!"
-    - run: echo "The current build ID is $EAS_BUILD_ID"
