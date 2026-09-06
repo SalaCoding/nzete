@@ -457,28 +457,35 @@ router.post('/upload', authMiddleware, uploadLimiter, async (req, res) => {
   const { image } = req.body;
   const userId = req.user._id;
 
-  if (!image) return res.status(400).json({ error: 'No image provided' });
+  if (!image) {
+    return res.status(400).json({ error: 'No image provided' });
+  }
 
   try {
+    // Extract base64
     let base64Data = image;
-
     if (image.startsWith('data:image/')) {
       const matches = image.match(/^data:image\/(jpeg|jpg|png);base64,(.+)$/);
-      if (!matches) return res.status(400).json({ error: 'Invalid base64 format' });
+      if (!matches) {
+        return res.status(400).json({ error: 'Invalid base64 format' });
+      }
       base64Data = matches[2];
     }
 
     const buffer = Buffer.from(base64Data, 'base64');
 
+    // Size limit
     if (buffer.length > 5 * 1024 * 1024) {
       return res.status(413).json({ error: 'Image exceeds 5MB limit' });
     }
 
+    // Validate type
     const type = await fileTypeFromBuffer(buffer);
     if (!type || !['image/jpeg', 'image/png'].includes(type.mime)) {
       return res.status(400).json({ error: 'Only JPEG/PNG images allowed' });
     }
 
+    // Resize + compress
     let processedBuffer;
     try {
       const sharpInstance = sharp(buffer)
@@ -493,14 +500,14 @@ router.post('/upload', authMiddleware, uploadLimiter, async (req, res) => {
       return res.status(400).json({ error: 'Failed to compress image file parameters' });
     }
 
-    // Cloudinary upload (correct promise wrapper)
+    // Cloudinary upload (correct Promise wrapper)
     const uploadToCloudinary = () =>
       new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
           {
-            folder: "nzete/profilePictures",
+            folder: 'nzete/profilePictures',
             public_id: `${userId}-${uuidv4()}`,
-            resource_type: "image",
+            resource_type: 'image',
           },
           (error, result) => {
             if (error) reject(error);
@@ -513,6 +520,7 @@ router.post('/upload', authMiddleware, uploadLimiter, async (req, res) => {
 
     const result = await uploadToCloudinary();
 
+    // Save Cloudinary URL
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       { profilePicture: result.secure_url },
