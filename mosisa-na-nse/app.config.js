@@ -82,9 +82,7 @@ export default ({ config }) => ({
       }
     }],
   ],
-   runtimeVersion: {
-      policy: "appVersion",
-    },
+    "runtimeVersion": "1.0.0",
   updates: {
     url: "https://u.expo.dev/4c21570f-f55a-409e-aeff-2b9c981412fd",
     enableBsdiffPatchSupport: true,
