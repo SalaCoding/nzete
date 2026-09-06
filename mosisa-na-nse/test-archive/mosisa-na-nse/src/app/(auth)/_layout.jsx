@@ -1,0 +1,15 @@
+import React from 'react';
+import { Stack } from 'expo-router';
+
+export default function AuthLayout() {
+  return (
+    <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
+      <Stack.Screen name="index" />
+      <Stack.Screen name="signup" />
+      <Stack.Screen name="forgotPassword" />
+      <Stack.Screen name="reset-password" />
+      <Stack.Screen name="changeUsername" />
+      <Stack.Screen name="deleteAccount" />
+    </Stack>
+  );
+}
