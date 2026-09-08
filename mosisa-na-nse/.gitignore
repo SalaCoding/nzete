@@ -101,3 +101,11 @@ AppData/
 *.json
 *.env
 .env
+
+node_modules/
+.expo/
+ios/
+android/
+dist/
+build/
+uploads/
