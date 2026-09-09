@@ -624,7 +624,6 @@ router.post('/request-password-reset', async (req, res) => {
       console.error("Background Reset Email Delivery Failed:", err);
     });
 
-    // Server returns an immediate responsive feedback confirmation straight back to the user interface
     return res.status(200).json(genericResponse);
   } catch (error) {
     console.error("Reset Error:", error);
@@ -674,16 +673,13 @@ router.post("/change-username", authMiddleware, async (req, res) => {
     const displayUsername = 
       newUsername.charAt(0).toUpperCase() + newUsername.slice(1).toLowerCase();
 
-    // Normalize for DB (schema stores lowercase)
     const normalized = displayUsername.toLowerCase();
 
-    // Check if username already exists (case-insensitive)
     const existing = await User.findOne({ username: normalized });
     if (existing) {
       return res.status(409).json({ message: "Username already taken" });
     }
 
-    // Update using normalized value
     const updatedUser = await User.findByIdAndUpdate(
       req.user.id,
       { username: normalized },
@@ -693,20 +689,15 @@ router.post("/change-username", authMiddleware, async (req, res) => {
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
     }
-
-    // Return capitalized version for UI
     return res.json({
       message: "Username updated successfully",
       username: displayUsername
     });
-
   } catch (err) {
     console.error("CHANGE USERNAME ERROR:", err);
-
     if (err.code === 11000) {
       return res.status(409).json({ message: "Username already taken" });
     }
-
     return res.status(500).json({ message: "Server error" });
   }
 });
@@ -723,7 +714,6 @@ router.delete("/delete-account", authMiddleware, async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 });
-
 router.get("/support", (req, res) => {
   res.send(`
     <!DOCTYPE html>
