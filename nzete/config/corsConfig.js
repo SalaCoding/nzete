@@ -5,7 +5,7 @@ const allowedOrigins = [
   "https://mosisa-ya-nzete.onrender.com",   // Your other domain
   process.env.BACKEND_URL,                     // Backend from env
   process.env.FRONTEND_URL,       // Frontend from env
-];
+].filter(Boolean); // Remove any falsy values (undefined, null, etc.)
 
 // Regex for ANY Expo Web preview domain
 const expoRegex = /^https:\/\/.*\.expo\.app$/;
@@ -19,6 +19,7 @@ export const corsOptions = {
       expoRegex.test(origin) ||                  // ANY expo.app domain
       "origin.startsWith('expo://')" ||                          // Expo Go app
       origin.startsWith("http://localhost") ||      // local dev
+      process.env.NODE_ENV !== "production" ||
       /^https:\/\/.*\.expo\.app$/.test(origin)   // any expo.app domain
     ) {
       callback(null, true);
