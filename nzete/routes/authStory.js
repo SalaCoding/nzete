@@ -123,10 +123,8 @@ async function seedStory() {
     console. error("🚫 Failed to seed story:", err);
   }
 }
-if (process.env.RUN_SEEDER === 'true') {
-  seedStory().then(() => console.log('✅ Seeder executed.'));
-}
-//I need to run this to add the story to the database, but I don't want to run it every time the server starts.
+
+eedStory()//I need to run this to add the story to the database, but I don't want to run it every time the server starts.
 
 
 // ============================================================
