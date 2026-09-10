@@ -67,11 +67,11 @@ io.on('connection', (socket) => {
 // 4. API AND ENDPOINT ROUTES
 // ==========================================
 app.set('trust proxy', 1);
-app.get('/api/health', (req, res) => res.json({ status: 'ok', message: 'Server is running' }));
-app.use('/api/number', authNumbers);
-app.use('/api/auth', authRoutes);
-app.use('/api/blog', authStory);
-app.use('/api/qa', samboleRoute);
+app.get('/singa/health', (req, res) => res.json({ status: 'ok', message: 'Server is running' }));
+app.use('/singa/number', authNumbers);
+app.use('/singa/auth', authRoutes);
+app.use('/singa/blog', authStory);
+app.use('/singa/qa', samboleRoute);
 
 // Error Handlers
 app.use((err, req, res, next) => {

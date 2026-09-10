@@ -19,7 +19,7 @@ export default function DeleteAccount() {
         return;
       }
 
-      const res = await fetch("https://nzete.onrender.com/api/auth/delete-account", {
+      const res = await fetch("https://nzete.onrender.com/singa/auth/delete-account", {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",

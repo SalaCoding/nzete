@@ -2,7 +2,7 @@ import { API_URL } from '../constants/api';
 import { Share } from 'react-native';
 import { useCallback } from 'react';
 
-export function useShareStory(baseUrl = `${API_URL}/api/blog/story/`) {
+export function useShareStory(baseUrl = `${API_URL}/singa/blog/story/`) {
   return useCallback(async (story) => {
     try {
       const title = story?.title || 'Untitled Story';

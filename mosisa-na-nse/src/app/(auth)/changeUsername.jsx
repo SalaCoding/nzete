@@ -19,7 +19,7 @@ export default function ChangeUsername() {
         return;
       }
 
-      const res = await fetch("https://nzete.onrender.com/api/auth/change-username", {
+      const res = await fetch("https://nzete.onrender.com/singa/auth/change-username", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

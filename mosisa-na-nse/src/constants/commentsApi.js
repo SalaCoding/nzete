@@ -20,7 +20,7 @@ export async function addStoryComment(storyId, payload, token) {
   }
 
   try {
-    const res = await fetch(`${API_BASE_URL}/api/blog/story/${storyId}/comment`, {
+    const res = await fetch(`${API_BASE_URL}/singa/blog/story/${storyId}/comment`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -49,7 +49,7 @@ export async function getStoryComments(storyId) {
     return { comments: [], commentsCount: 0, error: 'Invalid storyId' };
   }
   try {
-    const res = await fetch(`${API_BASE_URL}/api/blog/story/${storyId}/comments`, {
+    const res = await fetch(`${API_BASE_URL}/singa/blog/story/${storyId}/comments`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
     });
@@ -78,7 +78,7 @@ export async function deleteStoryComment(commentId, token) {
     return { deleted: false, storyId: null, newCount: null, error: 'Invalid commentId' };
   }
   try {
-    const res = await fetch(`${API_BASE_URL}/api/blog/comment/${commentId}`, {
+    const res = await fetch(`${API_BASE_URL}/singa/blog/comment/${commentId}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -110,7 +110,7 @@ export async function getStoryCommentCount(storyId) {
     return { total: 0 };
   }
   try {
-    const res = await fetch(`${API_BASE_URL}/api/blog/story/${storyId}/comments/count`, {
+    const res = await fetch(`${API_BASE_URL}/singa/blog/story/${storyId}/comments/count`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
     });
@@ -149,7 +149,7 @@ export async function likeComment(commentId, userId, token) {
     };
   }
   try {
-    const res = await fetch(`${API_BASE_URL}/api/blog/comment/${commentId}/like`, {
+    const res = await fetch(`${API_BASE_URL}/singa/blog/comment/${commentId}/like`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -210,7 +210,7 @@ export async function dislikeComment(commentId, userId, token) {
     };
   }
   try {
-    const res = await fetch(`${API_BASE_URL}/api/blog/comments/${commentId}/dislike`, {
+    const res = await fetch(`${API_BASE_URL}/singa/blog/comments/${commentId}/dislike`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -269,7 +269,7 @@ export async function likeStory(storyId, userId, token) {
     };
   }
   try {
-    const res = await fetch(`${API_BASE_URL}/api/blog/story/${storyId}/like`, {
+    const res = await fetch(`${API_BASE_URL}/singa/blog/story/${storyId}/like`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -15,7 +15,7 @@ export const useNumberStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       const groupQuery = groups.map(encodeURIComponent).join(',');
-      const url = `${API_URL}/api/number?groups=${groupQuery}`;
+      const url = `${API_URL}/singa/number?groups=${groupQuery}`;
       console.log('Fetching groups:', groups, 'from', url);
       const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
@@ -43,7 +43,7 @@ export const useNumberStore = create((set, get) => ({
   fetchAllGroups: async () => {
     set({ loading: true, error: null });
     try {
-      const url = `${API_URL}/api/number/groups`;
+      const url = `${API_URL}/singa/number/groups`;
       console.log('Fetching groups from', url);
       const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
@@ -61,7 +61,7 @@ export const useNumberStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       console.log('Adding number:', { value, word, group });
-      const url = `${API_URL}/api/number/motango`;
+      const url = `${API_URL}/singa/number/motango`;
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -82,7 +82,7 @@ export const useNumberStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       console.log('Seeding numbers');
-      const url = `${API_URL}/api/number/seed`;
+      const url = `${API_URL}/singa/number/seed`;
       const res = await fetch(url, { method: 'POST' });
       if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
       const summary = await res.json();
@@ -101,7 +101,7 @@ export const useNumberStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       console.log('Fetching by value:', value);
-      const url = `${API_URL}/api/number/${value}`;
+      const url = `${API_URL}/singa/number/${value}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
       const item = await res.json();

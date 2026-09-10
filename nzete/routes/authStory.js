@@ -22,7 +22,7 @@ import {
   dislikeComment
 } from '../controllers/commentController.js';
 
-import { story as Demukalinga } from "../seed/seedDemukalinga.js";
+import { story as Fololo } from "../seed/seedFololo.js";
 
 // Helper: find story by ObjectId or slug
 async function findStoryByIdOrSlug(idOrSlug) {
@@ -38,61 +38,64 @@ async function findStoryByIdOrSlug(idOrSlug) {
   if (!Array.isArray(story.comments)) story.comments = [];
   return story;
 }
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path. dirname(__filename);
 const router = express.Router();
-
 // Rate limiters (defined once)
 const createLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
   message: { error: 'Too many requests, please try again later.' }
 });
-
 const answerLimiter = rateLimit({
   windowMs: 1 * 60 * 1000,
   max: 60,
   message: { error: 'Too many answer attempts, please slow down.' }
 });
-
 // --- CONFIGURE THE SEED STORY AND IMAGE ---
-const storyData = Demukalinga;
+const storyData = Fololo;
 const imagePath = path.resolve(storyData.imagePath);
 const storyTitle = storyData. title;
 const storySlug = slugify(storyTitle, { lower: true, strict: true });
-
 // --- Helper: Read and encode image as base64 ---
-function getBase64Image(imagePath) {
+// Change this function to be ASYNC so sharp can process it
+async function getBase64Image(imagePath) {
   if (!fs.existsSync(imagePath)) {
     console.warn(`⚠️ Image not found: ${imagePath}`);
     return null;
   }
-  const ext = path.extname(imagePath). slice(1). toLowerCase() || "png";
-  const mime = ext ?  `image/${ext}` : "image/png";
-  const base64 = fs.readFileSync(imagePath, "base64");
-  return `data:${mime};base64,${base64}`;
-}
+  
+  try {
+    // Sharp scales down your image size and drops the weight drastically
+    const compressedImageBuffer = await sharp(imagePath)
+      .resize({ width: 800, withoutEnlargement: true }) // Limit size for mobile display
+      .webp({ quality: 75 })                             // Convert to hyper-compressed WebP format
+      .toBuffer();
 
+    return `data:image/webp;base64,${compressedImageBuffer.toString("base64")}`;
+  } catch (error) {
+    console.error("🚫 Sharp compression failed:", error);
+    // Fallback if compression drops
+    const base64 = fs.readFileSync(imagePath, "base64");
+    return `data:image/png;base64,${base64}`;
+  }
+}
 // --- Main seeding function ---
 async function seedStory() {
   if (!storySlug) {
-    console.error("🚫 Computed empty slug.  Aborting.");
+     console.error("🚫 Computed empty slug. Aborting.");
     return;
   }
 
-  const existing = await Blog.findOne({ slug: storySlug }). lean();
-  const drift = await Blog.findOne({ title: storyTitle, slug: { $ne: storySlug } }).lean();
-  if (drift) {
-    console.warn(`⚠️ Title "${storyTitle}" exists with mismatched slug (${drift.slug}). `);
-  }
-
-  const image = getBase64Image(imagePath);
+  const existing = await Blog.findOne({ slug: storySlug }).lean();
+  
+  // Await the compressed image buffer
+  const image = await getBase64Image(imagePath); 
 
   const updateFields = {
     title: storyTitle,
-    content: storyData. content,
-    ...(image ?  { image } : {}),
+    content: storyData.content,
+    ...(image ? { image } : {}),
     updatedAt: new Date()
   };
 
@@ -120,8 +123,10 @@ async function seedStory() {
     console. error("🚫 Failed to seed story:", err);
   }
 }
-
-seedStory(); //I need to run this to add the story to the database, but I don't want to run it every time the server starts.
+if (process.env.RUN_SEEDER === 'true') {
+  seedStory().then(() => console.log('✅ Seeder executed.'));
+}
+//I need to run this to add the story to the database, but I don't want to run it every time the server starts.
 
 
 // ============================================================
@@ -131,40 +136,52 @@ seedStory(); //I need to run this to add the story to the database, but I don't 
 router.post('/blog', authMiddleware, createLimiter, async (req, res) => {
   try {
     let { title, content, image, audioUrl, category } = req.body;
-    title = title?. trim();
+    title = title?.trim();
     content = content?.trim();
     image = image?.trim();
     audioUrl = audioUrl?.trim();
     category = category?.trim();
 
     if (!title || !content || !image || !audioUrl) {
-      return res. status(400).json({ error: 'Title, content, image, and audioUrl are required' });
+      return res.status(400).json({ error: 'Title, content, image, and audioUrl are required' });
     }
     if (title.length > 100 || content.length > 10000) {
       return res.status(400).json({ error: 'Title or content too long' });
     }
 
     const slug = slugify(title, { lower: true, strict: true });
-    const existingBlog = await Blog. findOne({ slug });
+    const existingBlog = await Blog.findOne({ slug });
     if (existingBlog) {
-      return res. status(400).json({ error: 'Story with this title already exists' });
+      return res.status(400).json({ error: 'Story with this title already exists' });
     }
 
     let processedImage = image;
     try {
-      const matches = image.match(/^data:image\/(jpeg|png);base64,(. +)$/);
-      if (! matches) throw new Error('Invalid image encoding');
+      // 1. Updated regex to accept jpg, jpeg, and png structures cleanly
+      const matches = image.match(/^data:image\/(jpeg|jpg|png);base64,(.+)$/);
+      if (!matches) throw new Error('Unsupported image format. Please use PNG or JPEG.');
+      
       const mimeType = matches[1];
       const base64Data = matches[2];
       const buffer = Buffer.from(base64Data, 'base64');
-      if (buffer.length > 5 * 1024 * 1024) throw new Error('Image too large');
-      processedImage = `data:image/${mimeType};base64,${(await sharp(buffer)
-        [mimeType === 'png' ? 'png' : 'jpeg'](
-          mimeType === 'png' ? { compressionLevel: 9 } : { quality: 90 }
-        ). toBuffer()). toString('base64')}`;
+      
+      if (buffer.length > 5 * 1024 * 1024) throw new Error('Image dimensions exceed 5MB limit');
+
+      // 2. Safe compression configuration: use quality 80 for jpeg/jpg, compression 6 for png to save memory on Render
+      const normalizedMime = mimeType === 'png' ? 'png' : 'jpeg';
+      const compressionConfig = normalizedMime === 'png' 
+        ? { compressionLevel: 6 } // Level 6 balances speed, low RAM usage, and size perfectly
+        : { quality: 80 };
+
+      const compressedBuffer = await sharp(buffer)
+        .resize({ width: 1020, withoutEnlargement: true }) // Downscale massive camera snaps down to mobile screen width
+        [normalizedMime](compressionConfig)
+        .toBuffer();
+
+      processedImage = `data:image/${normalizedMime};base64,${compressedBuffer.toString('base64')}`;
     } catch (err) {
-      console.error('❌ Sharp image error:', err);
-      return res.status(400).json({ error: 'Image validation failed: ' + err.message });
+      console.error('❌ Sharp image error handling upload:', err);
+      return res.status(400).json({ error: 'Image processing failed: ' + err.message });
     }
 
     const article = new Blog({
@@ -185,14 +202,14 @@ router.post('/blog', authMiddleware, createLimiter, async (req, res) => {
     });
 
     article.interactions.push({
-      userId: req.user._id. toString(),
+      userId: req.user._id.toString(),
       type: 'rating',
       score: 5,
     });
-    article. totalRatings = 1;
+    article.totalRatings = 1;
     await article.save();
 
-    res.status(201). json({
+    res.status(201).json({
       article: {
         _id: article._id,
         slug: article.slug,
@@ -202,11 +219,11 @@ router.post('/blog', authMiddleware, createLimiter, async (req, res) => {
         interactions: article.interactions,
         totalRatings: article.totalRatings,
         totalViews: article.totalViews,
-        bookmarksCount: article. bookmarksCount,
+        bookmarksCount: article.bookmarksCount,
         completionsCount: article.completionsCount,
-        commentsCount: article. commentsCount,
+        commentsCount: article.commentsCount,
         likesCount: article.likesCount,
-        dislikesCount: article. dislikesCount,
+        dislikesCount: article.dislikesCount,
         image: article.image,
         audioUrl: article.audioUrl
       }
@@ -214,7 +231,7 @@ router.post('/blog', authMiddleware, createLimiter, async (req, res) => {
 
   } catch (error) {
     if (error.code === 11000) {
-      return res.status(400). json({ error: 'Story with this title or slug already exists' });
+      return res.status(400).json({ error: 'Story with this title or slug already exists' });
     }
     console.error('❌ Blog POST error:', error);
     res.status(500).json({ error: 'An error occurred while saving story: ' + error.message });

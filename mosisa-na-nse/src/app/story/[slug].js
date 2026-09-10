@@ -55,7 +55,7 @@ export default function StoryPage() {
 
     setIsLoading(true);
     try {
-      const url = `/api/blog/story/${encodeURIComponent(apiSlug)}`;
+      const url = `/singa/blog/story/${encodeURIComponent(apiSlug)}`;
       const data = await fetchProtected(url);
 
       if (data?.title) {
@@ -91,7 +91,7 @@ export default function StoryPage() {
   const fetchRating = useCallback(async () => {
     if (!story?._id || !token) return;
     try {
-      const result = await fetchProtected(`/api/blog/check?storyId=${story._id}`);
+      const result = await fetchProtected(`/singa/blog/check?storyId=${story._id}`);
       const score = result?.score ?? 0;
       setRating(score);
       setHasRated(score > 0);
@@ -108,7 +108,7 @@ export default function StoryPage() {
     }
     try {
       const response = await fetchProtected(
-        `/api/blog/story/${story._id}/rate`,
+        `/singa/blog/story/${story._id}/rate`,
         { method: 'POST', body: JSON.stringify({ score: rating }) }
       );
       const newScore = response.score ?? rating;

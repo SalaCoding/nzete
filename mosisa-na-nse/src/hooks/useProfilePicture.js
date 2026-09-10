@@ -33,7 +33,7 @@ export const useProfilePicture = () => {
 
     setUploading(true);
     try {
-      const res = await fetch(`${API_URL}/api/auth/upload`, {
+      const res = await fetch(`${API_URL}/singa/auth/upload`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

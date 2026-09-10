@@ -207,7 +207,7 @@ export const ProfileScreen = () => {
     return;
   }
     try {
-      const res = await fetch(`https://nzete.onrender.com/api/auth/upload`, {
+      const res = await fetch(`https://nzete.onrender.com/singa/auth/upload`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -355,7 +355,7 @@ const displayUsername = user?.username
       style={styles.menuItem}
       onPress={() => {
         setMenuOpen(false);
-        Linking.openURL("https://nzete.onrender.com/api/auth/support");
+        Linking.openURL("https://nzete.onrender.com/singa/auth/support");
       }}
     >
       <Ionicons name="help-circle-outline" size={22} color="#0066cc" />

@@ -171,7 +171,7 @@ export const register = async (username, email, password) => {
     const sanitizedEmail = sanitizeEmail(email);
     if (!sanitizedUsername || !sanitizedEmail || !password) throw new Error('All fields are required');
     if (password.length < 8) throw new Error('Password must be at least 8 characters');
-    const response = await fetchWithRetries(`https://nzete.onrender.com/api/auth/register`, {
+    const response = await fetchWithRetries(`https://nzete.onrender.com/singa/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -206,7 +206,7 @@ export const login = async (email, password) => {
       throw new Error('Email and password are required');
     }
 
-    const response = await fetchWithRetries(`https://nzete.onrender.com/api/auth/login`, {
+    const response = await fetchWithRetries(`https://nzete.onrender.com/singa/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -242,7 +242,7 @@ export const logout = async () => {
   try {
     const { token } = useAuthUserStore.getState();
     if (token) {
-      fetchWithTimeout(`${process.env.BACKEND_URL || process.env.EXPO_PUBLIC_BACKEND_URL || 'https://nzete.onrender.com'}/api/auth/logout}`, {
+      fetchWithTimeout(`${process.env.BACKEND_URL || process.env.EXPO_PUBLIC_BACKEND_URL || 'https://nzete.onrender.com'}/singa/auth/logout}`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -271,7 +271,7 @@ export const updateUser = async (updatedData) => {
     
     if (Object.keys(sanitizedData).length === 0) throw new Error('No valid update data provided');
 
-    const response = await fetchWithRetries(`https://nzete.onrender.com/api/auth/auth/profile`, {
+    const response = await fetchWithRetries(`https://nzete.onrender.com/singa/auth/auth/profile`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -350,7 +350,7 @@ export const refreshUser = async () => {
   if (!token || isTokenExpired(token)) return { success: false, error: 'Not authenticated' };
   
   try {
-    const data = await fetchProtected('https://nzete.onrender.com/api/auth/me');
+    const data = await fetchProtected('https://nzete.onrender.com/singa/auth/me');
     useAuthUserStore.setState({ user: data.user });
     return { success: true, user: data.user };
   } catch (error) {
@@ -369,7 +369,7 @@ export const checkUser = async () => {
     }
 
     // ⚠️ Point to your actual API route, not just the root domain
-    const response = await fetchWithTimeout(`https://nzete.onrender.com/api/auth/check-status`, {
+    const response = await fetchWithTimeout(`https://nzete.onrender.com/singa/auth/check-status`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -434,7 +434,7 @@ export const checkUserWithRetry = async (retries = 2) => {
       // Ignore if Firebase isn't initialized or used
     }
     for (let i = 0; i < retries; i++) {
-      const res = await fetch(`https://nzete.onrender.com/api/auth/me?t=${Date.now()}`, {
+      const res = await fetch(`https://nzete.onrender.com/singa/auth/me?t=${Date.now()}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Cache-Control': 'no-cache',
@@ -487,7 +487,7 @@ export const requestPasswordReset = async (email) => {
     const sanitizedEmail = email.trim().toLowerCase();
     if (!sanitizedEmail) throw new Error("Email is required");
 
-    const response = await fetchWithRetries(`https://nzete.onrender.com/api/auth/request-password-reset`, {
+    const response = await fetchWithRetries(`https://nzete.onrender.com/singa/auth/request-password-reset`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: sanitizedEmail }),
@@ -517,7 +517,7 @@ export const requestPasswordReset = async (email) => {
 export const resetPassword = async (token, password) => {
   try {
     if (!token || !password) throw new Error('Missing reset token or password.');
-    const response = await fetch("https://nzete.onrender.com/api/auth/reset-password", {
+    const response = await fetch("https://nzete.onrender.com/singa/auth/reset-password", {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token, password }),
@@ -547,7 +547,7 @@ export const resendVerification = async (email) => {
     const sanitizedEmail = email.trim().toLowerCase();
 
     // Use fetchWithRetries or standard fetch to align with your store configuration utilities
-    const response = await fetchWithRetries("https://nzete.onrender.com/api/auth/resend-verification", {
+    const response = await fetchWithRetries("https://nzete.onrender.com/singa/auth/resend-verification", {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: sanitizedEmail }),

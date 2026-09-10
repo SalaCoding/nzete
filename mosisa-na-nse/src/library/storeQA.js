@@ -43,7 +43,7 @@ export const useQAStore = create((set, get) => ({
         limit: String(limit), 
         ... filters 
       });
-      const response = await fetch(`${API_URL}/api/qa/qas?${params}`);
+      const response = await fetch(`${API_URL}/singa/qa/qas?${params}`);
       const data = await response.json();
 
       if (! response.ok) throw new Error(data. error || 'Failed to fetch Q&As');
@@ -67,7 +67,7 @@ export const useQAStore = create((set, get) => ({
         exclude: answeredIds.join(','),
       });
 
-      const response = await fetch(`${API_URL}/api/qa/qa/random?${params}`);
+      const response = await fetch(`${API_URL}/singa/qa/qa/random?${params}`);
       const data = await response.json();
 
       if (! response.ok) {
@@ -90,7 +90,7 @@ export const useQAStore = create((set, get) => ({
   // Check answer
   checkAnswer: async (qaId, userAnswer) => {
     try {
-      const response = await fetch(`${API_URL}/api/qa/qa/${qaId}/check`, {
+      const response = await fetch(`${API_URL}/singa/qa/qa/${qaId}/check`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userAnswer }),
@@ -122,7 +122,7 @@ export const useQAStore = create((set, get) => ({
         ? Math.round((correctCount / totalQuestions) * 100) 
         : 0;
 
-      const response = await fetch(`${API_URL}/api/qa/score`, {
+      const response = await fetch(`${API_URL}/singa/qa/score`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -153,7 +153,7 @@ export const useQAStore = create((set, get) => ({
   fetchScores: async (limit = 10) => {
     try {
       const odioId = await getOdioId();
-      const response = await fetch(`${API_URL}/api/qa/scores/${odioId}? limit=${limit}`);
+      const response = await fetch(`${API_URL}/singa/qa/scores/${odioId}? limit=${limit}`);
       const data = await response.json();
 
       if (!response.ok) throw new Error(data.error || 'Failed to fetch scores');
@@ -174,7 +174,7 @@ export const useQAStore = create((set, get) => ({
   fetchBestScore: async () => {
     try {
       const odioId = await getOdioId();
-      const response = await fetch(`${API_URL}/api/qa/score/best/${odioId}`);
+      const response = await fetch(`${API_URL}/singa/qa/score/best/${odioId}`);
       
       const contentType = response.headers. get('content-type');
       if (!contentType || ! contentType.includes('application/json')) {
@@ -199,7 +199,7 @@ export const useQAStore = create((set, get) => ({
   deleteAllScores: async () => {
     try {
       const odioId = await getOdioId();
-      const response = await fetch(`${API_URL}/api/qa/scores/${odioId}`, {
+      const response = await fetch(`${API_URL}/singa/qa/scores/${odioId}`, {
         method: 'DELETE',
       });
 
@@ -218,7 +218,7 @@ export const useQAStore = create((set, get) => ({
   // Fetch categories
   fetchCategories: async () => {
     try {
-      const response = await fetch(`${API_URL}/api/qa/qa/categories`);
+      const response = await fetch(`${API_URL}/singa/qa/qa/categories`);
       const data = await response.json();
 
       if (!response. ok) throw new Error(data.error || 'Failed to fetch categories');
@@ -235,7 +235,7 @@ export const useQAStore = create((set, get) => ({
   // Fetch stats
   fetchStats: async () => {
     try {
-      const response = await fetch(`${API_URL}/api/qa/qa/stats`);
+      const response = await fetch(`${API_URL}/singa/qa/qa/stats`);
       const data = await response.json();
 
       if (!response. ok) throw new Error(data.error || 'Failed to fetch stats');

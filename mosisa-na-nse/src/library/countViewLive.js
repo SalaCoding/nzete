@@ -30,7 +30,7 @@ export const useCountViewLive = create((set, get) => ({
       return;
     }
     try {
-      const data = await fetchProtected(`https://nzete.onrender.com/api/blog/story/${storyId}/view`, {
+      const data = await fetchProtected(`https://nzete.onrender.com/singa/blog/story/${storyId}/view`, {
         method: 'POST',
         body: JSON.stringify({ userId }),
         headers: { 'Content-Type': 'application/json' },

@@ -5,7 +5,7 @@ import useHydrated from './useHydrated';
 // Fetch rating from the server
 const fetchRatingFromServer = async (storyId, slug, token) => {
   const res = await fetch(
-    `https://nzete.onrender.com/api/blog/check?storyId=${storyId}&slug=${encodeURIComponent(slug)}`,
+    `https://nzete.onrender.com/singa/blog/check?storyId=${storyId}&slug=${encodeURIComponent(slug)}`,
     {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -35,7 +35,7 @@ async function submitRatingToServer(storyId, slug, score, token) {
   if (!storyId || !slug || typeof score !== 'number') return score;
 
   try {
-    const res = await fetch(`https://nzete.onrender.com/api/blog/story/${storyId}/rate`, {
+    const res = await fetch(`https://nzete.onrender.com/singa/blog/story/${storyId}/rate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -21,7 +21,7 @@ import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 
 // WITH THIS (Guarantees that broken bare domains are overwritten with the correct subdomain):
 const BASE_HOST = process.env.BACKEND_URL || 'https://nzete.onrender.com';
-const Api_Url = `${BASE_HOST}/api/blog/stories`;
+const Api_Url = `${BASE_HOST}/singa/blog/stories`;
 
 export default function Index() { 
   const router = useRouter();

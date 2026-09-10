@@ -22,7 +22,7 @@ export function useRating({ storyId, lang = 'en' }) {
 
     const hydrate = async () => {
       try {
-        const data = await fetchProtected(`${API_URL}/api/blog/story/${storyId}/rate/${apiSlug}`, token);
+        const data = await fetchProtected(`${API_URL}/blog/story/${storyId}/rate/${apiSlug}`, token);
         const score = data?.userRating?.score ?? data?.rating?.score ?? data?.score ?? 0;
 
         setRating(score);
