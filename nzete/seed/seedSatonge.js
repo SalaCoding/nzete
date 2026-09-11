@@ -28,5 +28,6 @@ Satonge akomi na esika ya mutambu ya mokati mbila ezalaki. Abandi kolokota ba mb
 Abandi kobundana ndenge akobimisa musapi na ye. Mokati mbila aye kotala mutambo na ye, amoni Satonge azali kobundana kobisa musapi na ye. Mokati mbila abuakeli ye monyama abengi batu ya mboka, baye kosunga ye, bamemi Satonge na mboka epayi ya mokonzi.
 
 Na sima mikolo, mokati mbila abali muana ya mokonzi.`,
-imagePath: "public/images/satonge.jpg"
+imagePath: "public/images/satonge.jpg",
+audioUrl: "https://your-audio-file-url.mp3"
 }

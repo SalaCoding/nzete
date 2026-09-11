@@ -33,5 +33,6 @@ Kazangula ayoki nzembo na mosika, ebangisi ye pe akimi, aluki esika ya kobatama.
 Ba ndoki bakomi na ndaku, moko na bango ayoki solo ya muntu, pe ayebisi na baninga na ye.
 Balobi: "Esali ba mvula ebele, muntu ayakaka awa te; tika kokosa biso." Alobi: "Ya solo nayoki solo ya muntu."
 Bango nionso babandi koluka soki ya solo, muntu azali na ndaku na bango. Bamoni Kazangula, bakangi ye pe akomi kosalela bango.`,
-imagePath: "public/images/kabika.png"
+imagePath: "public/images/kabika.png",
+audioUrl: "https://your-audio-file-url.mp3"
 };

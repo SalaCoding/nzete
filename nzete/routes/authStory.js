@@ -122,10 +122,8 @@ async function seedStory() {
     console. error("🚫 Failed to seed story:", err);
   }
 }
-if (process.env.RUN_SEEDER === 'true') {
-  seedStory().then(() => console.log('✅ Seeder executed.'));
-}
-//seedStory()//I need to run this to add the story to the database, but I don't want to run it every time the server starts.
+
+seedStory()//I need to run this to add the story to the database, but I don't want to run it every time the server starts.
 
 
 // ============================================================
@@ -236,9 +234,6 @@ router.post('/blog', authMiddleware, createLimiter, async (req, res) => {
     res.status(500).json({ error: 'An error occurred while saving story: ' + error.message });
   }
 });
-
-router.post('/story/:id/like', authMiddleware, likeStory);
-
 router.get("/stories", async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -266,6 +261,7 @@ router.get("/stories", async (req, res) => {
   }
 });
 
+router.post('/story/:id/like', authMiddleware, likeStory);
 router.get("/story/:storyId", async (req, res) => {
   try {
     const { storyId } = req.params;
@@ -277,7 +273,6 @@ router.get("/story/:storyId", async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 });
-
 router.get('/user/rated-stories', authMiddleware, async (req, res) => {
   try {
     const userId = req.user. id;
@@ -321,7 +316,6 @@ router.get('/user/rated-stories', authMiddleware, async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
-
 router.get('/check', authMiddleware, async (req, res) => {
   try {
     const userId = req.user?. id;

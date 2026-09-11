@@ -7,5 +7,6 @@ export const story = {
     Na mokolo ya Eyenga, amemi mwana na ye ya muke na mokongo, azwi kitunga, kongo, pe na mbwa—bakeyi bilanga.
 
     Elengé muasi abandi kobalola mabélé ti butu ekoti. Sanza eye kozwa ye.`,
-    imagePath: "public/images/sanza.png"
+    imagePath: "public/images/sanza.png",
+    audioUrl: "https://your-audio-file-url.mp3"
     };

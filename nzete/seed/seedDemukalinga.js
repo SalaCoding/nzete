@@ -83,5 +83,6 @@ Demukalinga ozali wapi?
 Demukalinga azongisi:  
 Nazali na kati ya libumu na yo.
 Ndoki abangi pe akimi.`,
-imagePath: "public/images/demukalinga.png"
+imagePath: "public/images/demukalinga.png",
+audioUrl: "https://your-audio-file-url.mp3"
 };

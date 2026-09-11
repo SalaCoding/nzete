@@ -48,5 +48,6 @@ Konyata mikuwa na ngai te
 Yo moko obomi nga, obotoli ngai fleur rose.
 
 Bakangi yaya pe mokonzi alobi babengana ye na mboka.`,
-imagePath: "public/images/fololo.png"
+imagePath: "public/images/fololo.png",
+audioUrl: "https://your-audio-file-url.mp3"
 };
