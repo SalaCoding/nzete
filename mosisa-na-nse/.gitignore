@@ -98,7 +98,6 @@ serviceAccountKey.json
 
 AppData/
 
-*.json
 *.env
 .env
 
