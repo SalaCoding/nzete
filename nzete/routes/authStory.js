@@ -22,7 +22,7 @@ import {
   dislikeComment
 } from '../controllers/commentController.js';
 
-import { story as Satonge } from "../seed/seedSatonge.js";
+import { story as Sanza } from "../seed/seedSnza.js";
 
 // Helper: find story by ObjectId or slug
 async function findStoryByIdOrSlug(idOrSlug) {
@@ -53,7 +53,7 @@ const answerLimiter = rateLimit({
   message: { error: 'Too many answer attempts, please slow down.' }
 });
 // --- CONFIGURE THE SEED STORY AND IMAGE ---
-const storyData = Satonge;
+const storyData = Sanza;
 const imagePath = path.resolve(storyData.imagePath);
 const storyTitle = storyData. title;
 const storySlug = slugify(storyTitle, { lower: true, strict: true });
@@ -123,8 +123,10 @@ async function seedStory() {
     console. error("🚫 Failed to seed story:", err);
   }
 }
-
-eedStory()//I need to run this to add the story to the database, but I don't want to run it every time the server starts.
+//if (process.env.RUN_SEEDER === 'true') {
+//  seedStory().then(() => console.log('✅ Seeder executed.'));
+//}
+seedStory()//I need to run this to add the story to the database, but I don't want to run it every time the server starts.
 
 
 // ============================================================
