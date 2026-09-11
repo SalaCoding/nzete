@@ -57,8 +57,7 @@ const storyData = Sanza;
 const imagePath = path.resolve(storyData.imagePath);
 const storyTitle = storyData. title;
 const storySlug = slugify(storyTitle, { lower: true, strict: true });
-// --- Helper: Read and encode image as base64 ---
-// Change this function to be ASYNC so sharp can process it
+
 async function getBase64Image(imagePath) {
   if (!fs.existsSync(imagePath)) {
     console.warn(`⚠️ Image not found: ${imagePath}`);
@@ -123,10 +122,10 @@ async function seedStory() {
     console. error("🚫 Failed to seed story:", err);
   }
 }
-//if (process.env.RUN_SEEDER === 'true') {
-//  seedStory().then(() => console.log('✅ Seeder executed.'));
-//}
-seedStory()//I need to run this to add the story to the database, but I don't want to run it every time the server starts.
+if (process.env.RUN_SEEDER === 'true') {
+  seedStory().then(() => console.log('✅ Seeder executed.'));
+}
+//seedStory()//I need to run this to add the story to the database, but I don't want to run it every time the server starts.
 
 
 // ============================================================
