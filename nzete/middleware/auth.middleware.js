@@ -44,7 +44,7 @@ console.log('[AUTH] Looking up user ID:', userId);
     console.log(`[AUTH] ${req.method} ${req.originalUrl} → ✅ ${user.email}`);
     req.user = {
       ...user.toObject(),
-      id: user._id.toString() // ensures downstream compatibility
+      id: user._id.toString()
     };
 
     next();
