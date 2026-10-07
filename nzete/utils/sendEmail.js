@@ -7,7 +7,6 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS,
   },
 });
-
 export default async function sendEmail(to, subject, text, html) {
   await transporter.sendMail({
     from: `"Nzete" <${process.env.EMAIL_USER}>`,

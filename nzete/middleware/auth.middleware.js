@@ -11,13 +11,11 @@ export default async function authMiddleware(req, res, next) {
       console.warn('[AUTH] Missing Authorization header');
       return res.status(401).json({ error: 'Authorization header missing' });
     }
-
     const [scheme, token] = authHeader.split(' ');
     if (!scheme || scheme !== 'Bearer' || !token) {
       console.warn('[AUTH] Invalid authorization format');
       return res.status(401).json({ error: 'Invalid authorization format' });
     }
-
     // 2. Ensure JWT secret is configured
     const secret = process.env.JWT_SECRET;
     if (!secret) {
@@ -35,10 +33,8 @@ export default async function authMiddleware(req, res, next) {
       console.warn('[AUTH] Invalid or expired token');
       return res.status(401).json({ error: 'Invalid or expired token' });
     }
-
     // 4. Extract user ID and fetch user
     const userId = jwtOptions.extractUserId(payload); // should return a string
-    // ✅ Add this log here
 console.log('[AUTH] Looking up user ID:', userId);
     const user = await User.findById(userId).select('-password -__v');
     if (!user) {

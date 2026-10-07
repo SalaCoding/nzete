@@ -1,7 +1,5 @@
 // authConfig.js
 //Optional Enhancement: Modular Auth Config
-//To prevent future mismatches
-// authConfig.js
 export const jwtOptions = {
   sign: {
     expiresIn: '15d',
