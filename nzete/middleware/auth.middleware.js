@@ -22,7 +22,6 @@ export default async function authMiddleware(req, res, next) {
       console.error('JWT_SECRET is not defined in environment variables');
       return res.status(500).json({ error: 'Internal server error' });
     }
-
     // 3. Verify token and extract payload
     let payload;
     try {
@@ -43,8 +42,6 @@ console.log('[AUTH] Looking up user ID:', userId);
     }
 
     console.log(`[AUTH] ${req.method} ${req.originalUrl} → ✅ ${user.email}`);
-
-    // 5. Attach normalized user to request
     req.user = {
       ...user.toObject(),
       id: user._id.toString() // ensures downstream compatibility
