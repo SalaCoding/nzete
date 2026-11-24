@@ -1,5 +1,20 @@
-.env
-ios
-android
+# Crucial: Prevent uploading dependencies
+node_modules/
 
-AppData/ 
+# Native folders (if using CNG / Prebuild)
+ios/
+android/
+
+# Expo & local caches
+.expo/
+dist/
+web-build/
+
+# Environment & local system files
+.env*
+AppData/
+*.log
+.DS_Store
+
+# Optional: Ignore git history if your repo is huge
+.git/
